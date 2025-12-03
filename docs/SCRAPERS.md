@@ -121,39 +121,6 @@ All scrapers run via [Apify](https://apify.com). Requires `APIFY_API_TOKEN` in e
 
 ---
 
-### LinkedIn Sales Navigator Scraper
-**Use Case:** Advanced lead search with filters
-
-**Why:** Sales Nav has better search filters (company size, seniority, geography). Can build targeted lists without needing a post.
-
-**Apify Options:**
-- `anchor/linkedin-sales-navigator-search`
-
-**Note:** Requires LinkedIn Sales Navigator subscription.
-
----
-
-### LinkedIn Search Scraper
-**Use Case:** Find people by keyword search
-
-**Why:** Build lead lists from search queries like "VP Sales fintech San Francisco"
-
-**Apify Options:**
-- `anchor/linkedin-people-search`
-- `curious_coder/linkedin-search-scraper`
-
----
-
-### LinkedIn Event Attendees Scraper
-**Use Case:** Extract attendees from LinkedIn Events
-
-**Why:** People who register for industry events = interested in that topic = warm leads
-
-**Apify Options:**
-- `scrap3r/linkedin-event-scraper`
-
----
-
 ### Email Finder (Hunter.io / Apollo)
 **Use Case:** Find verified work emails for leads
 
