@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { jwtVerify } from "jose";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Providers } from "@/components/providers";
-import { getOrCreateUser, getRemainingCredits, getCRMLeads } from "@/lib/data-store";
+import { getOrCreateUser, getCRMLeads, getUserBillingInfo } from "@/lib/data-store";
 
 async function getAuthenticatedUser() {
   const cookieStore = await cookies();
@@ -44,8 +44,20 @@ export default async function DashboardLayout({
     redirect("/onboarding");
   }
 
-  const credits = await getRemainingCredits(user.id);
   const crmLeads = await getCRMLeads(user.id);
+  const billingInfo = await getUserBillingInfo(user.id);
+
+  // Prepare initial usage for sidebar
+  const initialUsage = billingInfo ? {
+    analysesUsed: billingInfo.analysesUsed,
+    analysesLimit: billingInfo.analysesLimit,
+    enrichmentsUsed: billingInfo.enrichmentsUsed,
+    enrichmentsLimit: billingInfo.enrichmentsLimit,
+    plan: billingInfo.plan,
+    planName: billingInfo.planName,
+    isTrialing: billingInfo.isTrialing,
+    trialDaysRemaining: billingInfo.trialDaysRemaining,
+  } : undefined;
 
   return (
     <Providers>
@@ -55,7 +67,7 @@ export default async function DashboardLayout({
           <div className="absolute top-0 z-[-2] h-screen w-screen bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.1),rgba(255,255,255,0))]" />
         </div>
 
-        <Sidebar userEmail={userEmail} credits={credits} crmLeadsCount={crmLeads.length} />
+        <Sidebar userEmail={userEmail} crmLeadsCount={crmLeads.length} initialUsage={initialUsage} />
 
         <div className="pl-44">
           <main className="p-6">{children}</main>

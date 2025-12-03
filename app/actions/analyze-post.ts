@@ -1,6 +1,9 @@
 "use server";
 
 import { ApifyClient } from 'apify-client';
+import { getAuthenticatedUser } from '@/lib/auth';
+import { getOrCreateUser } from '@/lib/data-store';
+import { canAnalyze, incrementAnalysisUsage, getScrapingCaps, UsageInfo } from '@/lib/usage';
 
 // Apify Response Types
 interface ApifyPostResponse {
@@ -64,6 +67,8 @@ interface AnalysisResult {
         totalReactors: number;
     };
     error?: string;
+    usage?: UsageInfo;
+    limitReached?: boolean;
 }
 
 // Initialize Apify client
@@ -75,6 +80,34 @@ export async function analyzePost(url: string): Promise<AnalysisResult> {
     try {
         console.log("=== STARTING REAL LINKEDIN ANALYSIS ===");
         console.log("Input URL:", url);
+
+        // Step 0: Check authentication and usage limits
+        const userEmail = await getAuthenticatedUser();
+        
+        if (!userEmail) {
+            return {
+                success: false,
+                error: "Please log in to analyze posts",
+                limitReached: false
+            };
+        }
+
+        const user = await getOrCreateUser(userEmail);
+        
+        // Check if user can analyze
+        const usageCheck = await canAnalyze(user.id);
+        if (!usageCheck.allowed) {
+            return {
+                success: false,
+                error: usageCheck.reason || "You've reached your analysis limit for this month.",
+                usage: usageCheck.usage,
+                limitReached: true
+            };
+        }
+
+        // Get plan-specific scraping caps
+        const caps = await getScrapingCaps(user.id);
+        console.log(`📊 Plan caps: ${caps.reactionCap} reactions, ${caps.commentCap} comments`);
 
         // Step 1: Fetch post details using Apify Post Scraper
         console.log("\n1️⃣ Fetching post details...");
@@ -110,7 +143,7 @@ export async function analyzePost(url: string): Promise<AnalysisResult> {
             post_urls: [activityId],
             page_number: 1,
             reaction_type: "ALL",
-            limit: 100 // Limit to first 100 for demo/cost control
+            limit: caps.reactionCap // Respect plan's reaction cap
         });
 
         const { items: reactionItems } = await apifyClient.dataset(reactionsRun.defaultDatasetId).listItems();
@@ -178,13 +211,25 @@ export async function analyzePost(url: string): Promise<AnalysisResult> {
         console.log("Total Reactions:", post.totalReactions);
         console.log("Fetched Reactors:", reactors.length);
 
+        // Increment usage after successful analysis
+        await incrementAnalysisUsage(user.id, {
+            postUrl: url,
+            reactionsScraped: reactors.length,
+            commentsScraped: 0, // TODO: Add comment scraping
+            leadsFound: reactors.length
+        });
+
+        // Get updated usage info
+        const updatedUsage = await canAnalyze(user.id);
+
         return {
             success: true,
             data: {
                 post,
                 reactors,
                 totalReactors: post.totalReactions
-            }
+            },
+            usage: updatedUsage.usage
         };
 
     } catch (error) {

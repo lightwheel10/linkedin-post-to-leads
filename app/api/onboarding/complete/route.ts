@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { getUser, completeOnboarding } from '@/lib/data-store';
+import { getUser, completeOnboarding, activateUserPlan } from '@/lib/data-store';
 
 export async function POST() {
   try {
@@ -42,26 +42,65 @@ export async function POST() {
       }, { status: 400 });
     }
 
-    // TODO: Verify payment was processed with Dodo Payment Gateway
-    // ============================================
+    // =============================================================================
+    // TODO: DODO PAYMENT GATEWAY INTEGRATION
+    // Before activating the plan, verify payment was processed:
+    // 
     // const dodoClient = new DodoClient(process.env.DODO_API_KEY);
-    // const subscription = await dodoClient.subscriptions.get(user.subscription_id);
+    // 
+    // 1. Verify customer exists or create one
+    // const customer = await dodoClient.customers.create({
+    //   email: userEmail,
+    //   name: user.full_name,
+    // });
+    // 
+    // 2. Create subscription with trial
+    // const subscription = await dodoClient.subscriptions.create({
+    //   customer_id: customer.id,
+    //   price_id: getPriceIdForPlan(user.selected_plan, user.billing_period),
+    //   trial_period_days: 7,
+    //   payment_method_id: user.payment_method_id, // From card tokenization in onboarding step 3
+    // });
+    // 
+    // 3. Verify subscription status
     // if (!subscription || subscription.status !== 'trialing') {
-    //   return NextResponse.json({ error: 'Payment not processed' }, { status: 400 });
+    //   return NextResponse.json({ error: 'Payment setup failed' }, { status: 400 });
     // }
-    // ============================================
+    // 
+    // 4. Store subscription info
+    // await updateUserWithSubscription(user.id, {
+    //   dodo_customer_id: customer.id,
+    //   dodo_subscription_id: subscription.id,
+    // });
+    // =============================================================================
+
+    // Activate the user's plan (creates subscription record and sets usage limits)
+    const { user: activatedUser, subscription } = await activateUserPlan(
+      user.id,
+      user.selected_plan,
+      user.billing_period || 'monthly',
+      7 // 7-day trial
+    );
+
+    if (!activatedUser) {
+      return NextResponse.json({ error: 'Failed to activate plan' }, { status: 500 });
+    }
 
     // Mark onboarding as complete
-    const updatedUser = await completeOnboarding(userEmail);
+    const completedUser = await completeOnboarding(userEmail);
 
-    if (!updatedUser) {
+    if (!completedUser) {
       return NextResponse.json({ error: 'Failed to complete onboarding' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, user: updatedUser });
+    return NextResponse.json({ 
+      success: true, 
+      user: completedUser,
+      subscription: subscription,
+      message: 'Welcome! Your 7-day free trial has started.'
+    });
   } catch (error) {
     console.error('Onboarding complete error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

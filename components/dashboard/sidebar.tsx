@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   Search,
@@ -12,22 +12,88 @@ import {
   Sparkles,
   ChevronRight,
   Database,
-  Coins,
   LogOut,
   ChevronUp,
-  User
+  User,
+  Zap,
+  Users,
+  AlertTriangle,
+  Crown
 } from "lucide-react";
+
+interface UsageInfo {
+  analysesUsed: number;
+  analysesLimit: number;
+  enrichmentsUsed: number;
+  enrichmentsLimit: number;
+  plan: string;
+  planName: string;
+  isTrialing: boolean;
+  trialDaysRemaining?: number;
+}
 
 interface SidebarProps {
   userEmail: string;
-  credits: number;
+  credits?: number; // Deprecated, keeping for backwards compat
   crmLeadsCount?: number;
+  initialUsage?: UsageInfo;
 }
 
-export function Sidebar({ userEmail, credits, crmLeadsCount = 0 }: SidebarProps) {
+export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [usage, setUsage] = useState<UsageInfo | null>(initialUsage || null);
+
+  // Fetch usage info on mount
+  useEffect(() => {
+    const fetchUsage = async () => {
+      try {
+        const res = await fetch('/api/billing');
+        const data = await res.json();
+        if (data.billing) {
+          setUsage({
+            analysesUsed: data.billing.analysesUsed,
+            analysesLimit: data.billing.analysesLimit,
+            enrichmentsUsed: data.billing.enrichmentsUsed,
+            enrichmentsLimit: data.billing.enrichmentsLimit,
+            plan: data.billing.plan,
+            planName: data.billing.planName,
+            isTrialing: data.billing.isTrialing,
+            trialDaysRemaining: data.billing.trialDaysRemaining,
+          });
+        }
+      } catch (e) {
+        console.error('Failed to fetch usage:', e);
+      }
+    };
+    if (!initialUsage) {
+      fetchUsage();
+    }
+  }, [initialUsage]);
+
+  const getUsageColor = (used: number, limit: number) => {
+    const percentage = (used / limit) * 100;
+    if (percentage >= 100) return 'text-red-500';
+    if (percentage >= 80) return 'text-amber-500';
+    return 'text-primary';
+  };
+
+  const getProgressColor = (used: number, limit: number) => {
+    const percentage = (used / limit) * 100;
+    if (percentage >= 100) return 'bg-red-500';
+    if (percentage >= 80) return 'bg-amber-500';
+    return 'bg-primary';
+  };
+
+  const getPlanColor = (plan: string) => {
+    switch (plan) {
+      case 'business': return 'text-amber-500';
+      case 'pro': return 'text-primary';
+      case 'starter': return 'text-blue-500';
+      default: return 'text-muted-foreground';
+    }
+  };
 
   const NAV_ITEMS = [
     {
@@ -133,24 +199,86 @@ export function Sidebar({ userEmail, credits, crmLeadsCount = 0 }: SidebarProps)
         })}
       </nav>
 
-      {/* Bottom Section - Credits & User */}
+      {/* Bottom Section - Usage & User */}
       <div className="p-2 space-y-2 border-t border-border/50">
-        {/* Credits Display */}
-        <div className="rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-2.5">
-          <div className="flex items-center justify-between mb-1.5">
+        {/* Usage Display */}
+        <div className="rounded-lg border border-border/50 bg-card/30 p-2.5 space-y-2">
+          {/* Plan Badge */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <Coins className="h-3.5 w-3.5 text-primary" />
-              <span className="text-[10px] text-muted-foreground">Credits</span>
+              {usage?.plan === 'business' ? (
+                <Crown className={cn("h-3 w-3", getPlanColor(usage?.plan || 'free'))} />
+              ) : (
+                <Zap className={cn("h-3 w-3", getPlanColor(usage?.plan || 'free'))} />
+              )}
+              <span className={cn("text-[10px] font-medium", getPlanColor(usage?.plan || 'free'))}>
+                {usage?.planName || 'Free'}
+              </span>
             </div>
-            <span className="text-sm font-bold">{credits}</span>
+            {usage?.isTrialing && usage.trialDaysRemaining && usage.trialDaysRemaining > 0 && (
+              <span className="text-[9px] text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                {usage.trialDaysRemaining}d left
+              </span>
+            )}
           </div>
-          <Link
-            href="/#pricing"
-            className="flex items-center justify-center gap-1 rounded-md bg-primary/90 hover:bg-primary px-2 py-1.5 text-[10px] font-medium text-primary-foreground transition-colors"
-          >
-            <Sparkles className="h-2.5 w-2.5" />
-            Get More
-          </Link>
+
+          {/* Analyses Usage */}
+          {usage && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <Search className="h-2.5 w-2.5 text-muted-foreground" />
+                  <span className="text-[9px] text-muted-foreground">Analyses</span>
+                </div>
+                <span className={cn("text-[10px] font-medium", getUsageColor(usage.analysesUsed, usage.analysesLimit))}>
+                  {usage.analysesUsed}/{usage.analysesLimit}
+                </span>
+              </div>
+              <div className="h-1 rounded-full bg-muted overflow-hidden">
+                <div 
+                  className={cn("h-full rounded-full transition-all", getProgressColor(usage.analysesUsed, usage.analysesLimit))}
+                  style={{ width: `${Math.min((usage.analysesUsed / usage.analysesLimit) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Enrichments Usage */}
+          {usage && (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1">
+                  <Users className="h-2.5 w-2.5 text-muted-foreground" />
+                  <span className="text-[9px] text-muted-foreground">Enrichments</span>
+                </div>
+                <span className={cn("text-[10px] font-medium", getUsageColor(usage.enrichmentsUsed, usage.enrichmentsLimit))}>
+                  {usage.enrichmentsUsed}/{usage.enrichmentsLimit}
+                </span>
+              </div>
+              <div className="h-1 rounded-full bg-muted overflow-hidden">
+                <div 
+                  className={cn("h-full rounded-full transition-all", getProgressColor(usage.enrichmentsUsed, usage.enrichmentsLimit))}
+                  style={{ width: `${Math.min((usage.enrichmentsUsed / usage.enrichmentsLimit) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Warning or Upgrade */}
+          {usage && (usage.analysesUsed >= usage.analysesLimit || usage.enrichmentsUsed >= usage.enrichmentsLimit) ? (
+            <div className="flex items-center gap-1.5 p-1.5 rounded bg-red-500/10 border border-red-500/20">
+              <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />
+              <span className="text-[9px] text-red-500">Limit reached</span>
+            </div>
+          ) : usage?.plan === 'free' ? (
+            <Link
+              href="/dashboard/settings?tab=billing"
+              className="flex items-center justify-center gap-1 rounded-md bg-primary/90 hover:bg-primary px-2 py-1.5 text-[10px] font-medium text-primary-foreground transition-colors"
+            >
+              <Sparkles className="h-2.5 w-2.5" />
+              Upgrade
+            </Link>
+          ) : null}
         </div>
 
         {/* User Menu */}
@@ -168,7 +296,9 @@ export function Sidebar({ userEmail, credits, crmLeadsCount = 0 }: SidebarProps)
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="text-[10px] font-medium truncate">{userEmail.split('@')[0]}</p>
-              <p className="text-[9px] text-muted-foreground">Free</p>
+              <p className={cn("text-[9px]", getPlanColor(usage?.plan || 'free'))}>
+                {usage?.planName || 'Free'}
+              </p>
             </div>
             <ChevronUp className={cn(
               "h-3 w-3 text-muted-foreground transition-transform flex-shrink-0",

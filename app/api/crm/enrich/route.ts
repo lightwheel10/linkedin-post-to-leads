@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
+import { getAuthenticatedUser } from '@/lib/auth';
+import { getOrCreateUser } from '@/lib/data-store';
+import { canEnrich, incrementEnrichmentUsage } from '@/lib/usage';
 
 // ============================================================================
 // LinkedIn Profile Enrichment API
@@ -11,6 +14,30 @@ const LINKEDIN_SCRAPER_ACTOR_ID = "VhxlqQXRwhW8H5hNV";
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication first
+    const userEmail = await getAuthenticatedUser();
+    if (!userEmail) {
+      return NextResponse.json(
+        { error: 'Please log in to enrich profiles' },
+        { status: 401 }
+      );
+    }
+
+    const user = await getOrCreateUser(userEmail);
+
+    // Check usage limits
+    const usageCheck = await canEnrich(user.id);
+    if (!usageCheck.allowed) {
+      return NextResponse.json(
+        { 
+          error: usageCheck.reason || "You've reached your enrichment limit for this month.",
+          usage: usageCheck.usage,
+          limitReached: true
+        },
+        { status: 403 }
+      );
+    }
+
     if (!APIFY_TOKEN) {
       return NextResponse.json(
         { error: 'Apify API token not configured' },
@@ -19,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { profileUrl, username } = body;
+    const { profileUrl, username, skipUsageTracking } = body;
 
     // Extract username from URL if not provided
     let linkedinUsername = username;
@@ -126,9 +153,18 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Enrich] Successfully enriched: ${linkedinUsername}`);
 
+    // Increment usage (unless explicitly skipped, e.g., for onboarding)
+    if (!skipUsageTracking) {
+      await incrementEnrichmentUsage(user.id);
+    }
+
+    // Get updated usage
+    const updatedUsage = await canEnrich(user.id);
+
     return NextResponse.json({
       success: true,
-      profile: enrichedProfile
+      profile: enrichedProfile,
+      usage: updatedUsage.usage
     });
 
   } catch (error: any) {

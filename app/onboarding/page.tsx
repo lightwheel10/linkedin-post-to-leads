@@ -370,15 +370,28 @@ export default function OnboardingPage() {
       const trialEndsAt = new Date();
       trialEndsAt.setDate(trialEndsAt.getDate() + 7);
 
-      // Save selected plan, billing period, and trial info
+      // Extract masked card info (NEVER store full card number)
+      const cardLastFour = getCardLastFour(cardNumber);
+      const cardBrand = detectCardBrand(cardNumber);
+
+      // Save selected plan, billing period, trial info, and masked card info
       await saveProgress({
         selected_plan: data.selected_plan,
         billing_period: data.billing_period,
-        trial_ends_at: trialEndsAt.toISOString()
+        trial_ends_at: trialEndsAt.toISOString(),
+        // Store only masked card info for display purposes
+        card_last_four: cardLastFour,
+        card_brand: cardBrand,
+        card_expiry: cardExpiry // Already in MM/YY format
       });
 
-      // TODO: Process payment with Dodo
-      // ============================================
+      // =============================================================================
+      // TODO: DODO PAYMENT GATEWAY INTEGRATION
+      // - Initialize Dodo SDK
+      // - Tokenize card (card number is sent directly to Dodo, never to our server)
+      // - Create customer with payment method
+      // - Create subscription with 7-day trial
+      // 
       // const dodoClient = new DodoClient(process.env.DODO_API_KEY);
       // const paymentMethod = await dodoClient.paymentMethods.create({
       //   card: { number: cardNumber, exp: cardExpiry, cvc: cardCvc }
@@ -389,7 +402,10 @@ export default function OnboardingPage() {
       //   payment_method_id: paymentMethod.id,
       //   trial_days: 7
       // });
-      // ============================================
+      // 
+      // Note: In production, use Dodo's client-side tokenization to ensure
+      // card numbers never touch our servers. Only the token is sent to backend.
+      // =============================================================================
 
       // Complete onboarding
       const res = await fetch('/api/onboarding/complete', {
@@ -480,6 +496,24 @@ export default function OnboardingPage() {
       return v.substring(0, 2) + '/' + v.substring(2, 4);
     }
     return v;
+  };
+
+  // Detect card brand from card number (first 6 digits)
+  const detectCardBrand = (number: string): string => {
+    const cleaned = number.replace(/\s/g, '');
+    if (/^4/.test(cleaned)) return 'visa';
+    if (/^5[1-5]/.test(cleaned) || /^2[2-7]/.test(cleaned)) return 'mastercard';
+    if (/^3[47]/.test(cleaned)) return 'amex';
+    if (/^6(?:011|5)/.test(cleaned)) return 'discover';
+    if (/^35/.test(cleaned)) return 'jcb';
+    if (/^3(?:0[0-5]|[68])/.test(cleaned)) return 'diners';
+    return 'card';
+  };
+
+  // Get last 4 digits of card
+  const getCardLastFour = (number: string): string => {
+    const cleaned = number.replace(/\s/g, '');
+    return cleaned.slice(-4);
   };
 
   if (initialLoading) {

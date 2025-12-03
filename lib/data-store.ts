@@ -25,10 +25,21 @@ export interface User {
   // LinkedIn profile
   linkedin_url: string | null;
   profile_picture: string | null;
-  // Subscription/Trial
+  // Subscription/Trial (from onboarding)
   selected_plan: string | null; // 'starter' | 'pro' | 'business'
   billing_period: string | null; // 'monthly' | 'annual'
   trial_ends_at: string | null;
+  // Active plan & usage tracking
+  plan: string; // 'free' | 'starter' | 'pro' | 'business'
+  plan_started_at: string | null;
+  plan_expires_at: string | null;
+  analyses_used: number;
+  enrichments_used: number;
+  usage_reset_at: string | null;
+  // Payment method (masked - NEVER store full card numbers)
+  card_last_four: string | null;
+  card_brand: string | null; // 'visa' | 'mastercard' | 'amex' | 'discover'
+  card_expiry: string | null; // 'MM/YY'
 }
 
 export interface UserSettings {
@@ -129,10 +140,21 @@ export async function createUser(email: string): Promise<User> {
     // LinkedIn profile
     linkedin_url: null,
     profile_picture: null,
-    // Subscription/Trial
+    // Subscription/Trial (from onboarding)
     selected_plan: null,
     billing_period: null,
-    trial_ends_at: null
+    trial_ends_at: null,
+    // Active plan & usage tracking
+    plan: 'free',
+    plan_started_at: null,
+    plan_expires_at: null,
+    analyses_used: 0,
+    enrichments_used: 0,
+    usage_reset_at: now,
+    // Payment method (masked - NEVER store full card numbers)
+    card_last_four: null,
+    card_brand: null,
+    card_expiry: null
   };
 
   const { error } = await supabase.from('users').insert(user);
@@ -270,6 +292,245 @@ export function getOnboardingStep(user: User): number {
   
   // Step 3: Ready for completion
   return 3;
+}
+
+// ============================================================================
+// SUBSCRIPTION OPERATIONS
+// ============================================================================
+
+export interface Subscription {
+  id: string;
+  user_id: string;
+  plan: string;
+  period: string;
+  status: 'trialing' | 'active' | 'cancelled' | 'expired' | 'past_due';
+  current_period_start: string | null;
+  current_period_end: string | null;
+  created_at: string;
+  updated_at: string;
+  // =============================================================================
+  // TODO: DODO PAYMENT GATEWAY FIELDS
+  // dodo_subscription_id?: string;
+  // dodo_customer_id?: string;
+  // dodo_payment_method_id?: string;
+  // =============================================================================
+}
+
+/**
+ * Activate a user's plan (called after onboarding or upgrade)
+ */
+export async function activateUserPlan(
+  userId: string,
+  plan: string,
+  period: string,
+  trialDays: number = 7
+): Promise<{ user: User | null; subscription: Subscription | null }> {
+  const now = new Date();
+  const trialEnd = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000);
+  
+  // Calculate period end based on billing period
+  let periodEnd: Date;
+  if (period === 'annual') {
+    periodEnd = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+  } else {
+    periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  }
+
+  // Update user's plan
+  const { error: userError } = await supabase
+    .from('users')
+    .update({
+      plan,
+      plan_started_at: now.toISOString(),
+      plan_expires_at: periodEnd.toISOString(),
+      trial_ends_at: trialEnd.toISOString(),
+      analyses_used: 0,
+      enrichments_used: 0,
+      usage_reset_at: now.toISOString(),
+      updated_at: now.toISOString()
+    })
+    .eq('id', userId);
+
+  if (userError) {
+    console.error('Failed to activate user plan:', userError);
+    return { user: null, subscription: null };
+  }
+
+  // Create subscription record
+  const subscription = await createSubscription(userId, plan, period, trialEnd);
+
+  // Get updated user
+  const { data: user } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  return { user: user as User | null, subscription };
+}
+
+/**
+ * Create a new subscription record
+ */
+export async function createSubscription(
+  userId: string,
+  plan: string,
+  period: string,
+  trialEnd: Date
+): Promise<Subscription | null> {
+  const now = new Date();
+  
+  // Calculate period end based on billing period
+  let periodEnd: Date;
+  if (period === 'annual') {
+    periodEnd = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+  } else {
+    periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  }
+
+  const subscription: Omit<Subscription, 'id'> = {
+    user_id: userId,
+    plan,
+    period,
+    status: 'trialing',
+    current_period_start: now.toISOString(),
+    current_period_end: periodEnd.toISOString(),
+    created_at: now.toISOString(),
+    updated_at: now.toISOString(),
+  };
+
+  // =============================================================================
+  // TODO: DODO PAYMENT GATEWAY INTEGRATION
+  // - Create customer in Dodo if not exists
+  // - Create subscription with trial period
+  // - Store dodo_subscription_id, dodo_customer_id
+  // =============================================================================
+
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .insert(subscription)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Failed to create subscription:', error);
+    return null;
+  }
+
+  return data as Subscription;
+}
+
+/**
+ * Get user's active subscription
+ */
+export async function getUserSubscription(userId: string): Promise<Subscription | null> {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', userId)
+    .in('status', ['trialing', 'active'])
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error || !data) return null;
+  return data as Subscription;
+}
+
+/**
+ * Update subscription status
+ */
+export async function updateSubscriptionStatus(
+  subscriptionId: string,
+  status: Subscription['status']
+): Promise<Subscription | null> {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .update({
+      status,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', subscriptionId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Failed to update subscription:', error);
+    return null;
+  }
+
+  return data as Subscription;
+}
+
+/**
+ * Cancel a subscription
+ */
+export async function cancelSubscription(subscriptionId: string): Promise<Subscription | null> {
+  // =============================================================================
+  // TODO: DODO PAYMENT GATEWAY INTEGRATION
+  // - Cancel subscription in Dodo
+  // - Handle proration if needed
+  // =============================================================================
+
+  return updateSubscriptionStatus(subscriptionId, 'cancelled');
+}
+
+/**
+ * Get user's billing info for display
+ */
+export async function getUserBillingInfo(userId: string): Promise<{
+  plan: string;
+  planName: string;
+  period: string;
+  status: string;
+  isTrialing: boolean;
+  trialDaysRemaining: number;
+  currentPeriodEnd: string | null;
+  analysesUsed: number;
+  analysesLimit: number;
+  enrichmentsUsed: number;
+  enrichmentsLimit: number;
+  // Card info (masked)
+  cardLastFour: string | null;
+  cardBrand: string | null;
+  cardExpiry: string | null;
+} | null> {
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('plan, billing_period, trial_ends_at, plan_expires_at, analyses_used, enrichments_used, card_last_four, card_brand, card_expiry')
+    .eq('id', userId)
+    .single();
+
+  if (error || !user) return null;
+
+  const subscription = await getUserSubscription(userId);
+  
+  // Import plan limits dynamically to avoid circular deps
+  const { getPlanLimits } = await import('./plans');
+  const limits = getPlanLimits(user.plan || 'free');
+
+  const now = new Date();
+  const trialEnd = user.trial_ends_at ? new Date(user.trial_ends_at) : null;
+  const isTrialing = trialEnd ? trialEnd > now : false;
+  const trialDaysRemaining = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
+
+  return {
+    plan: user.plan || 'free',
+    planName: limits.name,
+    period: user.billing_period || 'monthly',
+    status: subscription?.status || 'free',
+    isTrialing,
+    trialDaysRemaining,
+    currentPeriodEnd: user.plan_expires_at,
+    analysesUsed: user.analyses_used || 0,
+    analysesLimit: limits.analyses,
+    enrichmentsUsed: user.enrichments_used || 0,
+    enrichmentsLimit: limits.enrichments,
+    // Card info (masked - never store full card numbers)
+    cardLastFour: user.card_last_four || null,
+    cardBrand: user.card_brand || null,
+    cardExpiry: user.card_expiry || null,
+  };
 }
 
 // ============================================================================

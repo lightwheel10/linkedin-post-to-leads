@@ -52,6 +52,16 @@ export async function POST(request: Request) {
     if (data.trial_ends_at !== undefined && typeof data.trial_ends_at !== 'string') {
       return NextResponse.json({ error: 'Invalid trial_ends_at' }, { status: 400 });
     }
+    // Card info validation (masked only - NEVER store full card numbers)
+    if (data.card_last_four !== undefined && typeof data.card_last_four !== 'string') {
+      return NextResponse.json({ error: 'Invalid card_last_four' }, { status: 400 });
+    }
+    if (data.card_brand !== undefined && typeof data.card_brand !== 'string') {
+      return NextResponse.json({ error: 'Invalid card_brand' }, { status: 400 });
+    }
+    if (data.card_expiry !== undefined && typeof data.card_expiry !== 'string') {
+      return NextResponse.json({ error: 'Invalid card_expiry' }, { status: 400 });
+    }
 
     const user = await updateUserOnboarding(userEmail, data);
 
