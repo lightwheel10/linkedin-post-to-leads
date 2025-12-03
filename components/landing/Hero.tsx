@@ -229,11 +229,14 @@ export function Hero() {
                         {/* CTA Buttons */}
                         <div className="flex flex-col sm:flex-row items-start gap-2.5 pt-1 animate-fade-in-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
                             <Button
+                                asChild
                                 size="default"
                                 className="h-10 px-5 text-sm font-medium rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_-5px_rgba(16,185,129,0.4)] transition-all hover:scale-[1.02] w-full sm:w-auto"
                             >
-                                Start Free Trial
-                                <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
+                                <Link href="/signup">
+                                    Start Free Trial
+                                    <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
+                                </Link>
                             </Button>
                             <Button
                                 asChild

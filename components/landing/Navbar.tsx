@@ -80,6 +80,7 @@ export function Navbar() {
                             Log in
                         </Link>
                         <Button
+                            asChild
                             size="sm"
                             className={cn(
                                 "h-8 px-4 text-[13px] font-medium rounded-full transition-all duration-300",
@@ -88,7 +89,7 @@ export function Navbar() {
                                 "border border-white/10"
                             )}
                         >
-                            Get Started
+                            <Link href="/signup">Get Started</Link>
                         </Button>
                     </div>
 
@@ -133,8 +134,8 @@ export function Navbar() {
                         >
                             Log in
                         </Link>
-                        <Button className="w-full bg-primary hover:bg-primary/90 rounded-xl">
-                            Get Started
+                        <Button asChild className="w-full bg-primary hover:bg-primary/90 rounded-xl">
+                            <Link href="/signup">Get Started</Link>
                         </Button>
                     </div>
                 )}

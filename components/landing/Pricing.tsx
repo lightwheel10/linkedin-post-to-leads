@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Check, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -190,6 +191,7 @@ export function Pricing() {
                             </div>
 
                             <Button 
+                                asChild
                                 variant={tier.ctaVariant}
                                 size="lg"
                                 className={cn(
@@ -198,7 +200,9 @@ export function Pricing() {
                                     tier.ctaVariant === "outline" ? "border-primary/20 hover:bg-primary/5" : ""
                                 )}
                             >
-                                {tier.ctaText}
+                                <Link href={tier.ctaText === "Contact Sales" ? "/contact" : "/signup"}>
+                                    {tier.ctaText}
+                                </Link>
                             </Button>
                         </div>
                     ))}

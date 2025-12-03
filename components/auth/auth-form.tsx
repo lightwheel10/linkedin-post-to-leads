@@ -13,7 +13,12 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 
-export function AuthForm() {
+interface AuthFormProps {
+  mode?: 'login' | 'signup';
+}
+
+export function AuthForm({ mode = 'login' }: AuthFormProps) {
+  const isSignup = mode === 'signup';
   const [step, setStep] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -81,7 +86,8 @@ export function AuthForm() {
         throw new Error(data.error || 'Verification failed');
       }
 
-      window.location.href = '/dashboard';
+      // Redirect based on mode - signup goes to onboarding (dashboard for now)
+      window.location.href = isSignup ? '/dashboard' : '/dashboard';
     } catch (err: any) {
       setError(err.message);
       setIsLoading(false); 
@@ -108,11 +114,15 @@ export function AuthForm() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold tracking-tight">
-            {step === 'email' ? 'Sign in / Sign up' : 'Check your inbox'}
+            {step === 'email' 
+              ? (isSignup ? 'Start your free trial' : 'Welcome back')
+              : 'Check your inbox'}
           </CardTitle>
           <CardDescription>
             {step === 'email' 
-              ? 'Enter your email to receive a secure verification code' 
+              ? (isSignup 
+                  ? 'Enter your email to get started with 50 free credits'
+                  : 'Enter your email to receive a secure verification code')
               : `We've sent a 6-digit code to ${email}`}
           </CardDescription>
         </CardHeader>
@@ -216,9 +226,16 @@ export function AuthForm() {
             </div>
           )}
         </CardContent>
-        <CardFooter className="justify-center">
+        <CardFooter className="flex-col gap-4">
           <p className="text-xs text-muted-foreground text-center">
             By continuing, you agree to our Terms of Service and Privacy Policy.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {isSignup ? (
+              <>Already have an account? <Link href="/login" className="text-primary hover:underline">Sign in</Link></>
+            ) : (
+              <>Don't have an account? <Link href="/signup" className="text-primary hover:underline">Start free trial</Link></>
+            )}
           </p>
         </CardFooter>
       </Card>
