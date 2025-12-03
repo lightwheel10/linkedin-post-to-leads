@@ -79,23 +79,6 @@ export interface Lead {
   email_status?: 'pending' | 'found' | 'not_found';
 }
 
-export interface Credits {
-  user_id: string;
-  total_credits: number;
-  used_credits: number;
-  last_refill: string;
-  transactions: CreditTransaction[];
-}
-
-export interface CreditTransaction {
-  id: string;
-  type: 'initial' | 'purchase' | 'usage' | 'refund' | 'bonus';
-  amount: number;
-  description: string;
-  created_at: string;
-  analysis_id?: string;
-}
-
 // ============================================================================
 // USER OPERATIONS
 // ============================================================================
@@ -162,9 +145,6 @@ export async function createUser(email: string): Promise<User> {
   if (error) {
     throw new Error(`Failed to create user: ${error.message}`);
   }
-
-  // Initialize credits for new user
-  await initializeCredits(id);
 
   return user;
 }
@@ -612,121 +592,6 @@ export async function getUserStats(userId: string): Promise<{
     totalLeads: analyses.reduce((sum, a) => sum + a.leads.length, 0),
     qualifiedLeads: analyses.reduce((sum, a) => sum + a.qualified_leads_count, 0),
     thisMonth: analyses.filter(a => new Date(a.created_at) >= startOfMonth).length
-  };
-}
-
-// ============================================================================
-// CREDITS OPERATIONS
-// ============================================================================
-
-const INITIAL_CREDITS = 50;
-
-export async function initializeCredits(userId: string): Promise<Credits> {
-  const now = new Date().toISOString();
-
-  const credits: Credits = {
-    user_id: userId,
-    total_credits: INITIAL_CREDITS,
-    used_credits: 0,
-    last_refill: now,
-    transactions: [{
-      id: `txn_${Date.now()}`,
-      type: 'initial',
-      amount: INITIAL_CREDITS,
-      description: 'Welcome credits',
-      created_at: now
-    }]
-  };
-
-  const { error } = await supabase.from('credits').insert(credits);
-
-  if (error) {
-    throw new Error(`Failed to initialize credits: ${error.message}`);
-  }
-
-  return credits;
-}
-
-export async function getCredits(userId: string): Promise<Credits | null> {
-  const { data, error } = await supabase
-    .from('credits')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
-
-  if (error || !data) return null;
-  return data as Credits;
-}
-
-export async function getRemainingCredits(userId: string): Promise<number> {
-  const credits = await getCredits(userId);
-  if (!credits) return 0;
-  return credits.total_credits - credits.used_credits;
-}
-
-export async function useCredit(userId: string, analysisId: string): Promise<{ success: boolean; remaining: number; error?: string }> {
-  const credits = await getCredits(userId);
-
-  if (!credits) {
-    return { success: false, remaining: 0, error: 'No credits found for user' };
-  }
-
-  const remaining = credits.total_credits - credits.used_credits;
-
-  if (remaining <= 0) {
-    return { success: false, remaining: 0, error: 'No credits remaining' };
-  }
-
-  const newTransaction: CreditTransaction = {
-    id: `txn_${Date.now()}`,
-    type: 'usage',
-    amount: -1,
-    description: 'Post analysis',
-    created_at: new Date().toISOString(),
-    analysis_id: analysisId
-  };
-
-  const { error } = await supabase
-    .from('credits')
-    .update({
-      used_credits: credits.used_credits + 1,
-      transactions: [...credits.transactions, newTransaction]
-    })
-    .eq('user_id', userId);
-
-  if (error) {
-    return { success: false, remaining, error: error.message };
-  }
-
-  return { success: true, remaining: remaining - 1 };
-}
-
-export async function addCredits(userId: string, amount: number, type: CreditTransaction['type'], description: string): Promise<Credits | null> {
-  const credits = await getCredits(userId);
-  if (!credits) return null;
-
-  const newTransaction: CreditTransaction = {
-    id: `txn_${Date.now()}`,
-    type,
-    amount,
-    description,
-    created_at: new Date().toISOString()
-  };
-
-  const { error } = await supabase
-    .from('credits')
-    .update({
-      total_credits: credits.total_credits + amount,
-      transactions: [...credits.transactions, newTransaction]
-    })
-    .eq('user_id', userId);
-
-  if (error) return null;
-
-  return {
-    ...credits,
-    total_credits: credits.total_credits + amount,
-    transactions: [...credits.transactions, newTransaction]
   };
 }
 

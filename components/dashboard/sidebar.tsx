@@ -34,7 +34,6 @@ interface UsageInfo {
 
 interface SidebarProps {
   userEmail: string;
-  credits?: number; // Deprecated, keeping for backwards compat
   crmLeadsCount?: number;
   initialUsage?: UsageInfo;
 }

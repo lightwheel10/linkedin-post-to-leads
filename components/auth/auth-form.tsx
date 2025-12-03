@@ -121,7 +121,7 @@ export function AuthForm({ mode = 'login' }: AuthFormProps) {
           <CardDescription>
             {step === 'email' 
               ? (isSignup 
-                  ? 'Enter your email to get started with 50 free credits'
+                  ? 'Enter your email to start your 7-day free trial'
                   : 'Enter your email to receive a secure verification code')
               : `We've sent a 6-digit code to ${email}`}
           </CardDescription>

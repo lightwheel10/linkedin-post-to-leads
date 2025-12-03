@@ -29,8 +29,8 @@ const PRICING_TIERS: PricingTier[] = [
             yearly: 0,
         },
         features: [
-            "50 Lead Credits / month",
-            "Basic Profile Enrichment",
+            "2 Post Analyses / month",
+            "5 Profile Enrichments",
             "Manual Export to CSV",
             "7-day Data Retention",
             "Community Support"
@@ -52,13 +52,13 @@ const PRICING_TIERS: PricingTier[] = [
             yearly: 39,
         },
         features: [
-            "1,000 Lead Credits / month",
-            "Full Email & Phone Enrichment",
+            "25 Post Analyses / month",
+            "120 Profile Enrichments",
             "One-click CRM Sync (HubSpot, Salesforce)",
             "30-day Data Retention",
-            "Advanced Filtering & Scoring",
+            "Advanced ICP Filtering",
             "Priority Email Support",
-            "Export to CSV/Excel"
+            "Export to CSV/JSON"
         ],
         highlight: true,
         ctaText: "Get Started",
@@ -72,8 +72,8 @@ const PRICING_TIERS: PricingTier[] = [
             yearly: 119,
         },
         features: [
-            "5,000 Lead Credits / month",
-            "Unlimited Enrichment",
+            "45 Post Analyses / month",
+            "300 Profile Enrichments",
             "All CRM Integrations + API Access",
             "Unlimited Data Retention",
             "Team Management & Roles",
