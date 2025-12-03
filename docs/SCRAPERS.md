@@ -13,6 +13,7 @@ All scrapers run via [Apify](https://apify.com). Requires `APIFY_API_TOKEN` in e
 | **Apify URL** | https://apify.com/scrap3r/linkedin-post-scraper |
 | **Used In** | `app/actions/analyze-post.ts` |
 | **Purpose** | Fetches LinkedIn post metadata (author, content, engagement stats, images) |
+| **Cost** | **$5 per 1000 results** ($0.005 per post) |
 
 **Input:**
 ```json
@@ -41,6 +42,9 @@ All scrapers run via [Apify](https://apify.com). Requires `APIFY_API_TOKEN` in e
 | **Apify URL** | https://apify.com/scrap3r/linkedin-reactions-scraper |
 | **Used In** | `app/actions/analyze-post.ts` |
 | **Purpose** | Fetches list of people who reacted to a post |
+| **Cost** | **$5 per 1000 results** ($0.005 per reaction) |
+
+⚠️ **Cost Warning:** 1 reaction = 1 result. A post with 10,000 reactions = $50 to scrape all.
 
 **Input:**
 ```json
@@ -59,7 +63,11 @@ All scrapers run via [Apify](https://apify.com). Requires `APIFY_API_TOKEN` in e
 - `reactor.profile_pictures.small/medium/large` - Avatar URLs
 - `reaction_type` - Type of reaction (LIKE, CELEBRATE, etc.)
 
-**Cost Note:** Limited to 100 reactors per call for cost control.
+**Cost Example:**
+- 100 reactions = $0.50
+- 500 reactions = $2.50
+- 1000 reactions = $5.00
+- 10,000 reactions = $50.00 ← DANGER
 
 ---
 
@@ -70,6 +78,7 @@ All scrapers run via [Apify](https://apify.com). Requires `APIFY_API_TOKEN` in e
 | **Apify URL** | https://apify.com/scrap3r/linkedin-profile-scraper |
 | **Used In** | `app/api/crm/enrich/route.ts` |
 | **Purpose** | Full profile enrichment for CRM leads |
+| **Cost** | **$5 per 1000 results** ($0.005 per profile) |
 
 **Input:**
 ```json

@@ -1,7 +1,5 @@
 # Billing & Credits System
 
-> **TODO:** Update credit costs once pricing is finalized.
-
 ---
 
 ## Overview
@@ -10,16 +8,28 @@ LinkMind uses a credit-based system. Users purchase or earn credits, which are c
 
 ---
 
-## Credit Costs
+## Apify Costs (Our Cost)
 
-| Action | Credits | Notes |
-|--------|---------|-------|
-| **Post Analysis** | — | Fetches post details + up to 100 reactors |
-| **Profile Enrichment** | — | Full LinkedIn profile via Apify |
-| **Save to CRM** | — | Store lead in database |
-| **CSV Export** | — | Per lead exported |
+| Scraper | Apify Cost |
+|---------|------------|
+| Post Scraper | $0.005 per post |
+| Reactions Scraper | $0.005 per reaction |
+| Profile Scraper | $0.005 per profile |
 
-> Fill in the "—" with actual credit costs.
+**The Problem:** Reactions are charged per-reaction. A viral post with 10k reactions = $50 to scrape.
+
+---
+
+## Credit Costs (User Pays)
+
+| Action | Credits | Our Cost | Notes |
+|--------|---------|----------|-------|
+| **Post Analysis** | TBD | $0.005 + (N × $0.005) | N = number of reactions scraped |
+| **Profile Enrichment** | TBD | $0.005 | Per profile |
+| **Save to CRM** | TBD | $0 | Free for us |
+| **CSV Export** | TBD | $0 | Free for us |
+
+> ⚠️ **Critical Decision Needed:** How to handle posts with high reaction counts?
 
 ---
 
