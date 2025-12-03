@@ -14,6 +14,21 @@ export interface User {
   created_at: string;
   updated_at: string;
   settings: UserSettings;
+  // Onboarding fields
+  full_name: string | null;
+  company: string | null;
+  role: string | null;
+  locations: string[];
+  industries: string[];
+  onboarding_completed: boolean;
+  onboarding_step: number; // 1=profile, 2=icp, 3=payment
+  // LinkedIn profile
+  linkedin_url: string | null;
+  profile_picture: string | null;
+  // Subscription/Trial
+  selected_plan: string | null; // 'starter' | 'pro' | 'business'
+  billing_period: string | null; // 'monthly' | 'annual'
+  trial_ends_at: string | null;
 }
 
 export interface UserSettings {
@@ -102,7 +117,22 @@ export async function createUser(email: string): Promise<User> {
       exclude_keywords: ['student', 'intern', 'looking for', 'seeking'],
       default_export_format: 'csv',
       notifications_enabled: true
-    }
+    },
+    // Onboarding fields - null/empty until completed
+    full_name: null,
+    company: null,
+    role: null,
+    locations: [],
+    industries: [],
+    onboarding_completed: false,
+    onboarding_step: 1,
+    // LinkedIn profile
+    linkedin_url: null,
+    profile_picture: null,
+    // Subscription/Trial
+    selected_plan: null,
+    billing_period: null,
+    trial_ends_at: null
   };
 
   const { error } = await supabase.from('users').insert(user);
@@ -141,6 +171,105 @@ export async function updateUserSettings(email: string, settings: Partial<UserSe
   if (error) return null;
 
   return { ...user, settings: updatedSettings, updated_at: new Date().toISOString() };
+}
+
+// ============================================================================
+// ONBOARDING OPERATIONS
+// ============================================================================
+
+export interface OnboardingData {
+  full_name?: string;
+  company?: string;
+  role?: string;
+  locations?: string[];
+  industries?: string[];
+  icp_keywords?: string[];
+  exclude_keywords?: string[];
+  linkedin_url?: string;
+  profile_picture?: string;
+  onboarding_step?: number;
+  selected_plan?: string;
+  billing_period?: string;
+  trial_ends_at?: string;
+}
+
+/**
+ * Updates user onboarding data (partial save during wizard steps)
+ */
+export async function updateUserOnboarding(email: string, data: OnboardingData): Promise<User | null> {
+  const user = await getUser(email);
+  if (!user) return null;
+
+  const updates: Record<string, unknown> = {
+    updated_at: new Date().toISOString()
+  };
+
+  // Add profile fields if provided
+  if (data.full_name !== undefined) updates.full_name = data.full_name;
+  if (data.company !== undefined) updates.company = data.company;
+  if (data.role !== undefined) updates.role = data.role;
+  if (data.locations !== undefined) updates.locations = data.locations;
+  if (data.industries !== undefined) updates.industries = data.industries;
+  if (data.linkedin_url !== undefined) updates.linkedin_url = data.linkedin_url;
+  if (data.profile_picture !== undefined) updates.profile_picture = data.profile_picture;
+  if (data.onboarding_step !== undefined) updates.onboarding_step = data.onboarding_step;
+  if (data.selected_plan !== undefined) updates.selected_plan = data.selected_plan;
+  if (data.billing_period !== undefined) updates.billing_period = data.billing_period;
+  if (data.trial_ends_at !== undefined) updates.trial_ends_at = data.trial_ends_at;
+
+  // Update ICP settings if provided
+  if (data.icp_keywords !== undefined || data.exclude_keywords !== undefined) {
+    const updatedSettings = { ...user.settings };
+    if (data.icp_keywords !== undefined) updatedSettings.icp_keywords = data.icp_keywords;
+    if (data.exclude_keywords !== undefined) updatedSettings.exclude_keywords = data.exclude_keywords;
+    updates.settings = updatedSettings;
+  }
+
+  const { error } = await supabase
+    .from('users')
+    .update(updates)
+    .eq('email', email);
+
+  if (error) return null;
+
+  // Return updated user
+  return getUser(email);
+}
+
+/**
+ * Marks onboarding as complete for a user
+ */
+export async function completeOnboarding(email: string): Promise<User | null> {
+  const { error } = await supabase
+    .from('users')
+    .update({
+      onboarding_completed: true,
+      updated_at: new Date().toISOString()
+    })
+    .eq('email', email);
+
+  if (error) return null;
+
+  return getUser(email);
+}
+
+/**
+ * Gets the current onboarding step based on filled data
+ * Returns: 1 (user details), 2 (ICP config), 3 (complete/signup)
+ */
+export function getOnboardingStep(user: User): number {
+  // Step 1: User details (name, company, role, locations)
+  if (!user.full_name || !user.company || !user.role || user.locations.length === 0) {
+    return 1;
+  }
+  
+  // Step 2: ICP config (industries)
+  if (user.industries.length === 0) {
+    return 2;
+  }
+  
+  // Step 3: Ready for completion
+  return 3;
 }
 
 // ============================================================================

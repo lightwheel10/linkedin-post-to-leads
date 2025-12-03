@@ -38,6 +38,12 @@ export default async function DashboardLayout({
 
   // Get or create user in our data store
   const user = await getOrCreateUser(userEmail);
+
+  // Redirect to onboarding if not completed
+  if (!user.onboarding_completed) {
+    redirect("/onboarding");
+  }
+
   const credits = await getRemainingCredits(user.id);
   const crmLeads = await getCRMLeads(user.id);
 

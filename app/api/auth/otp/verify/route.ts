@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { hashOTP, verifyOTPInternal, OTP_CONSTANTS } from '@/lib/auth-store';
 import { SignJWT } from 'jose';
+import { getOrCreateUser } from '@/lib/data-store';
 
 export async function POST(request: Request) {
   try {
@@ -34,8 +35,17 @@ export async function POST(request: Request) {
       .setExpirationTime('24h')
       .sign(secret);
 
-    // 4. Set Cookie
-    const response = NextResponse.json({ success: true });
+    // 4. Get or create user to check onboarding status
+    const user = await getOrCreateUser(email);
+    
+    // 5. Determine redirect based on onboarding status
+    const redirectTo = user.onboarding_completed ? '/dashboard' : '/onboarding';
+
+    // 6. Set Cookie and return response with redirect info
+    const response = NextResponse.json({ 
+      success: true,
+      redirectTo
+    });
     
     response.cookies.set({
       name: 'auth_token',

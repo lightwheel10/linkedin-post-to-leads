@@ -86,8 +86,8 @@ export function AuthForm({ mode = 'login' }: AuthFormProps) {
         throw new Error(data.error || 'Verification failed');
       }
 
-      // Redirect based on mode - signup goes to onboarding (dashboard for now)
-      window.location.href = isSignup ? '/dashboard' : '/dashboard';
+      // Redirect based on server response (handles onboarding status)
+      window.location.href = data.redirectTo || '/dashboard';
     } catch (err: any) {
       setError(err.message);
       setIsLoading(false); 
