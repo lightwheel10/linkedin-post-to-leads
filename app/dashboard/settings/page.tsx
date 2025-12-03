@@ -17,7 +17,6 @@ import {
   FileText,
   Bell,
   CreditCard,
-  Coins,
   Zap,
   TrendingUp,
 } from "lucide-react";
@@ -239,106 +238,118 @@ export default function SettingsPage() {
           {activeTab === "billing" && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-xl font-semibold">Billing & Credits</h2>
+                <h2 className="text-xl font-semibold">Billing & Usage</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Manage your credits and subscription
+                  Manage your subscription and track usage
                 </p>
               </div>
 
-              {/* Credit Balance Card */}
+              {/* Current Plan Card */}
               <div className="p-6 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 rounded-lg bg-primary/20">
-                      <Coins className="w-5 h-5 text-primary" />
+                      <Zap className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <div className="text-sm text-muted-foreground">Available Credits</div>
-                      <div className="text-3xl font-bold">0</div>
+                      <div className="text-sm text-muted-foreground">Current Plan</div>
+                      <div className="text-2xl font-bold">Free Trial</div>
                     </div>
                   </div>
                   <Button>
-                    <Zap className="w-4 h-4 mr-2" />
-                    Buy Credits
+                    <TrendingUp className="w-4 h-4 mr-2" />
+                    Upgrade
                   </Button>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Credits are used for post analysis, profile enrichment, and exports.
+                  2 post analyses • 5 profile enrichments • No credit card required
                 </div>
               </div>
 
-              {/* Current Plan */}
+              {/* Usage This Month */}
               <div className="space-y-3">
-                <label className="text-sm font-medium">Current Plan</label>
-                <div className="p-4 rounded-lg border border-border/50 bg-card/30">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">Free Trial</div>
-                      <div className="text-sm text-muted-foreground">
-                        50 credits on signup
-                      </div>
+                <label className="text-sm font-medium">Usage This Month</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg border border-border/50 bg-card/30">
+                    <div className="text-2xl font-bold">0 / 2</div>
+                    <div className="text-sm text-muted-foreground">Post Analyses</div>
+                    <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full bg-primary rounded-full" style={{ width: "0%" }} />
                     </div>
-                    <Button variant="outline">
-                      <TrendingUp className="w-4 h-4 mr-2" />
-                      Upgrade
-                    </Button>
+                  </div>
+                  <div className="p-4 rounded-lg border border-border/50 bg-card/30">
+                    <div className="text-2xl font-bold">0 / 5</div>
+                    <div className="text-sm text-muted-foreground">Profile Enrichments</div>
+                    <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+                      <div className="h-full bg-primary rounded-full" style={{ width: "0%" }} />
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Credit Usage Breakdown */}
+              {/* Available Plans */}
               <div className="space-y-3">
-                <label className="text-sm font-medium">Credit Costs</label>
+                <label className="text-sm font-medium">Available Plans</label>
                 <div className="rounded-lg border border-border/50 overflow-hidden">
                   <table className="w-full text-sm">
                     <thead className="bg-muted/30">
                       <tr>
-                        <th className="text-left px-4 py-2.5 font-medium">Action</th>
-                        <th className="text-right px-4 py-2.5 font-medium">Credits</th>
+                        <th className="text-left px-4 py-2.5 font-medium">Plan</th>
+                        <th className="text-center px-4 py-2.5 font-medium">Analyses</th>
+                        <th className="text-center px-4 py-2.5 font-medium">Enrichments</th>
+                        <th className="text-right px-4 py-2.5 font-medium">Price</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/50">
-                      <tr>
+                      <tr className="bg-primary/5">
                         <td className="px-4 py-3">
-                          <div className="font-medium">Post Analysis</div>
-                          <div className="text-xs text-muted-foreground">Fetch post details & reactions</div>
+                          <div className="font-medium">Free Trial</div>
+                          <div className="text-xs text-muted-foreground">Current plan</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono">—</td>
+                        <td className="px-4 py-3 text-center font-mono">2</td>
+                        <td className="px-4 py-3 text-center font-mono">5</td>
+                        <td className="px-4 py-3 text-right font-medium">$0</td>
                       </tr>
                       <tr>
                         <td className="px-4 py-3">
-                          <div className="font-medium">Profile Enrichment</div>
-                          <div className="text-xs text-muted-foreground">Full LinkedIn profile data</div>
+                          <div className="font-medium">Starter</div>
+                          <div className="text-xs text-muted-foreground">Up to 350 people/post</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono">—</td>
+                        <td className="px-4 py-3 text-center font-mono">15</td>
+                        <td className="px-4 py-3 text-center font-mono">50</td>
+                        <td className="px-4 py-3 text-right font-medium">$79/mo</td>
                       </tr>
                       <tr>
                         <td className="px-4 py-3">
-                          <div className="font-medium">CSV Export</div>
-                          <div className="text-xs text-muted-foreground">Download leads as CSV</div>
+                          <div className="font-medium">Pro</div>
+                          <div className="text-xs text-muted-foreground">Up to 500 people/post</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono">—</td>
+                        <td className="px-4 py-3 text-center font-mono">25</td>
+                        <td className="px-4 py-3 text-center font-mono">120</td>
+                        <td className="px-4 py-3 text-right font-medium">$149/mo</td>
                       </tr>
                       <tr>
                         <td className="px-4 py-3">
-                          <div className="font-medium">Save to CRM</div>
-                          <div className="text-xs text-muted-foreground">Add lead to your CRM</div>
+                          <div className="font-medium">Business</div>
+                          <div className="text-xs text-muted-foreground">Up to 700 people/post</div>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono">—</td>
+                        <td className="px-4 py-3 text-center font-mono">45</td>
+                        <td className="px-4 py-3 text-center font-mono">300</td>
+                        <td className="px-4 py-3 text-right font-medium">$299/mo</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Credit costs will be updated soon. Check docs/BILLING.md for integration notes.
+                  Annual plans available with 2 months free. CSV export and CRM storage included in all plans.
                 </p>
               </div>
 
               {/* Usage History */}
               <div className="space-y-3">
-                <label className="text-sm font-medium">Recent Usage</label>
+                <label className="text-sm font-medium">Recent Activity</label>
                 <div className="p-8 rounded-lg border border-dashed border-border/50 text-center">
-                  <div className="text-sm text-muted-foreground">No usage history yet</div>
+                  <div className="text-sm text-muted-foreground">No activity yet</div>
                 </div>
               </div>
             </div>
