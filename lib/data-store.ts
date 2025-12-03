@@ -213,6 +213,10 @@ export interface OnboardingData {
   selected_plan?: string;
   billing_period?: string;
   trial_ends_at?: string;
+  // Card info (masked - NEVER store full card numbers)
+  card_last_four?: string;
+  card_brand?: string;
+  card_expiry?: string;
 }
 
 /**
@@ -238,6 +242,10 @@ export async function updateUserOnboarding(email: string, data: OnboardingData):
   if (data.selected_plan !== undefined) updates.selected_plan = data.selected_plan;
   if (data.billing_period !== undefined) updates.billing_period = data.billing_period;
   if (data.trial_ends_at !== undefined) updates.trial_ends_at = data.trial_ends_at;
+  // Card info (masked only - NEVER store full card numbers)
+  if (data.card_last_four !== undefined) updates.card_last_four = data.card_last_four;
+  if (data.card_brand !== undefined) updates.card_brand = data.card_brand;
+  if (data.card_expiry !== undefined) updates.card_expiry = data.card_expiry;
 
   // Update ICP settings if provided
   if (data.icp_keywords !== undefined || data.exclude_keywords !== undefined) {

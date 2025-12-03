@@ -4,13 +4,14 @@ import { jwtVerify } from "jose";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StatsCards } from "@/components/dashboard/stats-cards";
-import { getOrCreateUser, getUserStats, getAnalyses, getRemainingCredits } from "@/lib/data-store";
+import { getOrCreateUser, getUserStats, getAnalyses, getUserBillingInfo } from "@/lib/data-store";
 import {
   ArrowRight,
   Search,
-  Sparkles,
+  BarChart3,
   TrendingUp,
-  Zap
+  Zap,
+  AlertTriangle
 } from "lucide-react";
 
 async function getAuthenticatedUser() {
@@ -40,7 +41,7 @@ export default async function DashboardPage() {
   const user = await getOrCreateUser(userEmail);
   const stats = await getUserStats(user.id);
   const recentAnalyses = await getAnalyses(user.id);
-  const credits = await getRemainingCredits(user.id);
+  const billing = await getUserBillingInfo(user.id);
 
   return (
     <div className="space-y-5">
@@ -171,34 +172,50 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Sidebar - Credits & Tips */}
+        {/* Sidebar - Usage & Tips */}
         <div className="space-y-4">
-          {/* Credits Card */}
-          <div className="rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="rounded-md bg-primary/20 p-1.5">
-                <Sparkles className="h-4 w-4 text-primary" />
+          {/* Usage Card */}
+          {billing && (
+            <div className="rounded-lg border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 p-4">
+              <div className="flex items-center gap-2.5 mb-3">
+                <div className="rounded-md bg-primary/20 p-1.5">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{billing.planName} Plan</p>
+                  <p className="text-lg font-bold">
+                    {billing.analysesUsed}/{billing.analysesLimit} analyses
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Available Credits</p>
-                <p className="text-xl font-bold">{credits}</p>
+              <div className="h-1.5 rounded-full bg-muted/50 overflow-hidden mb-2">
+                <div
+                  className={`h-full transition-all ${
+                    billing.analysesUsed >= billing.analysesLimit 
+                      ? 'bg-red-500' 
+                      : billing.analysesUsed >= billing.analysesLimit * 0.8 
+                        ? 'bg-amber-500' 
+                        : 'bg-primary'
+                  }`}
+                  style={{ width: `${Math.min((billing.analysesUsed / billing.analysesLimit) * 100, 100)}%` }}
+                />
               </div>
+              {billing.analysesUsed >= billing.analysesLimit && (
+                <div className="flex items-center gap-1.5 text-xs text-red-500 mb-2">
+                  <AlertTriangle className="h-3 w-3" />
+                  Limit reached - upgrade for more
+                </div>
+              )}
+              <p className="text-[10px] text-muted-foreground mb-3">
+                {billing.enrichmentsUsed}/{billing.enrichmentsLimit} enrichments used
+              </p>
+              <Link href="/dashboard/settings">
+                <Button variant="outline" size="sm" className="w-full h-7 text-xs">
+                  {billing.analysesUsed >= billing.analysesLimit ? 'Upgrade Plan' : 'Manage Plan'}
+                </Button>
+              </Link>
             </div>
-            <div className="h-1.5 rounded-full bg-muted/50 overflow-hidden mb-2">
-              <div
-                className="h-full bg-primary transition-all"
-                style={{ width: `${Math.min((credits / 50) * 100, 100)}%` }}
-              />
-            </div>
-            <p className="text-[10px] text-muted-foreground mb-3">
-              Each post analysis uses 1 credit
-            </p>
-            <Link href="/#pricing">
-              <Button variant="outline" size="sm" className="w-full h-7 text-xs">
-                Get More Credits
-              </Button>
-            </Link>
-          </div>
+          )}
 
           {/* Pro Tips */}
           <div className="rounded-lg border border-border/50 bg-card/30 p-4">

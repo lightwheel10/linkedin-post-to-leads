@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
-import { getOrCreateUser, getAnalyses, saveAnalysis, useCredit, getRemainingCredits } from '@/lib/data-store';
+import { getOrCreateUser, getAnalyses, saveAnalysis } from '@/lib/data-store';
 
 export async function GET() {
   try {
@@ -30,11 +30,8 @@ export async function POST(request: Request) {
 
     const user = await getOrCreateUser(userEmail);
     
-    // Check credits first
-    const remaining = await getRemainingCredits(user.id);
-    if (remaining <= 0) {
-      return NextResponse.json({ error: 'No credits remaining' }, { status: 402 });
-    }
+    // Note: Usage limits are checked and tracked in the analyze-post server action
+    // This endpoint only saves the analysis results to database
 
     const body = await request.json();
 
@@ -65,13 +62,7 @@ export async function POST(request: Request) {
 
     const analysis = await saveAnalysis(analysisData);
 
-    // Deduct credit
-    const creditResult = await useCredit(user.id, analysis.id);
-
-    return NextResponse.json({
-      analysis,
-      remainingCredits: creditResult.remaining
-    });
+    return NextResponse.json({ analysis });
   } catch (error) {
     console.error('Analysis save error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -26,7 +26,8 @@ import {
   Globe,
   Send,
   Download,
-  Coins
+  BarChart3,
+  AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { analyzePost, filterByICP } from "@/app/actions/analyze-post";
@@ -277,14 +278,26 @@ export default function AnalyzePage() {
   const [qualifiedLeads, setQualifiedLeads] = useState<Lead[]>([]);
   const [totalReactorsCount, setTotalReactorsCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [credits, setCredits] = useState<number | null>(null);
   const [savedAnalysisId, setSavedAnalysisId] = useState<string | null>(null);
+  
+  // Usage tracking (new billing system)
+  const [usage, setUsage] = useState<{
+    analysesUsed: number;
+    analysesLimit: number;
+  } | null>(null);
 
-  // Fetch current credits on mount
+  // Fetch current usage on mount
   useEffect(() => {
-    fetch('/api/credits')
+    fetch('/api/billing')
       .then(res => res.json())
-      .then(data => setCredits(data.remaining))
+      .then(data => {
+        if (data.billing) {
+          setUsage({
+            analysesUsed: data.billing.analysesUsed,
+            analysesLimit: data.billing.analysesLimit
+          });
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -292,16 +305,8 @@ export default function AnalyzePage() {
     if (!url) return;
 
     try {
-      // Check credits first
-      const creditCheck = await fetch('/api/credits');
-      const creditData = await creditCheck.json();
-      
-      if (creditData.remaining <= 0) {
-        setError("No credits remaining. Please upgrade your plan.");
-        setStatus('error');
-        return;
-      }
-
+      // Usage limit is checked by the server action (canAnalyze)
+      // We show a warning in UI but the real check happens server-side
       setStatus('processing');
       setProgressStep(1);
       setActiveTab(1);
@@ -311,8 +316,23 @@ export default function AnalyzePage() {
 
       const result = await analyzePost(url);
 
+      // Handle limit reached error
+      if (result.limitReached) {
+        setError(result.error || "You've reached your analysis limit for this month. Upgrade for more.");
+        setStatus('error');
+        return;
+      }
+
       if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to analyze post");
+      }
+      
+      // Update usage from result
+      if (result.usage) {
+        setUsage({
+          analysesUsed: result.usage.analysesUsed,
+          analysesLimit: result.usage.analysesLimit
+        });
       }
 
       const { post, reactors, totalReactors } = result.data;
@@ -380,7 +400,7 @@ export default function AnalyzePage() {
           `✅ ${qualifiedLeadsList.length} leads match your ICP criteria`
         ]);
 
-        // Save the analysis and deduct credit
+        // Save the analysis (usage is already tracked by server action)
         try {
           const saveRes = await fetch('/api/analyses', {
             method: 'POST',
@@ -412,9 +432,6 @@ export default function AnalyzePage() {
           const saveData = await saveRes.json();
           if (saveData.analysis?.id) {
             setSavedAnalysisId(saveData.analysis.id);
-          }
-          if (typeof saveData.remainingCredits === 'number') {
-            setCredits(saveData.remainingCredits);
           }
         } catch (e) {
           console.error('Failed to save analysis:', e);
@@ -480,11 +497,19 @@ export default function AnalyzePage() {
             Extract qualified leads from post engagement
           </p>
         </div>
-        {credits !== null && (
+        {usage !== null && (
           <div className="flex items-center gap-1.5 text-xs">
-            <Coins className="h-3.5 w-3.5 text-primary" />
-            <span className="font-medium">{credits}</span>
-            <span className="text-muted-foreground">credits</span>
+            <BarChart3 className="h-3.5 w-3.5 text-primary" />
+            <span className={cn(
+              "font-medium",
+              usage.analysesUsed >= usage.analysesLimit && "text-red-500"
+            )}>
+              {usage.analysesUsed}/{usage.analysesLimit}
+            </span>
+            <span className="text-muted-foreground">analyses</span>
+            {usage.analysesUsed >= usage.analysesLimit && (
+              <AlertTriangle className="h-3 w-3 text-red-500" />
+            )}
           </div>
         )}
       </div>
@@ -514,10 +539,10 @@ export default function AnalyzePage() {
                 size="sm"
                 className="w-full h-9 text-sm font-medium rounded-lg shadow-md shadow-primary/20 hover:shadow-primary/40 transition-all"
                 onClick={handleAnalyze}
-                disabled={!url || (credits !== null && credits <= 0)}
+                disabled={!url || (usage !== null && usage.analysesUsed >= usage.analysesLimit)}
               >
-                {credits !== null && credits <= 0 ? (
-                  "No Credits - Upgrade Plan"
+                {usage !== null && usage.analysesUsed >= usage.analysesLimit ? (
+                  "Limit Reached - Upgrade Plan"
                 ) : url ? (
                   <>
                     Analyze Post
@@ -528,7 +553,7 @@ export default function AnalyzePage() {
                 )}
               </Button>
               <p className="text-[10px] text-center text-muted-foreground">
-                Uses real LinkedIn data • 1 credit per analysis
+                Uses real LinkedIn data • Plan limits apply
               </p>
             </div>
           </div>
