@@ -16,6 +16,10 @@ import {
   AlertCircle,
   FileText,
   Bell,
+  CreditCard,
+  Coins,
+  Zap,
+  TrendingUp,
 } from "lucide-react";
 
 interface UserSettings {
@@ -32,10 +36,11 @@ interface UserData {
   settings: UserSettings;
 }
 
-type SettingsTab = "account" | "icp" | "export" | "notifications" | "danger";
+type SettingsTab = "account" | "billing" | "icp" | "export" | "notifications" | "danger";
 
 const TABS: { id: SettingsTab; label: string; icon: typeof User }[] = [
   { id: "account", label: "Account", icon: User },
+  { id: "billing", label: "Billing & Credits", icon: CreditCard },
   { id: "icp", label: "ICP Filters", icon: Target },
   { id: "export", label: "Export", icon: FileText },
   { id: "notifications", label: "Notifications", icon: Bell },
@@ -225,6 +230,115 @@ export default function SettingsPage() {
                     disabled
                     className="mt-1.5 bg-muted/30"
                   />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Billing Tab */}
+          {activeTab === "billing" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-semibold">Billing & Credits</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Manage your credits and subscription
+                </p>
+              </div>
+
+              {/* Credit Balance Card */}
+              <div className="p-6 rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-lg bg-primary/20">
+                      <Coins className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-muted-foreground">Available Credits</div>
+                      <div className="text-3xl font-bold">0</div>
+                    </div>
+                  </div>
+                  <Button>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Buy Credits
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Credits are used for post analysis, profile enrichment, and exports.
+                </div>
+              </div>
+
+              {/* Current Plan */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Current Plan</label>
+                <div className="p-4 rounded-lg border border-border/50 bg-card/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">Free Trial</div>
+                      <div className="text-sm text-muted-foreground">
+                        50 credits on signup
+                      </div>
+                    </div>
+                    <Button variant="outline">
+                      <TrendingUp className="w-4 h-4 mr-2" />
+                      Upgrade
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Credit Usage Breakdown */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Credit Costs</label>
+                <div className="rounded-lg border border-border/50 overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/30">
+                      <tr>
+                        <th className="text-left px-4 py-2.5 font-medium">Action</th>
+                        <th className="text-right px-4 py-2.5 font-medium">Credits</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/50">
+                      <tr>
+                        <td className="px-4 py-3">
+                          <div className="font-medium">Post Analysis</div>
+                          <div className="text-xs text-muted-foreground">Fetch post details & reactions</div>
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono">—</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3">
+                          <div className="font-medium">Profile Enrichment</div>
+                          <div className="text-xs text-muted-foreground">Full LinkedIn profile data</div>
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono">—</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3">
+                          <div className="font-medium">CSV Export</div>
+                          <div className="text-xs text-muted-foreground">Download leads as CSV</div>
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono">—</td>
+                      </tr>
+                      <tr>
+                        <td className="px-4 py-3">
+                          <div className="font-medium">Save to CRM</div>
+                          <div className="text-xs text-muted-foreground">Add lead to your CRM</div>
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono">—</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Credit costs will be updated soon. Check docs/BILLING.md for integration notes.
+                </p>
+              </div>
+
+              {/* Usage History */}
+              <div className="space-y-3">
+                <label className="text-sm font-medium">Recent Usage</label>
+                <div className="p-8 rounded-lg border border-dashed border-border/50 text-center">
+                  <div className="text-sm text-muted-foreground">No usage history yet</div>
                 </div>
               </div>
             </div>
