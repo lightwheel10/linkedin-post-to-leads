@@ -1,0 +1,370 @@
+"use client";
+
+import { useState } from "react";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+    Search,
+    Loader2,
+    CheckCircle2,
+    Users,
+    Filter,
+    Mail,
+    ArrowRight,
+    Linkedin,
+    AlertCircle
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { analyzePost } from "@/app/actions/analyze-post";
+
+// Mock Data for Simulation
+const MOCK_LEADS = [
+    {
+        id: 1,
+        name: "James Wilson",
+        role: "Head of Sales",
+        company: "Growth.io",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=James",
+        status: "Qualified",
+        email: "james.w@growth.io",
+        match: 94
+    },
+    {
+        id: 2,
+        name: "Sarah Chen",
+        role: "Founder",
+        company: "TechFlow",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
+        status: "Qualified",
+        email: "sarah@techflow.com",
+        match: 88
+    },
+    {
+        id: 3,
+        name: "Michael Ross",
+        role: "Marketing Director",
+        company: "ScaleUp",
+        image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael",
+        status: "Qualified",
+        email: "mike.ross@scaleup.co",
+        match: 82
+    }
+];
+
+const STEPS = [
+    { id: 1, label: "Scanning Post", icon: Search },
+    { id: 2, label: "Extracting Reactions", icon: Users },
+    { id: 3, label: "Qualifying Leads", icon: Filter },
+    { id: 4, label: "Enriching Profiles", icon: Mail },
+];
+
+interface PostData {
+    author: string;
+    content: string;
+    engagement?: {
+        likes?: number;
+        comments?: number;
+        shares?: number;
+    };
+}
+
+export default function DemoPage() {
+    const [url, setUrl] = useState("");
+    const [status, setStatus] = useState<'idle' | 'processing' | 'complete' | 'error'>('idle');
+    const [currentStep, setCurrentStep] = useState(0);
+    const [logs, setLogs] = useState<string[]>([]);
+    const [foundLeads, setFoundLeads] = useState<typeof MOCK_LEADS>([]);
+    const [postData, setPostData] = useState<PostData | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleAnalyze = async () => {
+        if (!url) return;
+
+        setStatus('processing');
+        setCurrentStep(1);
+        setError(null);
+        setLogs(["Initializing connection to LinkedIn...", "Verifying post URL..."]);
+
+        // Step 1: Fetch real post data
+        const result = await analyzePost(url);
+
+        if (!result.success) {
+            setStatus('error');
+            setError(result.error || "Failed to analyze post");
+            setLogs(prev => [...prev, `❌ Error: ${result.error}`]);
+            return;
+        }
+
+        const data = result.data!;
+        setPostData(data);
+
+        // Step 1 Complete
+        setTimeout(() => {
+            setCurrentStep(2);
+            const contentPreview = data.content.length > 50 ? data.content.substring(0, 50) + "..." : data.content;
+            setLogs(prev => [
+                ...prev,
+                `✓ Post found: "${contentPreview}"`,
+                `✓ Author: ${data.author}`,
+                "Scanning reactions and comments...",
+                `Found ${data.engagement?.likes || 0} reactions, ${data.engagement?.comments || 0} comments...`
+            ]);
+        }, 1500);
+
+        // Step 2: Simulate filtering
+        setTimeout(() => {
+            setCurrentStep(3);
+            const totalEngagements = (data.engagement?.likes || 0) + (data.engagement?.comments || 0);
+            const qualifiedCount = Math.min(3, Math.floor(totalEngagements * 0.15)); // 15% qualify
+            setLogs(prev => [
+                ...prev,
+                "Filtering for ICP...",
+                "Removing recruiters and students...",
+                "Identifying decision makers...",
+                `${qualifiedCount} profiles match your ICP criteria`
+            ]);
+        }, 3500);
+
+        // Step 3: Simulate enrichment
+        setTimeout(() => {
+            setCurrentStep(4);
+            setLogs(prev => [...prev, "Enriching profiles with contact data...", "Verifying email addresses...", "Syncing with database..."]);
+        }, 6000);
+
+        // Step 4: Complete
+        setTimeout(() => {
+            setStatus('complete');
+            setFoundLeads(MOCK_LEADS);
+            setLogs(prev => [...prev, "✓ Analysis complete!", `${MOCK_LEADS.length} Qualified Leads found.`]);
+        }, 8500);
+    };
+
+    return (
+        <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20 selection:text-primary flex flex-col">
+            <Navbar />
+
+            <main className="flex-1 container mx-auto px-4 py-32 md:py-40 max-w-5xl">
+
+                {/* Header */}
+                <div className="text-center mb-16 space-y-4">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary mb-2">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                        </span>
+                        Live Demo
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                        See <span className="text-gradient">LinkMind</span> in Action
+                    </h1>
+                    <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+                        Enter a LinkedIn post URL below to see how we extract, qualify, and enrich leads in real-time.
+                    </p>
+                </div>
+
+                {/* Interactive Demo Container */}
+                <div className="relative bg-card/30 border border-white/10 rounded-2xl p-6 md:p-10 backdrop-blur-sm shadow-2xl overflow-hidden min-h-[400px]">
+
+                    {/* Background Grid */}
+                    <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+
+                    {/* State: IDLE */}
+                    {status === 'idle' && (
+                        <div className="flex flex-col items-center justify-center h-full py-12 animate-in fade-in zoom-in duration-500">
+                            <div className="w-full max-w-xl space-y-4">
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                                        <Linkedin className="h-5 w-5 text-muted-foreground group-focus-within:text-[#0077b5] transition-colors" />
+                                    </div>
+                                    <Input
+                                        type="text"
+                                        placeholder="Paste LinkedIn Post URL (e.g., linkedin.com/posts/...)"
+                                        className="pl-10 h-14 text-base bg-background/50 border-white/10 focus:border-primary/50 transition-all rounded-xl shadow-inner"
+                                        value={url}
+                                        onChange={(e) => setUrl(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
+                                    />
+                                </div>
+                                <Button
+                                    size="lg"
+                                    className="w-full h-12 text-base font-medium rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all"
+                                    onClick={handleAnalyze}
+                                    disabled={!url}
+                                >
+                                    {url ? "Analyze Post" : "Paste URL to Start"}
+                                    <ArrowRight className="ml-2 w-4 h-4" />
+                                </Button>
+                                <p className="text-xs text-center text-muted-foreground mt-4">
+                                    Try it with any public post URL. Demo uses real post metadata.
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* State: PROCESSING */}
+                    {status === 'processing' && (
+                        <div className="flex flex-col h-full py-8 animate-in fade-in duration-500">
+                            {/* Progress Steps */}
+                            <div className="grid grid-cols-4 gap-4 mb-12 relative">
+                                <div className="absolute top-5 left-0 w-full h-0.5 bg-white/5 -z-10">
+                                    <div
+                                        className="h-full bg-primary transition-all duration-1000 ease-linear"
+                                        style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+                                    />
+                                </div>
+
+                                {STEPS.map((step) => {
+                                    const isActive = currentStep === step.id;
+                                    const isCompleted = currentStep > step.id;
+                                    const Icon = step.icon;
+
+                                    return (
+                                        <div key={step.id} className="flex flex-col items-center gap-3">
+                                            <div className={cn(
+                                                "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500 bg-background",
+                                                isActive ? "border-primary text-primary scale-110 shadow-[0_0_15px_rgba(16,185,129,0.4)]" :
+                                                    isCompleted ? "border-primary bg-primary text-primary-foreground" :
+                                                        "border-white/10 text-muted-foreground"
+                                            )}>
+                                                {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Icon className="w-5 h-5" />}
+                                            </div>
+                                            <span className={cn(
+                                                "text-xs font-medium transition-colors duration-300",
+                                                isActive ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground"
+                                            )}>
+                                                {step.label}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Logs Terminal */}
+                            <div className="flex-1 bg-black/40 rounded-xl border border-white/10 p-6 font-mono text-sm overflow-hidden relative">
+                                <div className="absolute top-0 left-0 w-full h-8 bg-white/5 border-b border-white/5 flex items-center px-4 gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
+                                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
+                                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/50" />
+                                    <span className="ml-2 text-xs text-muted-foreground">system-log</span>
+                                </div>
+                                <div className="mt-6 space-y-2">
+                                    {logs.map((log, i) => (
+                                        <div key={i} className="flex items-center gap-2 text-muted-foreground animate-in fade-in slide-in-from-left-2">
+                                            <span className="text-primary">➜</span>
+                                            <span>{log}</span>
+                                        </div>
+                                    ))}
+                                    <div className="flex items-center gap-2 text-primary animate-pulse">
+                                        <span>_</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* State: COMPLETE */}
+                    {status === 'complete' && (
+                        <div className="flex flex-col h-full animate-in fade-in zoom-in duration-500">
+                            <div className="text-center mb-8">
+                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10 text-green-500 mb-4">
+                                    <CheckCircle2 className="w-6 h-6" />
+                                </div>
+                                <h2 className="text-2xl font-bold">Analysis Complete</h2>
+                                <p className="text-muted-foreground">Found {foundLeads.length} qualified leads from your post.</p>
+                                {postData && (
+                                    <div className="mt-4 p-4 rounded-lg bg-muted/20 border border-white/10 max-w-md mx-auto">
+                                        <p className="text-sm text-muted-foreground mb-1">Post by <span className="font-semibold text-foreground">{postData.author}</span></p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {postData.engagement?.likes || 0} reactions • {postData.engagement?.comments || 0} comments
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid gap-4">
+                                {foundLeads.map((lead, index) => (
+                                    <div
+                                        key={lead.id}
+                                        className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:border-primary/30 transition-all animate-in fade-in slide-in-from-bottom-4"
+                                        style={{ animationDelay: `${index * 150}ms` }}
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-full bg-muted overflow-hidden">
+                                                <img src={lead.image} alt={lead.name} className="w-full h-full object-cover" />
+                                            </div>
+                                            <div>
+                                                <h3 className="font-semibold text-foreground">{lead.name}</h3>
+                                                <p className="text-xs text-muted-foreground">{lead.role} at {lead.company}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-6">
+                                            <div className="hidden md:block text-right">
+                                                <div className="text-xs text-muted-foreground">Match Score</div>
+                                                <div className="text-sm font-bold text-emerald-500">{lead.match}%</div>
+                                            </div>
+                                            <Button size="sm" className="bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20">
+                                                <Mail className="w-4 h-4 mr-2" />
+                                                Reveal Email
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-8 flex justify-center">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        setStatus('idle');
+                                        setUrl('');
+                                        setLogs([]);
+                                        setCurrentStep(0);
+                                        setPostData(null);
+                                        setError(null);
+                                        setFoundLeads([]);
+                                    }}
+                                >
+                                    Analyze Another Post
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* State: ERROR */}
+                    {status === 'error' && (
+                        <div className="flex flex-col items-center justify-center h-full py-12 animate-in fade-in zoom-in duration-500">
+                            <div className="max-w-md text-center space-y-4">
+                                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 text-red-500 mb-4">
+                                    <AlertCircle className="w-6 h-6" />
+                                </div>
+                                <h2 className="text-2xl font-bold">Analysis Failed</h2>
+                                <p className="text-muted-foreground">{error || "Something went wrong"}</p>
+                                <div className="pt-4">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            setStatus('idle');
+                                            setUrl('');
+                                            setLogs([]);
+                                            setCurrentStep(0);
+                                            setPostData(null);
+                                            setError(null);
+                                        }}
+                                    >
+                                        Try Again
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+            </main>
+
+            <Footer />
+        </div>
+    );
+}
