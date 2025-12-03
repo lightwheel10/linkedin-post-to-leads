@@ -107,11 +107,25 @@ All scrapers run via [Apify](https://apify.com). Requires `APIFY_API_TOKEN` in e
 ### LinkedIn Comments Scraper
 **Use Case:** Extract people who commented on a post (higher intent than reactions)
 
-**Why:** Commenters show stronger engagement than reactors. They took time to write something.
+| Property | Value |
+|----------|-------|
+| **Cost** | **$5 per 1000 results** ($0.005 per comment) |
+| **Apify Options** | `epctex/linkedin-comment-scraper`, `curious_coder/linkedin-comments-scraper` |
 
-**Apify Options:**
-- `epctex/linkedin-comment-scraper`
-- `curious_coder/linkedin-comments-scraper`
+**Why Comments > Reactions:**
+- Commenters show stronger engagement (took time to write)
+- Posts have 10-50x fewer comments than reactions
+- Same cost per result, but far fewer results to scrape
+- Higher ICP match rate (decision-makers comment, not just like)
+
+**Cost Comparison Example:**
+| Post | Reactions | Comments | Reaction Cost | Comment Cost |
+|------|-----------|----------|---------------|--------------|
+| Viral | 10,000 | 300 | $50.00 | $1.50 |
+| Medium | 2,000 | 100 | $10.00 | $0.50 |
+| Small | 500 | 30 | $2.50 | $0.15 |
+
+💡 **Recommendation:** Prioritize comment scraping over reactions for cost efficiency.
 
 ---
 

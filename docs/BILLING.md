@@ -10,13 +10,16 @@ LinkMind uses a credit-based system. Users purchase or earn credits, which are c
 
 ## Apify Costs (Our Cost)
 
-| Scraper | Apify Cost |
-|---------|------------|
-| Post Scraper | $0.005 per post |
-| Reactions Scraper | $0.005 per reaction |
-| Profile Scraper | $0.005 per profile |
+| Scraper | Apify Cost | Typical Volume |
+|---------|------------|----------------|
+| Post Scraper | $0.005 per post | 1 per analysis |
+| Reactions Scraper | $0.005 per reaction | 100 - 10,000+ |
+| **Comments Scraper** | $0.005 per comment | 30 - 500 |
+| Profile Scraper | $0.005 per profile | 1 per enrichment |
 
 **The Problem:** Reactions are charged per-reaction. A viral post with 10k reactions = $50 to scrape.
+
+**The Solution:** Comments are 10-50x fewer than reactions but higher quality leads. Prioritize comments.
 
 ---
 
@@ -24,12 +27,16 @@ LinkMind uses a credit-based system. Users purchase or earn credits, which are c
 
 | Action | Credits | Our Cost | Notes |
 |--------|---------|----------|-------|
-| **Post Analysis** | TBD | $0.005 + (N × $0.005) | N = number of reactions scraped |
+| **Post Analysis (Reactions)** | TBD | $0.005 + (N × $0.005) | N = reactions scraped |
+| **Post Analysis (Comments)** | TBD | $0.005 + (N × $0.005) | N = comments scraped (cheaper!) |
 | **Profile Enrichment** | TBD | $0.005 | Per profile |
 | **Save to CRM** | TBD | $0 | Free for us |
 | **CSV Export** | TBD | $0 | Free for us |
 
-> ⚠️ **Critical Decision Needed:** How to handle posts with high reaction counts?
+> ⚠️ **Critical Decision Needed:** 
+> 1. How to handle posts with high reaction counts?
+> 2. Should we offer Comments-only analysis as cheaper option?
+> 3. Should we default to Comments and make Reactions a premium feature?
 
 ---
 
