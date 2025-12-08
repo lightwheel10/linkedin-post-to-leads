@@ -95,11 +95,11 @@ export function HowItWorks() {
                         <span>Simple 3-Step Process</span>
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight leading-tight">
-                        Turn engagement into <br className="hidden md:block" />
-                        <span className="text-gradient">revenue on autopilot</span>
+                        From buying signal to <br className="hidden md:block" />
+                        <span className="text-gradient">qualified lead in minutes</span>
                     </h2>
                     <p className="text-muted-foreground text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
-                        Stop manually copy-pasting. Our system handles the heavy lifting while you focus on closing deals.
+                        Every day, thousands publicly signal what they need. They comment, like, and engage with content about problems they're facing. We help you find them.
                     </p>
                 </div>
 
@@ -155,7 +155,7 @@ export function HowItWorks() {
                                                 />
                                             </div>
                                             <div className="mt-3 text-[10px] text-muted-foreground/80 font-mono tracking-tight">
-                                                {step1Progress < 100 ? "Syncing cookies..." : "Session active"}
+                                                {step1Progress < 100 ? "Connecting..." : "Connected"}
                                             </div>
                                         </div>
                                     </div>
@@ -163,9 +163,9 @@ export function HowItWorks() {
                             </div>
 
                             <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/90 to-transparent pt-12">
-                                <h3 className="text-lg font-semibold mb-2 text-foreground">One-Click Sync</h3>
+                                <h3 className="text-lg font-semibold mb-2 text-foreground">Describe Your Buyer</h3>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Connect your LinkedIn account securely. We handle the cookies and sessions automatically.
+                                    Tell us who you're looking for in plain English. "Startup founders looking for marketing help" or paste a post URL directly.
                                 </p>
                             </div>
                         </div>
@@ -248,9 +248,9 @@ export function HowItWorks() {
                             </div>
 
                             <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/90 to-transparent pt-12">
-                                <h3 className="text-lg font-semibold mb-2 text-foreground">Smart Filtering</h3>
+                                <h3 className="text-lg font-semibold mb-2 text-foreground">AI Scores & Qualifies</h3>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Define your ICP. We automatically filter out noise and only capture high-intent leads.
+                                    AI analyzes every person who engaged and scores them based on how well they match your ideal buyer profile.
                                 </p>
                             </div>
                         </div>
@@ -314,9 +314,9 @@ export function HowItWorks() {
                             </div>
 
                             <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black via-black/90 to-transparent pt-12">
-                                <h3 className="text-lg font-semibold mb-2 text-foreground">Auto-Enrichment</h3>
+                                <h3 className="text-lg font-semibold mb-2 text-foreground">Enrich & Reach Out</h3>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Get verified emails, company data, and social profiles instantly. Ready for your CRM.
+                                    Get verified emails for the leads you like. Reach out while intent is fresh, before they forget what they were searching for.
                                 </p>
                             </div>
                         </div>

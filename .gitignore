@@ -44,3 +44,5 @@ next-env.d.ts
 
 # Local data storage
 .data/
+Guffles_Pricing_Financial_Document.pdf
+SUPABASE_AUTH_MIGRATION.md

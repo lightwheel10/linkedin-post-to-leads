@@ -8,12 +8,12 @@ export function Footer() {
                     <div className="col-span-1 md:col-span-2">
                         <div className="flex items-center gap-2 mb-6">
                             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center text-white font-bold">
-                                L
+                                G
                             </div>
-                            <span className="text-xl font-bold">LinkMind</span>
+                            <span className="text-xl font-bold">Guffles</span>
                         </div>
                         <p className="text-muted-foreground text-sm max-w-sm leading-relaxed">
-                            The ultimate tool for LinkedIn lead generation and automation. Built for modern sales teams who want to scale their outreach without losing the personal touch.
+                            Intent-based lead discovery platform. Find people actively engaging with content related to what you sell. Turn social signals into sales.
                         </p>
                     </div>
 
@@ -22,6 +22,7 @@ export function Footer() {
                         <ul className="space-y-4 text-sm text-muted-foreground">
                             <li><Link href="/#features" className="hover:text-primary transition-colors">Features</Link></li>
                             <li><Link href="/#pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
+                            <li><Link href="/calculator" className="hover:text-primary transition-colors">Cost Calculator</Link></li>
                             <li><Link href="/demo" className="hover:text-primary transition-colors">Demo</Link></li>
                         </ul>
                     </div>
@@ -37,7 +38,7 @@ export function Footer() {
                 </div>
 
                 <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-                    <p>&copy; {new Date().getFullYear()} LinkMind Inc. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} Guffles Inc. All rights reserved.</p>
                     <div className="flex gap-8">
                         <Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
                         <Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link>

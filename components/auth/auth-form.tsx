@@ -232,9 +232,9 @@ export function AuthForm({ mode = 'login' }: AuthFormProps) {
           </p>
           <p className="text-sm text-muted-foreground">
             {isSignup ? (
-              <>Already have an account? <Link href="/login" className="text-primary hover:underline">Sign in</Link></>
+              <>Already have an account? <Link href="/waitlist" className="text-primary hover:underline">Sign in</Link></>
             ) : (
-              <>Don't have an account? <Link href="/signup" className="text-primary hover:underline">Start free trial</Link></>
+              <>Don't have an account? <Link href="/waitlist" className="text-primary hover:underline">Start free trial</Link></>
             )}
           </p>
         </CardFooter>

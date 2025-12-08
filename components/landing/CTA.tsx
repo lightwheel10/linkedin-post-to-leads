@@ -20,17 +20,17 @@ export function CTA() {
 
                 <div className="relative z-10 max-w-3xl mx-auto">
                     <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight">
-                        Ready to supercharge your <br />
-                        <span className="text-gradient">LinkedIn growth?</span>
+                        Stop cold outreach. <br />
+                        <span className="text-gradient">Start warm conversations.</span>
                     </h2>
 
                     <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
-                        Join thousands of professionals converting their audience into revenue today. Start your 14-day free trial.
+                        Find people actively searching for solutions like yours. Reach out while intent is fresh and watch your response rates climb from 1% to 10%+.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <Button asChild size="lg" className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 w-full sm:w-auto transition-all hover:scale-105">
-                            <Link href="/signup">Get Started for Free</Link>
+                            <Link href="/waitlist">Get Started for Free</Link>
                         </Button>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card/80 px-4 py-2 rounded-full border border-primary/20 shiny-border">
                             <CheckCircle2 className="h-4 w-4 text-green-500" />

@@ -444,10 +444,10 @@ export default function DemoPage() {
                         Live Demo - Real LinkedIn Data
                     </div>
                     <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-                        See <span className="text-gradient">LinkMind</span> in Action
+                        See <span className="text-gradient">Guffles</span> in Action
                     </h1>
                     <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                        Enter a LinkedIn post URL to extract real engagement data and find qualified leads.
+                        Paste any LinkedIn post URL. We'll extract everyone who engaged and show you the buying signals hiding in plain sight.
                     </p>
                 </div>
 
@@ -483,7 +483,7 @@ export default function DemoPage() {
                                     <ArrowRight className="ml-2 w-4 h-4" />
                                 </Button>
                                 <p className="text-xs text-center text-muted-foreground mt-4">
-                                    Uses real LinkedIn data via Apify. Powered by AI-driven ICP matching.
+                                    Direct Post Analysis mode. Extract everyone who liked or commented on any post.
                                 </p>
                             </div>
                         </div>
@@ -608,8 +608,8 @@ export default function DemoPage() {
                                 {activeTab === 3 && (
                                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 h-full flex flex-col">
                                         <div className="text-center mb-6">
-                                            <h2 className="text-2xl font-bold mb-2">ICP Filtering</h2>
-                                            <p className="text-muted-foreground">Matching profiles against your Ideal Customer Profile...</p>
+                                            <h2 className="text-2xl font-bold mb-2">AI Scoring & Qualifying</h2>
+                                            <p className="text-muted-foreground">AI analyzes each profile and scores them against your ideal buyer...</p>
                                         </div>
 
                                         <div className="flex items-center justify-center gap-8 mb-8">
@@ -661,9 +661,9 @@ export default function DemoPage() {
                                             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/10 text-emerald-500 mb-4 ring-1 ring-emerald-500/20 shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)]">
                                                 <BadgeCheck className="w-6 h-6" />
                                             </div>
-                                            <h2 className="text-3xl font-bold tracking-tight mb-2">Qualified Leads Found</h2>
+                                            <h2 className="text-3xl font-bold tracking-tight mb-2">Qualified Leads Ready for Outreach</h2>
                                             <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-                                                We identified <span className="text-foreground font-bold">{qualifiedLeads.length}</span> high-intent decision makers matching your ICP.
+                                                Found <span className="text-foreground font-bold">{qualifiedLeads.length}</span> people showing buying intent. Reach out while it's fresh.
                                             </p>
                                         </div>
 

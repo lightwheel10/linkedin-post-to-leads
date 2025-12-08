@@ -5,41 +5,11 @@ import { getAuthenticatedUser } from '@/lib/auth';
 import { getOrCreateUser } from '@/lib/data-store';
 import { canAnalyze, incrementAnalysisUsage, getScrapingCaps, UsageInfo } from '@/lib/usage';
 
-// Apify Response Types
-interface ApifyPostResponse {
-    post?: {
-        id?: string;
-        text?: string;
-        images?: (string | { url: string })[];
-        img?: string;
-    };
-    author?: {
-        name?: string;
-        headline?: string;
-        profile_picture?: string;
-    };
-    stats?: {
-        total_reactions?: number;
-        comments?: number;
-        shares?: number;
-    };
-}
+// ============================================================================
+// TYPES
+// ============================================================================
 
-interface ApifyReactorResponse {
-    reactor?: {
-        name?: string;
-        headline?: string;
-        profile_url?: string;
-        profile_pictures?: {
-            small?: string;
-            medium?: string;
-            large?: string;
-        };
-    };
-    reaction_type?: string;
-}
-
-interface PostData {
+export interface PostData {
     author: string;
     authorHeadline?: string;
     content: string;
@@ -49,14 +19,44 @@ interface PostData {
     image?: string;
     postImage?: string;
     postUrl: string;
+    activityId?: string;
 }
 
-interface Reactor {
+export interface Reactor {
     name: string;
     headline: string;
     profileUrl: string;
     profilePicture?: string;
     reactionType: string;
+}
+
+interface PostFetchResult {
+    success: boolean;
+    post?: PostData;
+    error?: string;
+    usage?: UsageInfo;
+    limitReached?: boolean;
+}
+
+interface ReactionsFetchResult {
+    success: boolean;
+    reactors?: Reactor[];
+    error?: string;
+}
+
+// Commenter uses same structure as Reactor for consistency
+export interface Commenter {
+    name: string;
+    headline: string;
+    profileUrl: string;
+    profilePicture?: string;
+    commentText: string;
+}
+
+interface CommentsFetchResult {
+    success: boolean;
+    commenters?: Commenter[];
+    error?: string;
 }
 
 interface AnalysisResult {
@@ -76,12 +76,16 @@ const apifyClient = new ApifyClient({
     token: process.env.APIFY_API_TOKEN,
 });
 
-export async function analyzePost(url: string): Promise<AnalysisResult> {
+// ============================================================================
+// STEP 1: Fetch Post Details Only
+// ============================================================================
+
+export async function fetchPostDetails(url: string): Promise<PostFetchResult> {
     try {
-        console.log("=== STARTING REAL LINKEDIN ANALYSIS ===");
+        console.log("=== STEP 1: FETCHING POST DETAILS ===");
         console.log("Input URL:", url);
 
-        // Step 0: Check authentication and usage limits
+        // Check authentication and usage limits
         const userEmail = await getAuthenticatedUser();
         
         if (!userEmail) {
@@ -105,12 +109,8 @@ export async function analyzePost(url: string): Promise<AnalysisResult> {
             };
         }
 
-        // Get plan-specific scraping caps
-        const caps = await getScrapingCaps(user.id);
-        console.log(`📊 Plan caps: ${caps.reactionCap} reactions, ${caps.commentCap} comments`);
-
-        // Step 1: Fetch post details using Apify Post Scraper
-        console.log("\n1️⃣ Fetching post details...");
+        // Fetch post details using Apify Post Scraper
+        console.log("🔍 Fetching post details...");
         const postRun = await apifyClient.actor("d0DhjXPjkkwm4W5xK").call({
             post_urls: [url]
         });
@@ -123,12 +123,6 @@ export async function analyzePost(url: string): Promise<AnalysisResult> {
 
         const postData = postItems[0] as any;
         console.log("✅ Post fetched:", postData.author?.name);
-        console.log("🔍 Raw Post Data Keys:", Object.keys(postData));
-        if (postData.post) console.log("🔍 Raw Post Object Keys:", Object.keys(postData.post));
-        if (postData.post?.images) console.log("🔍 Raw Post Images:", JSON.stringify(postData.post.images, null, 2));
-        
-        // Step 2: Fetch reactions using Apify Reactions Scraper
-        console.log("\n2️⃣ Fetching post reactions...");
 
         // Extract activity ID from URL or use the post ID
         let activityId = "";
@@ -139,28 +133,15 @@ export async function analyzePost(url: string): Promise<AnalysisResult> {
             activityId = postData.post.id;
         }
 
-        const reactionsRun = await apifyClient.actor("J9UfswnR3Kae4O6vm").call({
-            post_urls: [activityId],
-            page_number: 1,
-            reaction_type: "ALL",
-            limit: caps.reactionCap // Respect plan's reaction cap
-        });
-
-        const { items: reactionItems } = await apifyClient.dataset(reactionsRun.defaultDatasetId).listItems();
-        console.log(`✅ Fetched ${reactionItems.length} reactions`);
-
-        // Helper to safely extract image
+        // Extract image
         let fetchedImage: string | undefined;
         
-        // Case 1: 'media' array at root (COMMON CASE)
         if (postData.media && Array.isArray(postData.media) && postData.media.length > 0) {
              const firstMedia = postData.media[0];
              if (typeof firstMedia === 'object' && firstMedia && 'url' in firstMedia) {
                  fetchedImage = firstMedia.url;
              }
         }
-
-        // Case 2: 'images' array in post object (Legacy/Alternative)
         if (!fetchedImage && postData.post?.images && Array.isArray(postData.post.images) && postData.post.images.length > 0) {
             const firstImage = postData.post.images[0];
             if (typeof firstImage === 'string') {
@@ -169,20 +150,13 @@ export async function analyzePost(url: string): Promise<AnalysisResult> {
                 fetchedImage = firstImage.url;
             }
         }
-        
-        // Case 3: 'img' property in post
         if (!fetchedImage && postData.post?.img) {
             fetchedImage = postData.post.img;
         }
-
-        // Case 4: Check root level 'image' or 'images' if structure is different
         if (!fetchedImage && postData.image) {
             fetchedImage = postData.image;
         }
-        
-        console.log("🖼️ Extracted Image URL:", fetchedImage);
 
-        // Step 3: Transform data
         const post: PostData = {
             author: postData.author?.name || "Unknown Author",
             authorHeadline: postData.author?.headline,
@@ -192,55 +166,182 @@ export async function analyzePost(url: string): Promise<AnalysisResult> {
             totalShares: postData.stats?.shares || 0,
             image: postData.author?.profile_picture,
             postImage: fetchedImage,
-            postUrl: url
-        };
-
-        const reactors: Reactor[] = reactionItems.map((item) => {
-            const reactor = item as ApifyReactorResponse;
-            return {
-                name: reactor.reactor?.name || "Unknown",
-                headline: reactor.reactor?.headline || "",
-                profileUrl: reactor.reactor?.profile_url || "",
-                profilePicture: reactor.reactor?.profile_pictures?.medium || reactor.reactor?.profile_pictures?.small || "",
-                reactionType: reactor.reaction_type || "LIKE"
-            };
-        });
-
-        console.log("\n=== ANALYSIS COMPLETE ===");
-        console.log("Post:", post.author);
-        console.log("Total Reactions:", post.totalReactions);
-        console.log("Fetched Reactors:", reactors.length);
-
-        // Increment usage after successful analysis
-        await incrementAnalysisUsage(user.id, {
             postUrl: url,
-            reactionsScraped: reactors.length,
-            commentsScraped: 0, // TODO: Add comment scraping
-            leadsFound: reactors.length
-        });
-
-        // Get updated usage info
-        const updatedUsage = await canAnalyze(user.id);
-
-        return {
-            success: true,
-            data: {
-                post,
-                reactors,
-                totalReactors: post.totalReactions
-            },
-            usage: updatedUsage.usage
+            activityId: activityId
         };
+
+        console.log("✅ Post details complete");
+        return { success: true, post };
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-        console.error("=== ERROR ===", errorMessage);
+        console.error("❌ Post fetch error:", errorMessage);
+        return { success: false, error: errorMessage };
+    }
+}
 
+// ============================================================================
+// STEP 2: Fetch Reactions (using LinkedIn Post Reactions Scraper)
+// ============================================================================
+
+export async function fetchReactions(postUrl: string): Promise<ReactionsFetchResult> {
+    try {
+        console.log("=== STEP 2: FETCHING REACTIONS ===");
+        console.log("Post URL:", postUrl);
+
+        const userEmail = await getAuthenticatedUser();
+        if (!userEmail) {
+            return { success: false, error: "Please log in" };
+        }
+
+        const user = await getOrCreateUser(userEmail);
+        const caps = await getScrapingCaps(user.id);
+        console.log(`📊 Reaction cap: ${caps.reactionCap}`);
+
+        // Using the new LinkedIn Post Reactions Scraper (S6mgSO5lezSZKi0zN)
+        const reactionsRun = await apifyClient.actor("S6mgSO5lezSZKi0zN").call({
+            posts: [postUrl],
+            maxItems: caps.reactionCap,
+            profileScraperMode: "short"
+        });
+
+        const { items: reactionItems } = await apifyClient.dataset(reactionsRun.defaultDatasetId).listItems();
+        console.log(`✅ Fetched ${reactionItems.length} reactions`);
+
+        // Map the new scraper's output format to our Reactor interface
+        // New scraper returns: { actor: { name, position, linkedinUrl, pictureUrl }, reactionType }
+        const reactors: Reactor[] = reactionItems.map((item: any) => ({
+            name: item.actor?.name || "Unknown",
+            headline: item.actor?.position || "",
+            profileUrl: item.actor?.linkedinUrl || "",
+            profilePicture: item.actor?.pictureUrl || item.actor?.picture?.url || "",
+            reactionType: item.reactionType || "LIKE"
+        }));
+
+        return { success: true, reactors };
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("❌ Reactions fetch error:", errorMessage);
+        return { success: false, error: errorMessage };
+    }
+}
+
+// ============================================================================
+// STEP 2B: Fetch Comments (using LinkedIn Post Comments Scraper)
+// ============================================================================
+
+export async function fetchComments(postUrl: string): Promise<CommentsFetchResult> {
+    try {
+        console.log("=== STEP 2B: FETCHING COMMENTS ===");
+        console.log("Post URL:", postUrl);
+
+        const userEmail = await getAuthenticatedUser();
+        if (!userEmail) {
+            return { success: false, error: "Please log in" };
+        }
+
+        const user = await getOrCreateUser(userEmail);
+        const caps = await getScrapingCaps(user.id);
+        console.log(`📊 Comment cap: ${caps.commentCap}`);
+
+        // Using LinkedIn Post Comments Scraper (ZI6ykbLlGS3APaPE8)
+        const commentsRun = await apifyClient.actor("ZI6ykbLlGS3APaPE8").call({
+            posts: [postUrl],
+            maxItems: caps.commentCap,
+            profileScraperMode: "short"
+        });
+
+        const { items: commentItems } = await apifyClient.dataset(commentsRun.defaultDatasetId).listItems();
+        console.log(`✅ Fetched ${commentItems.length} comments`);
+
+        // Map the scraper's output format to our Commenter interface
+        // Comment scraper returns: { actor: { name, position, linkedinUrl, pictureUrl }, commentary }
+        const commenters: Commenter[] = commentItems.map((item: any) => ({
+            name: item.actor?.name || "Unknown",
+            headline: item.actor?.position || "",
+            profileUrl: item.actor?.linkedinUrl || "",
+            profilePicture: item.actor?.pictureUrl || item.actor?.picture?.url || "",
+            commentText: item.commentary || ""
+        }));
+
+        return { success: true, commenters };
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("❌ Comments fetch error:", errorMessage);
+        return { success: false, error: errorMessage };
+    }
+}
+
+// ============================================================================
+// STEP 3: Track Usage (call after successful analysis)
+// ============================================================================
+
+export async function trackAnalysisUsage(
+    postUrl: string, 
+    reactorsCount: number, 
+    commentersCount: number = 0
+): Promise<UsageInfo | null> {
+    try {
+        const userEmail = await getAuthenticatedUser();
+        if (!userEmail) return null;
+
+        const user = await getOrCreateUser(userEmail);
+        
+        await incrementAnalysisUsage(user.id, {
+            postUrl,
+            reactionsScraped: reactorsCount,
+            commentsScraped: commentersCount,
+            leadsFound: reactorsCount + commentersCount
+        });
+
+        const updatedUsage = await canAnalyze(user.id);
+        return updatedUsage.usage || null;
+
+    } catch (error) {
+        console.error("Failed to track usage:", error);
+        return null;
+    }
+}
+
+// ============================================================================
+// LEGACY: Combined function (kept for backwards compatibility)
+// ============================================================================
+
+export async function analyzePost(url: string): Promise<AnalysisResult> {
+    // Step 1: Fetch post
+    const postResult = await fetchPostDetails(url);
+    if (!postResult.success || !postResult.post) {
         return {
             success: false,
-            error: errorMessage
+            error: postResult.error,
+            usage: postResult.usage,
+            limitReached: postResult.limitReached
         };
     }
+
+    // Step 2: Fetch reactions (now uses full post URL instead of activity ID)
+    const reactionsResult = await fetchReactions(postResult.post.postUrl);
+    if (!reactionsResult.success || !reactionsResult.reactors) {
+        return {
+            success: false,
+            error: reactionsResult.error
+        };
+    }
+
+    // Step 3: Track usage
+    const usage = await trackAnalysisUsage(url, reactionsResult.reactors.length);
+
+    return {
+        success: true,
+        data: {
+            post: postResult.post,
+            reactors: reactionsResult.reactors,
+            totalReactors: postResult.post.totalReactions
+        },
+        usage: usage || undefined
+    };
 }
 
 // Helper function to filter reactors based on ICP criteria

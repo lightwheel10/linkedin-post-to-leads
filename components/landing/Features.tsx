@@ -134,19 +134,19 @@ export function Features() {
                 <div className="text-center max-w-2xl mx-auto mb-12">
                     <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-medium text-primary/80 mb-4">
                         <Sparkles className="w-3 h-3" />
-                        <span>Powerful Features</span>
+                        <span>Three Ways to Find Leads</span>
                     </div>
                     <h2 className="text-2xl md:text-4xl font-bold mb-4 tracking-tight text-foreground">
-                        Everything you need to <span className="text-gradient">scale</span>
+                        Find intent signals <span className="text-gradient">your way</span>
                     </h2>
                     <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-                        Automate your LinkedIn lead generation with a suite of tools designed for growth.
+                        AI Search, Direct Post Analysis, or Profile Monitoring. Use whichever method fits your workflow.
                     </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(220px,auto)]">
                     
-                    {/* Feature 1: Instant Lead Capture (Infinite Scroll) */}
+                    {/* Feature 1: AI Search */}
                     <div className="group md:col-span-2 relative overflow-hidden rounded-xl border border-white/10 bg-background/40 backdrop-blur-xl shadow-sm ring-1 ring-white/5 p-6 transition-all duration-300 hover:shadow-2xl hover:border-primary/20 hover:ring-primary/10">
                         <div className="relative z-10 flex flex-col h-full">
                             <div className="mb-6">
@@ -154,10 +154,10 @@ export function Features() {
                                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                                         <Zap className="w-4 h-4 text-primary" />
                                     </div>
-                                    <h3 className="text-lg font-semibold">Instant Lead Capture</h3>
+                                    <h3 className="text-lg font-semibold">AI Search</h3>
                                 </div>
                                 <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
-                                    Automatically detect and capture high-intent leads from post comments and likes in real-time.
+                                    Describe your ideal customer in plain English. AI finds relevant posts and extracts everyone who engaged. Up to 1,500 leads per search.
                                 </p>
                             </div>
                             
@@ -233,8 +233,8 @@ export function Features() {
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
 
-                    {/* Feature 2: Smart Enrichment (Interactive Reveal) */}
-                    <div 
+                    {/* Feature 2: Direct Post Analysis */}
+                    <div
                         className="group relative overflow-hidden rounded-xl border border-white/10 bg-background/40 backdrop-blur-xl shadow-sm ring-1 ring-white/5 p-6 transition-all duration-300 hover:shadow-2xl hover:border-primary/20 hover:ring-primary/10"
                         onMouseEnter={handleMouseEnter}
                         onMouseLeave={() => setIsHovered(false)}
@@ -245,10 +245,10 @@ export function Features() {
                                     <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                                         <Database className="w-4 h-4 text-blue-500" />
                                     </div>
-                                    <h3 className="text-lg font-semibold">Smart Enrichment</h3>
+                                    <h3 className="text-lg font-semibold">Direct Post Analysis</h3>
                                 </div>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Instantly reveal verified professional emails from LinkedIn profiles.
+                                    Found a viral post in your industry? Paste the URL. We extract everyone who engaged and enrich with verified emails.
                                 </p>
                             </div>
 
@@ -332,7 +332,7 @@ export function Features() {
                         </div>
                     </div>
 
-                    {/* Feature 3: Analytics (Real-time Growth) */}
+                    {/* Feature 3: Profile Monitoring */}
                     <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-background/40 backdrop-blur-xl shadow-sm ring-1 ring-white/5 p-6 transition-all duration-300 hover:shadow-2xl hover:border-primary/20 hover:ring-primary/10">
                         <div className="relative z-10">
                             <div className="mb-6">
@@ -340,10 +340,10 @@ export function Features() {
                                     <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                                         <LineChart className="w-4 h-4 text-green-500" />
                                     </div>
-                                    <h3 className="text-lg font-semibold">Growth Analytics</h3>
+                                    <h3 className="text-lg font-semibold">Profile Monitoring</h3>
                                 </div>
                                 <p className="text-sm text-muted-foreground leading-relaxed">
-                                    Track your daily lead velocity and engagement metrics.
+                                    Add influencers or competitors to monitor. We auto-track who engages with their new posts for 72 hours.
                                 </p>
                             </div>
                             
@@ -416,7 +416,7 @@ export function Features() {
                         </div>
                     </div>
 
-                    {/* Feature 4: Seamless Export (Interactive Sync) */}
+                    {/* Feature 4: Export & Integrate */}
                     <div className="group md:col-span-2 relative overflow-hidden rounded-xl border border-white/10 bg-background/40 backdrop-blur-xl shadow-sm ring-1 ring-white/5 p-6 transition-all duration-300 hover:shadow-2xl hover:border-primary/20 hover:ring-primary/10">
                         <div className="grid md:grid-cols-2 gap-8 items-center h-full">
                             <div className="relative z-10">
@@ -425,10 +425,10 @@ export function Features() {
                                         <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                                             <Share2 className="w-4 h-4 text-indigo-500" />
                                         </div>
-                                        <h3 className="text-lg font-semibold">Seamless Export</h3>
+                                        <h3 className="text-lg font-semibold">Export & Integrate</h3>
                                     </div>
                                     <p className="text-sm text-muted-foreground leading-relaxed">
-                                        Export enriched leads to CSV/Excel or sync directly with your CRM. Ready for your outreach campaigns.
+                                        Export to CSV or sync with HubSpot, Salesforce, and more. Start your warm outreach while intent is fresh.
                                     </p>
                                 </div>
                             </div>

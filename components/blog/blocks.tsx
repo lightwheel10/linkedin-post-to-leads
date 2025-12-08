@@ -1,0 +1,173 @@
+import Link from "next/link";
+import { ReactNode } from "react";
+import { BadgeCheck, BarChart3, Sparkles, Share2, Clock, List, Zap, ArrowRight, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+type StatProps = {
+  label: string;
+  value: string;
+  sub: string;
+};
+
+export const Stat = ({ label, value, sub }: StatProps) => (
+  <div className="flex flex-col gap-1 rounded-2xl border border-border bg-card/50 px-5 py-4 shadow-sm hover:border-primary/20 transition-colors">
+    <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+      {label}
+    </div>
+    <div className="text-2xl font-bold text-foreground">{value}</div>
+    <div className="text-xs text-muted-foreground">{sub}</div>
+  </div>
+);
+
+type PillProps = { children: ReactNode };
+export const Pill = ({ children }: PillProps) => (
+  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground border border-border">
+    {children}
+  </span>
+);
+
+type CalloutProps = { title: string; children: ReactNode; icon?: ReactNode };
+export const Callout = ({ title, children, icon }: CalloutProps) => (
+  <div className="rounded-xl border-l-4 border-primary bg-primary/5 pl-6 pr-6 py-5 my-8">
+    <div className="flex items-center gap-2 text-base font-bold text-foreground mb-2">
+      {icon || <Sparkles className="w-5 h-5 text-primary" />}
+      {title}
+    </div>
+    <div className="text-base text-muted-foreground leading-relaxed">{children}</div>
+  </div>
+);
+
+export const TLDR = ({ children }: { children: ReactNode }) => (
+    <div className="rounded-2xl bg-secondary/30 border border-border p-6 mb-10">
+        <div className="flex items-center gap-2 font-bold text-foreground mb-3">
+            <Zap className="w-4 h-4 text-amber-500 fill-amber-500" />
+            <span>TL;DR</span>
+        </div>
+        <div className="text-sm md:text-base text-muted-foreground leading-relaxed">
+            {children}
+        </div>
+    </div>
+);
+
+type SectionTitleProps = { eyebrow?: string; title: string; children?: ReactNode };
+export const SectionTitle = ({ eyebrow, title, children }: SectionTitleProps) => (
+  <div className="space-y-3 mb-6 mt-12 scroll-mt-24">
+    {eyebrow ? (
+      <span className="text-xs uppercase tracking-widest text-primary font-bold">
+        {eyebrow}
+      </span>
+    ) : null}
+    <h2 className="text-3xl font-bold tracking-tight text-foreground">{title}</h2>
+    {children ? (
+      <p className="text-lg text-muted-foreground leading-relaxed">{children}</p>
+    ) : null}
+  </div>
+);
+
+export const Meta = () => (
+  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-8">
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+      Playbook
+    </span>
+    <span className="flex items-center gap-1.5">
+      <Clock className="w-4 h-4" />
+      8 min read
+    </span>
+    <span className="flex items-center gap-1.5">
+      <BadgeCheck className="w-4 h-4 text-emerald-500" />
+      Updated Jan 2025
+    </span>
+  </div>
+);
+
+export const ShareBar = () => (
+  <div className="flex items-center gap-4 py-6 border-t border-border mt-8">
+    <span className="text-sm font-semibold text-foreground">Share this article:</span>
+    <div className="flex gap-2">
+      {["LinkedIn", "X", "Email"].map((label) => (
+        <Button
+          key={label}
+          variant="outline"
+          size="sm"
+          className="h-8 px-3 text-xs rounded-full bg-background hover:bg-secondary transition-colors"
+        >
+          {label}
+        </Button>
+      ))}
+    </div>
+  </div>
+);
+
+export const SidebarQuickWins = () => (
+  <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+    <div className="flex items-center gap-2 text-sm font-bold text-foreground mb-4">
+      <BarChart3 className="w-4 h-4 text-primary" />
+      Quick Wins
+    </div>
+    <ul className="space-y-4">
+      {[
+          "Launch a “comment-to-lead” alert in 1 day.",
+          "Publish 1 flagship + 4 support posts in 2 weeks.",
+          "Embed product clips in every post."
+      ].map((item, i) => (
+          <li key={i} className="flex gap-3 text-sm text-muted-foreground">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
+              {item}
+          </li>
+      ))}
+    </ul>
+  </div>
+);
+
+export const StickyTableOfContents = () => (
+  <div className="hidden lg:block max-h-[calc(100vh-8rem)] overflow-auto pr-4">
+    <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 pl-3">
+      On this page
+    </div>
+    <nav className="flex flex-col space-y-1 relative border-l border-border/50">
+       <a href="#the-problem" className="pl-3 py-1.5 text-sm text-muted-foreground hover:text-primary hover:border-l-2 hover:border-primary -ml-px transition-all block">Silence is Expensive</a>
+       <a href="#the-solution" className="pl-3 py-1.5 text-sm text-muted-foreground hover:text-primary hover:border-l-2 hover:border-primary -ml-px transition-all block">The Intent Mining Loop</a>
+       <a href="#results" className="pl-3 py-1.5 text-sm text-muted-foreground hover:text-primary hover:border-l-2 hover:border-primary -ml-px transition-all block">Results & Metrics</a>
+       <a href="#start-mining" className="pl-3 py-1.5 text-sm text-muted-foreground hover:text-primary hover:border-l-2 hover:border-primary -ml-px transition-all block">Start Mining Intent</a>
+    </nav>
+  </div>
+);
+
+
+export const SidebarResource = () => (
+  <div className="rounded-2xl bg-primary/5 border border-primary/10 p-6">
+    <div className="text-xs uppercase tracking-widest text-primary font-bold mb-3">
+      Free Template
+    </div>
+    <h3 className="text-lg font-bold text-foreground mb-2">
+      The Intent Mining Starter Pack
+    </h3>
+    <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+      Copy-paste templates for alerts, comment angles, and 15+ follow-up scripts.
+    </p>
+    <Button asChild className="w-full font-semibold shadow-lg shadow-primary/20">
+        <Link href="/waitlist">Download Free Pack</Link>
+    </Button>
+  </div>
+);
+
+export const SidebarMore = () => (
+  <div className="space-y-4 pt-6 border-t border-border">
+    <div className="text-sm font-bold text-foreground">Related Articles</div>
+    <div className="flex flex-col gap-3">
+      {[
+          "Cold Email is Dead: Here's What's Next",
+          "How to Scrape LinkedIn Comments Legally",
+          "3 Tools to Automate Social Selling"
+      ].map((title, i) => (
+          <Link key={i} href="/blog/sample" className="group flex gap-3 items-start">
+             <div className="mt-1 w-1 h-1 rounded-full bg-muted-foreground/40 group-hover:bg-primary transition-colors" />
+             <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors leading-snug">
+                 {title}
+             </span>
+          </Link>
+      ))}
+    </div>
+  </div>
+);

@@ -108,14 +108,14 @@ export default function AboutPage() {
                         </div>
 
                         <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-8 leading-[1.1] animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-                            Sales is <span className="text-foreground">human.</span> <br />
+                            Buying signals are <span className="text-foreground">everywhere.</span> <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-b from-foreground/80 to-foreground/20 font-medium tracking-tighter">
-                                Everything else is noise.
+                                We help you find them.
                             </span>
                         </h1>
 
                         <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto animate-fade-in-up font-light" style={{ animationDelay: '200ms' }}>
-                            We're not just building another lead gen tool. We're rebuilding the trust layer of the internet, one conversation at a time.
+                            Every day, thousands publicly signal what they need. They comment, like, and engage with content about problems they're facing. We built Guffles to help you find them.
                         </p>
                     </div>
 
@@ -136,9 +136,9 @@ export default function AboutPage() {
                                 <div className="w-10 h-10 rounded-xl bg-primary/10 backdrop-blur-md border border-primary/10 flex items-center justify-center mb-4 shadow-xl">
                                     <Users className="w-5 h-5 text-primary" />
                                 </div>
-                                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2 tracking-tight">People Buy From People</h3>
+                                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2 tracking-tight">Warm Beats Cold. Always.</h3>
                                 <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
-                                    In a world of AI-generated spam, authenticity is the ultimate competitive advantage. We build technology that amplifies your humanity, rather than replacing it.
+                                    Cold outreach gets 1-2% response rates. When you reach out to someone who just engaged with content about their problem? 10-15%. That's the Guffles difference.
                                 </p>
                             </div>
                         </SpotlightCard>
@@ -152,8 +152,8 @@ export default function AboutPage() {
                                     </div>
                                     <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-foreground transition-colors -rotate-45 group-hover:rotate-0 duration-300" />
                                 </div>
-                                <h3 className="text-base font-bold text-foreground mb-1">Signal over Noise</h3>
-                                <p className="text-[10px] text-muted-foreground leading-tight">We filter out 99% of the internet to find the 1% that matters.</p>
+                                <h3 className="text-base font-bold text-foreground mb-1">Intent over Volume</h3>
+                                <p className="text-[10px] text-muted-foreground leading-tight">We don't target random profiles. We find people actively showing buying intent.</p>
                             </div>
                             <div className="mt-2">
                                 <SignalVisual />
@@ -169,8 +169,8 @@ export default function AboutPage() {
                                     </div>
                                     <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-foreground transition-colors -rotate-45 group-hover:rotate-0 duration-300" />
                                 </div>
-                                <h3 className="text-base font-bold text-foreground mb-1">Trust is Everything</h3>
-                                <p className="text-[10px] text-muted-foreground leading-tight">Your reputation is your best asset. We help you protect it.</p>
+                                <h3 className="text-base font-bold text-foreground mb-1">Multi-Platform Vision</h3>
+                                <p className="text-[10px] text-muted-foreground leading-tight">LinkedIn today. Twitter/X, Instagram, Reddit coming soon. Buying signals everywhere.</p>
                             </div>
                             <div className="mt-2">
                                 <TrustVisual />
@@ -221,15 +221,15 @@ export default function AboutPage() {
                                         </div>
 
                                         <blockquote className="text-xl md:text-3xl font-medium leading-tight mb-6 text-foreground">
-                                            "I built LinkMind because I was tired of missing opportunities that were staring me right in the face."
+                                            "I built Guffles because I was tired of cold outreach to people who didn't care."
                                         </blockquote>
 
                                         <div className="space-y-4 text-muted-foreground text-base leading-relaxed">
                                             <p>
-                                                After a decade in sales leadership, I realized the best leads weren't in a database—they were in the comments section.
+                                                Traditional lead gen gives you lists of random profiles. But every day, thousands of people publicly signal what they need. They comment, like, and engage with content about problems they're facing.
                                             </p>
                                             <p>
-                                                We're building the tool I wish I had 10 years ago. One that respects your time, values your relationships, and actually delivers results.
+                                                We built Guffles to find these buying signals hiding in plain sight. Now you can reach out while intent is fresh, not when it's too late.
                                             </p>
                                         </div>
 
@@ -264,16 +264,16 @@ export default function AboutPage() {
 
                         <div className="relative z-10 max-w-3xl mx-auto">
                             <h2 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-foreground">
-                                Ready to find your <br />
+                                Ready to find buyers <br />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-400 to-primary animate-shimmer bg-[length:200%_auto]">
-                                    signal?
+                                    showing real intent?
                                 </span>
                             </h2>
                             <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
-                                Join thousands of sales professionals who are turning engagement into revenue. Start your free trial today.
+                                Stop cold outreach. Start warm conversations with people actively engaging with content about problems you solve.
                             </p>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                                <Link href="/signup">
+                                <Link href="/waitlist">
                                     <button className="h-14 px-8 rounded-full bg-primary text-primary-foreground font-bold text-base hover:bg-primary/90 transition-all hover:scale-105 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)]">
                                         Get Started Free
                                     </button>

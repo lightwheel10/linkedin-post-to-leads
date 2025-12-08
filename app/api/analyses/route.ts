@@ -56,7 +56,9 @@ export async function POST(request: Request) {
         headline: lead.headline,
         profile_url: lead.profile_url,
         profile_picture: lead.profile_picture,
-        matches_icp: lead.matches_icp
+        matches_icp: lead.matches_icp,
+        source: lead.source || 'reaction',
+        comment_text: lead.comment_text
       }))
     };
 

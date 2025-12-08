@@ -19,13 +19,13 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "LinkMind - Turn LinkedIn Posts into High-Quality Leads",
-  description: "AI-powered lead generation from LinkedIn. Automatically capture high-intent prospects and automate your outreach pipeline.",
-  keywords: ["LinkedIn", "lead generation", "AI", "automation", "sales", "marketing"],
-  authors: [{ name: "LinkMind" }],
+  title: "Guffles - Turn Social Engagement Into Warm Leads",
+  description: "Intent-based lead discovery platform. Find people actively engaging with content related to what you sell. Turn social signals into warm leads with 10x better response rates.",
+  keywords: ["intent-based leads", "LinkedIn lead generation", "buying signals", "social selling", "warm leads", "engagement leads", "B2B sales"],
+  authors: [{ name: "Guffles" }],
   openGraph: {
-    title: "LinkMind - AI-Powered LinkedIn Lead Generation",
-    description: "Stop chasing leads manually. Let our AI analyze engagement and automate your outreach.",
+    title: "Guffles - Intent-Based Lead Discovery",
+    description: "Find buyers hiding in plain sight. Discover people engaging with content about problems you solve, then reach out while intent is fresh.",
     type: "website",
   },
 };

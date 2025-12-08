@@ -1,92 +1,111 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { Check, Sparkles, X } from "lucide-react";
+import { Check, Sparkles, Wallet, Crown, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type PricingTier = {
+type PricingPlan = {
     name: string;
     description: string;
-    price: {
-        monthly: number;
-        yearly: number;
+    originalPrice: number;
+    price: number;
+    walletBase: number;
+    walletBonus: number;
+    limits: {
+        reactionsPerPost: number;
+        commentsPerPost: number;
+        monitoredReactions: number;
+        monitoredComments: number;
     };
     features: string[];
-    notIncluded?: string[];
     highlight?: boolean;
-    ctaText: string;
-    ctaVariant: "default" | "outline" | "secondary" | "ghost";
+    icon: any;
+    badge?: string;
 };
 
-const PRICING_TIERS: PricingTier[] = [
-    {
-        name: "Starter",
-        description: "Perfect for individuals just getting started with LinkedIn growth.",
-        price: {
-            monthly: 0,
-            yearly: 0,
-        },
-        features: [
-            "2 Post Analyses / month",
-            "5 Profile Enrichments",
-            "Manual Export to CSV",
-            "7-day Data Retention",
-            "Community Support"
-        ],
-        notIncluded: [
-            "CRM Integrations",
-            "Advanced Filtering",
-            "Priority Support",
-            "Team Access"
-        ],
-        ctaText: "Start Free",
-        ctaVariant: "outline",
-    },
+const PRICING_PLANS: PricingPlan[] = [
     {
         name: "Pro",
-        description: "For serious creators and sales professionals scaling their outreach.",
-        price: {
-            monthly: 49,
-            yearly: 39,
+        description: "For solo founders and SDRs discovering intent-based leads",
+        originalPrice: 99,
+        price: 79,
+        walletBase: 100,
+        walletBonus: 50,
+        limits: {
+            reactionsPerPost: 300,
+            commentsPerPost: 200,
+            monitoredReactions: 200,
+            monitoredComments: 200,
         },
         features: [
-            "25 Post Analyses / month",
-            "120 Profile Enrichments",
-            "One-click CRM Sync (HubSpot, Salesforce)",
-            "30-day Data Retention",
-            "Advanced ICP Filtering",
-            "Priority Email Support",
-            "Export to CSV/JSON"
+            "AI-powered post discovery",
+            "Up to 300 reactions per post",
+            "Up to 200 comments per post",
+            "Profile monitoring",
+            "Lead scoring & enrichment",
+            "Email discovery (Apollo)",
+            "Export to CSV/JSON",
+            "Email support"
         ],
-        highlight: true,
-        ctaText: "Get Started",
-        ctaVariant: "default",
+        icon: Sparkles,
     },
     {
-        name: "Business",
-        description: "Power up your entire sales team with advanced automation.",
-        price: {
-            monthly: 149,
-            yearly: 119,
+        name: "Growth",
+        description: "For sales teams capturing buying signals at scale",
+        originalPrice: 229,
+        price: 179,
+        walletBase: 200,
+        walletBonus: 100,
+        limits: {
+            reactionsPerPost: 600,
+            commentsPerPost: 400,
+            monitoredReactions: 400,
+            monitoredComments: 400,
         },
         features: [
-            "45 Post Analyses / month",
-            "300 Profile Enrichments",
-            "All CRM Integrations + API Access",
-            "Unlimited Data Retention",
-            "Team Management & Roles",
-            "Dedicated Account Manager",
-            "Custom Onboarding"
+            "Everything in Pro, plus:",
+            "Up to 600 reactions per post",
+            "Up to 400 comments per post",
+            "2x wallet credits ($300)",
+            "Advanced filtering & sorting",
+            "Bulk operations",
+            "CRM integrations",
+            "Priority support"
         ],
-        ctaText: "Contact Sales",
-        ctaVariant: "outline",
+        highlight: true,
+        icon: Rocket,
+        badge: "MOST POPULAR"
+    },
+    {
+        name: "Scale",
+        description: "For agencies running intent-based campaigns for clients",
+        originalPrice: 379,
+        price: 279,
+        walletBase: 300,
+        walletBonus: 200,
+        limits: {
+            reactionsPerPost: 1000,
+            commentsPerPost: 600,
+            monitoredReactions: 600,
+            monitoredComments: 600,
+        },
+        features: [
+            "Everything in Growth, plus:",
+            "Up to 1,000 reactions per post",
+            "Up to 600 comments per post",
+            "3.5x wallet credits ($600)",
+            "Unlimited profile monitoring",
+            "Team collaboration tools",
+            "API access & webhooks",
+            "Dedicated account manager"
+        ],
+        icon: Crown,
+        badge: "BEST VALUE"
     }
 ];
 
 export function Pricing() {
-    const [isYearly, setIsYearly] = useState(true);
 
     return (
         <section id="pricing" className="py-24 relative overflow-hidden">
@@ -99,121 +118,168 @@ export function Pricing() {
             <div className="container px-4 md:px-6 relative z-10 max-w-6xl mx-auto">
                 
                 {/* Header */}
-                <div className="text-center max-w-2xl mx-auto mb-16">
+                <div className="text-center max-w-3xl mx-auto mb-16">
                     <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-medium text-primary/80 mb-4">
-                        <Sparkles className="w-3 h-3" />
-                        <span>Simple Pricing</span>
+                        <Wallet className="w-3 h-3" />
+                        <span>Wallet-Based Pricing</span>
                     </div>
                     <h2 className="text-3xl md:text-4xl font-bold mb-4 tracking-tight text-foreground">
-                        Choose the plan that fits your <span className="text-gradient">growth</span>
+                        Simple pricing, <span className="text-gradient">full control</span>
                     </h2>
-                    <p className="text-base text-muted-foreground leading-relaxed">
-                        Start for free, upgrade as you grow. No hidden fees.
+                    <p className="text-base text-muted-foreground leading-relaxed mb-3">
+                        Wallet credits let you spend on what matters: AI Search, Post Analysis, or Profile Monitoring. Your choice.
                     </p>
-
-                    {/* Toggle */}
-                    <div className="mt-8 flex items-center justify-center gap-3">
-                        <span className={cn("text-sm font-medium transition-colors", !isYearly ? "text-foreground" : "text-muted-foreground")}>Monthly</span>
-                        <button
-                            onClick={() => setIsYearly(!isYearly)}
-                            className="relative w-12 h-6 rounded-full bg-muted border border-input focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors"
-                        >
-                            <span 
-                                className={cn(
-                                    "absolute top-0.5 left-0.5 w-4.5 h-4.5 rounded-full bg-primary shadow-sm transition-transform duration-200",
-                                    isYearly ? "translate-x-6" : "translate-x-0"
-                                )} 
-                            />
-                        </button>
-                        <span className={cn("text-sm font-medium transition-colors flex items-center gap-1.5", isYearly ? "text-foreground" : "text-muted-foreground")}>
-                            Yearly
-                            <span className="inline-block px-1.5 py-0.5 rounded bg-green-500/10 border border-green-500/20 text-[9px] text-green-500 font-semibold">
-                                Save 20%
-                            </span>
-                        </span>
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20">
+                        <span className="text-sm font-semibold text-green-600">🎉 3-Day Free Trial</span>
+                        <span className="text-xs text-muted-foreground">• Credit card required</span>
                     </div>
                 </div>
 
-                {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-                    {PRICING_TIERS.map((tier) => (
-                        <div 
-                            key={tier.name}
-                            className={cn(
-                                "relative flex flex-col rounded-2xl p-6 transition-all duration-300",
-                                tier.highlight 
-                                    ? "bg-background/60 backdrop-blur-xl border border-primary/20 shadow-2xl shadow-primary/5 ring-1 ring-primary/20 z-10 scale-105 md:-translate-y-4" 
-                                    : "bg-background/40 backdrop-blur-md border border-white/10 hover:border-white/20 hover:bg-background/50 shadow-lg"
-                            )}
-                        >
-                            {tier.highlight && (
-                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-primary to-emerald-500 text-[10px] font-bold text-white shadow-lg shadow-primary/20 border border-white/20">
-                                    MOST POPULAR
-                                </div>
-                            )}
-
-                            <div className="mb-6">
-                                <h3 className="text-lg font-bold text-foreground">{tier.name}</h3>
-                                <p className="text-sm text-muted-foreground mt-1.5 min-h-[40px]">{tier.description}</p>
-                            </div>
-
-                            <div className="mb-6">
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-4xl font-bold text-foreground">
-                                        ${isYearly ? tier.price.yearly : tier.price.monthly}
-                                    </span>
-                                    <span className="text-muted-foreground text-sm">/month</span>
-                                </div>
-                                {isYearly && tier.price.monthly > 0 && (
-                                    <div className="text-xs text-muted-foreground mt-1">
-                                        Billed ${tier.price.yearly * 12} yearly
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="flex-1 space-y-4 mb-8">
-                                {tier.features.map((feature) => (
-                                    <div key={feature} className="flex items-start gap-3 text-sm text-muted-foreground/90">
-                                        <div className="mt-0.5 p-0.5 rounded-full bg-green-500/10 border border-green-500/20 shrink-0">
-                                            <Check className="w-3 h-3 text-green-500" />
-                                        </div>
-                                        <span>{feature}</span>
-                                    </div>
-                                ))}
-                                {tier.notIncluded?.map((feature) => (
-                                    <div key={feature} className="flex items-start gap-3 text-sm text-muted-foreground/50">
-                                        <div className="mt-0.5 p-0.5 rounded-full bg-muted border border-white/5 shrink-0">
-                                            <X className="w-3 h-3" />
-                                        </div>
-                                        <span>{feature}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <Button 
-                                asChild
-                                variant={tier.ctaVariant}
-                                size="lg"
+                {/* Pricing Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-12">
+                    {PRICING_PLANS.map((plan) => {
+                        const Icon = plan.icon;
+                        return (
+                            <div 
+                                key={plan.name}
                                 className={cn(
-                                    "w-full rounded-full transition-all",
-                                    tier.highlight ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30" : "",
-                                    tier.ctaVariant === "outline" ? "border-primary/20 hover:bg-primary/5" : ""
+                                    "relative flex flex-col rounded-2xl p-6 transition-all duration-300",
+                                    plan.highlight 
+                                        ? "bg-background/60 backdrop-blur-xl border border-primary/20 shadow-2xl shadow-primary/5 ring-1 ring-primary/20 z-10 scale-105 md:-translate-y-4" 
+                                        : "bg-background/40 backdrop-blur-md border border-white/10 hover:border-white/20 hover:bg-background/50 shadow-lg"
                                 )}
                             >
-                                <Link href={tier.ctaText === "Contact Sales" ? "/contact" : "/signup"}>
-                                    {tier.ctaText}
-                                </Link>
-                            </Button>
-                        </div>
-                    ))}
+                                {plan.badge && (
+                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gradient-to-r from-primary to-emerald-500 text-[10px] font-bold text-white shadow-lg shadow-primary/20 border border-white/20">
+                                        {plan.badge}
+                                    </div>
+                                )}
+
+                                {/* Header */}
+                                <div className="mb-6">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className={cn(
+                                            "p-2 rounded-lg",
+                                            plan.highlight ? "bg-primary/10" : "bg-muted"
+                                        )}>
+                                            <Icon className={cn(
+                                                "w-5 h-5",
+                                                plan.highlight ? "text-primary" : "text-muted-foreground"
+                                            )} />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground min-h-[40px]">{plan.description}</p>
+                                </div>
+
+                                {/* Pricing */}
+                                <div className="mb-6">
+                                    <div className="flex items-baseline gap-2 mb-3">
+                                        <span className="text-4xl font-bold text-foreground">
+                                            ${plan.price}
+                                        </span>
+                                        <div className="flex flex-col">
+                                            <span className="text-lg text-muted-foreground/60 line-through leading-none">
+                                                ${plan.originalPrice}
+                                            </span>
+                                            <span className="text-muted-foreground text-xs">/month</span>
+                                        </div>
+                                    </div>
+                                    <div className="px-3 py-2.5 rounded-lg bg-primary/5 border border-primary/10">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Wallet className="w-4 h-4 text-primary shrink-0" />
+                                            <span className="text-xs font-medium text-muted-foreground">Wallet Credits</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-lg font-bold text-primary">${plan.walletBase + plan.walletBonus}</span>
+                                            <div className="flex items-center gap-1.5 text-xs">
+                                                <span className="text-muted-foreground/70">${plan.walletBase}</span>
+                                                <span className="text-muted-foreground/50">+</span>
+                                                <span className="px-1.5 py-0.5 rounded bg-green-500/10 border border-green-500/20 text-green-500 font-semibold">
+                                                    ${plan.walletBonus} bonus
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Limits */}
+                                <div className="mb-6 p-3 rounded-lg bg-muted/30 border border-white/5">
+                                    <div className="text-xs font-semibold text-muted-foreground mb-2">Limits per action:</div>
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div>
+                                            <span className="text-muted-foreground">Reactions:</span>{" "}
+                                            <span className="font-semibold text-foreground">{plan.limits.reactionsPerPost}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-muted-foreground">Comments:</span>{" "}
+                                            <span className="font-semibold text-foreground">{plan.limits.commentsPerPost}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Features */}
+                                <div className="flex-1 space-y-3 mb-8">
+                                    {plan.features.map((feature) => (
+                                        <div key={feature} className="flex items-start gap-2 text-sm text-muted-foreground/90">
+                                            <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
+                                            <span>{feature}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* CTA */}
+                                <div>
+                                    <Button 
+                                        asChild
+                                        variant={plan.highlight ? "default" : "outline"}
+                                        size="lg"
+                                        className={cn(
+                                            "w-full rounded-full transition-all",
+                                            plan.highlight ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30" : "",
+                                            !plan.highlight ? "border-primary/20 hover:bg-primary/5" : ""
+                                        )}
+                                    >
+                                        <Link href="/waitlist">
+                                            Start 3-Day Free Trial
+                                        </Link>
+                                    </Button>
+                                    <p className="text-xs text-center text-muted-foreground mt-2">
+                                        No charges for 3 days
+                                    </p>
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
 
-                <div className="mt-12 text-center">
+                {/* Enterprise Option */}
+                <div className="max-w-3xl mx-auto mb-8">
+                    <div className="relative flex flex-col md:flex-row items-center justify-between gap-4 p-6 rounded-xl bg-gradient-to-r from-primary/5 via-primary/5 to-transparent border border-primary/20">
+                        <div className="text-center md:text-left">
+                            <h3 className="text-lg font-bold text-foreground mb-1">Need more? Looking for Enterprise?</h3>
+                            <p className="text-sm text-muted-foreground">
+                                Custom limits, dedicated support, and volume discounts available
+                            </p>
+                        </div>
+                        <Button 
+                            asChild
+                            variant="outline"
+                            className="rounded-full border-primary/30 hover:bg-primary/10 shrink-0"
+                        >
+                            <Link href="/contact">
+                                Contact Sales
+                            </Link>
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Trial Terms */}
+                <div className="max-w-2xl mx-auto text-center">
                     <p className="text-sm text-muted-foreground">
-                        Need a custom enterprise plan?{" "}
-                        <a href="#" className="text-primary hover:underline font-medium">
-                            Talk to sales
-                        </a>
+                        Start your 3-day free trial with any plan. Credit card required. 
+                        Cancel anytime during the trial period and you won't be charged. 
+                        After the trial, you'll be automatically charged the monthly rate.
                     </p>
                 </div>
             </div>

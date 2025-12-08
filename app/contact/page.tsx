@@ -24,7 +24,7 @@ export default function ContactPage() {
                         Get in Touch
                     </h1>
                     <p className="text-lg text-muted-foreground leading-relaxed">
-                        Have questions about LinkMind? We're here to help. Reach out to us through any of the channels below.
+                        Have questions about Guffles? We're here to help. Reach out to us through any of the channels below.
                     </p>
                 </div>
 
@@ -39,10 +39,10 @@ export default function ContactPage() {
                             </div>
                             <h3 className="font-semibold text-foreground mb-2">Email Us</h3>
                             <a
-                                href="mailto:support@linkmind.com"
+                                href="mailto:support@guffles.com"
                                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
                             >
-                                support@linkmind.com
+                                support@guffles.com
                             </a>
                         </div>
                     </div>
@@ -98,43 +98,43 @@ function FAQSection() {
             icon: Zap,
             iconColor: "text-primary",
             iconBg: "bg-primary/10",
-            question: "How does LinkMind capture leads from my LinkedIn posts?",
-            answer: "LinkMind automatically monitors your LinkedIn posts for engagement activity. When someone comments, likes, or reposts your content, our system captures their profile information in real-time. You simply connect your LinkedIn account once, and we handle the rest - no manual copy-pasting required."
+            question: "How does Guffles find leads with buying intent?",
+            answer: "Guffles finds people actively engaging with content related to what you sell. You can use AI Search to describe your ideal customer in plain English, paste a viral post URL for Direct Post Analysis, or monitor influencer profiles to auto-track engagement. We extract everyone who liked or commented. These are people who showed interest in the topic."
         },
         {
             icon: Database,
             iconColor: "text-blue-500",
             iconBg: "bg-blue-500/10",
             question: "What's included in the email enrichment feature?",
-            answer: "Our enrichment service finds verified professional email addresses, phone numbers (when available), company information, and social profiles for your leads. All data is sourced from reputable databases and validated before being delivered to you, ensuring high accuracy rates."
+            answer: "Our enrichment service finds verified professional email addresses using Apollo integration. AI also scores each lead based on how well they match your target buyer profile. You get full profile data and verified business emails so you can reach out while the intent is fresh."
         },
         {
             icon: Link2,
             iconColor: "text-indigo-500",
             iconBg: "bg-indigo-500/10",
-            question: "Can I integrate LinkMind with my existing CRM?",
-            answer: "Yes! LinkMind offers one-click integrations with popular CRMs including HubSpot, Salesforce, and more. Pro and Business plans also include API access for custom integrations. You can also export your leads to CSV/Excel format at any time."
+            question: "Can I integrate Guffles with my existing CRM?",
+            answer: "Yes! Guffles offers integrations with popular CRMs including HubSpot, Salesforce, and more. Growth and Scale plans include API access for custom integrations. You can also export your leads to CSV/JSON format at any time."
         },
         {
             icon: CreditCard,
             iconColor: "text-emerald-500",
             iconBg: "bg-emerald-500/10",
-            question: "How does the free trial work?",
-            answer: "Our 14-day free trial gives you full access to Pro features with no credit card required. You'll get 50 lead credits to test our enrichment capabilities, and you can upgrade or downgrade at any time. After the trial, you can continue with our free Starter plan or choose a paid tier."
+            question: "How does the wallet system work?",
+            answer: "Instead of confusing plan limits, Guffles uses a simple wallet. You pay for credits and decide how to spend them: AI Search, Direct Post Analysis, Profile Monitoring, Enrichment, or Email Finding. Use it however you want. The wallet gives you full control."
         },
         {
             icon: Shield,
             iconColor: "text-green-500",
             iconBg: "bg-green-500/10",
-            question: "Is my LinkedIn account safe when using LinkMind?",
-            answer: "Absolutely. We use secure, LinkedIn-compliant methods to access your data and never store your password. Our connection uses encrypted cookies and sessions, similar to how you'd stay logged in on your browser. We also follow LinkedIn's rate limits to ensure your account remains in good standing."
+            question: "Is my LinkedIn account safe when using Guffles?",
+            answer: "Absolutely. We use secure, LinkedIn-compliant methods to access public engagement data. Your account credentials are never stored on our servers. We follow best practices and rate limits to ensure your account remains in good standing."
         },
         {
             icon: Target,
             iconColor: "text-orange-500",
             iconBg: "bg-orange-500/10",
-            question: "What is the accuracy rate for email enrichment?",
-            answer: "We maintain a 95%+ accuracy rate for email enrichment. All emails are verified before delivery, and we continuously update our databases. If an email bounces, you can report it and we'll investigate - most plans include replacement credits for invalid emails."
+            question: "What platforms does Guffles support?",
+            answer: "Currently, Guffles works with LinkedIn. Twitter/X, Instagram, and Reddit are coming soon. Our goal is to help you find buying signals wherever your audience engages, across all social platforms."
         }
     ];
 
@@ -147,7 +147,7 @@ function FAQSection() {
                 <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">
                     Frequently Asked Questions
                 </h2>
-                <p className="text-muted-foreground">Everything you need to know about LinkMind</p>
+                <p className="text-muted-foreground">Everything you need to know about Guffles</p>
             </div>
 
             <div className="space-y-3">

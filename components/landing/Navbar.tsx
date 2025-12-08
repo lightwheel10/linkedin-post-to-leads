@@ -43,7 +43,7 @@ export function Navbar() {
                     {/* Logo */}
                     <Link href="/" className="flex items-center gap-2">
                         <div className="h-8 w-8 rounded-lg bg-gradient-to-b from-primary/80 to-primary flex items-center justify-center text-primary-foreground font-bold shadow-lg shadow-primary/20 ring-1 ring-white/10">
-                            L
+                            G
                         </div>
                         <span
                             style={{
@@ -54,7 +54,7 @@ export function Navbar() {
                                 isScrolled ? "hidden md:block" : "block"
                             )}
                         >
-                            LeadLift
+                            Guffles
                         </span>
                     </Link>
 
@@ -74,7 +74,7 @@ export function Navbar() {
                     {/* Actions */}
                     <div className="hidden md:flex items-center gap-3">
                         <Link
-                            href="/login"
+                            href="/waitlist"
                             className="text-[13px] font-medium text-muted-foreground/80 hover:text-primary transition-colors"
                         >
                             Log in
@@ -89,7 +89,7 @@ export function Navbar() {
                                 "border border-white/10"
                             )}
                         >
-                            <Link href="/signup">Get Started</Link>
+                            <Link href="/waitlist">Get Started</Link>
                         </Button>
                     </div>
 
@@ -128,14 +128,14 @@ export function Navbar() {
                         </Link>
                         <div className="h-px bg-border/50 my-1" />
                         <Link
-                            href="/login"
+                            href="/waitlist"
                             className="text-sm font-medium text-muted-foreground hover:text-primary p-2 rounded-lg hover:bg-white/5 transition-colors"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             Log in
                         </Link>
                         <Button asChild className="w-full bg-primary hover:bg-primary/90 rounded-xl">
-                            <Link href="/signup">Get Started</Link>
+                            <Link href="/waitlist">Get Started</Link>
                         </Button>
                     </div>
                 )}

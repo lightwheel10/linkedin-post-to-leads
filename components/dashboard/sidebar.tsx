@@ -44,32 +44,49 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [usage, setUsage] = useState<UsageInfo | null>(initialUsage || null);
 
-  // Fetch usage info on mount
-  useEffect(() => {
-    const fetchUsage = async () => {
-      try {
-        const res = await fetch('/api/billing');
-        const data = await res.json();
-        if (data.billing) {
-          setUsage({
-            analysesUsed: data.billing.analysesUsed,
-            analysesLimit: data.billing.analysesLimit,
-            enrichmentsUsed: data.billing.enrichmentsUsed,
-            enrichmentsLimit: data.billing.enrichmentsLimit,
-            plan: data.billing.plan,
-            planName: data.billing.planName,
-            isTrialing: data.billing.isTrialing,
-            trialDaysRemaining: data.billing.trialDaysRemaining,
-          });
-        }
-      } catch (e) {
-        console.error('Failed to fetch usage:', e);
+  // Fetch usage info
+  const fetchUsage = async () => {
+    try {
+      const res = await fetch('/api/billing');
+      const data = await res.json();
+      if (data.billing) {
+        setUsage({
+          analysesUsed: data.billing.analysesUsed,
+          analysesLimit: data.billing.analysesLimit,
+          enrichmentsUsed: data.billing.enrichmentsUsed,
+          enrichmentsLimit: data.billing.enrichmentsLimit,
+          plan: data.billing.plan,
+          planName: data.billing.planName,
+          isTrialing: data.billing.isTrialing,
+          trialDaysRemaining: data.billing.trialDaysRemaining,
+        });
       }
-    };
+    } catch (e) {
+      console.error('Failed to fetch usage:', e);
+    }
+  };
+
+  // Fetch on mount
+  useEffect(() => {
     if (!initialUsage) {
       fetchUsage();
     }
   }, [initialUsage]);
+
+  // Listen for usage update events (triggered after analysis completes)
+  useEffect(() => {
+    const handleUsageUpdate = () => {
+      fetchUsage();
+    };
+    
+    window.addEventListener('usage-updated', handleUsageUpdate);
+    return () => window.removeEventListener('usage-updated', handleUsageUpdate);
+  }, []);
+
+  // Refetch when route changes (user navigates back to dashboard)
+  useEffect(() => {
+    fetchUsage();
+  }, [pathname]);
 
   const getUsageColor = (used: number, limit: number) => {
     const percentage = (used / limit) * 100;
@@ -150,9 +167,9 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
       {/* Logo */}
       <div className="flex h-12 items-center gap-2 border-b border-border/50 px-3">
         <div className="h-6 w-6 rounded-md bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground text-xs font-bold shadow-md shadow-primary/25">
-          L
+          G
         </div>
-        <span className="text-sm font-semibold">LeadLift</span>
+        <span className="text-sm font-semibold">Guffles</span>
       </div>
 
       {/* Navigation */}
@@ -201,9 +218,12 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
       {/* Bottom Section - Usage & User */}
       <div className="p-2 space-y-2 border-t border-border/50">
         {/* Usage Display */}
-        <div className="rounded-lg border border-border/50 bg-card/30 p-2.5 space-y-2">
+        <div className="relative rounded-lg border border-primary/30 bg-gradient-to-br from-primary/20 via-emerald-500/10 to-card/50 p-2.5 space-y-2 overflow-hidden">
+          {/* Decorative blur effects like CTA */}
+          <div className="absolute top-0 right-0 w-16 h-16 bg-primary/30 rounded-full blur-[40px] pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-16 h-16 bg-emerald-500/30 rounded-full blur-[40px] pointer-events-none" />
           {/* Plan Badge */}
-          <div className="flex items-center justify-between">
+          <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               {usage?.plan === 'business' ? (
                 <Crown className={cn("h-3 w-3", getPlanColor(usage?.plan || 'free'))} />
@@ -223,7 +243,7 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
 
           {/* Analyses Usage */}
           {usage && (
-            <div className="space-y-1">
+            <div className="relative z-10 space-y-1">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
                   <Search className="h-2.5 w-2.5 text-muted-foreground" />
@@ -233,7 +253,7 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
                   {usage.analysesUsed}/{usage.analysesLimit}
                 </span>
               </div>
-              <div className="h-1 rounded-full bg-muted overflow-hidden">
+              <div className="h-1 rounded-full bg-muted/50 overflow-hidden">
                 <div 
                   className={cn("h-full rounded-full transition-all", getProgressColor(usage.analysesUsed, usage.analysesLimit))}
                   style={{ width: `${Math.min((usage.analysesUsed / usage.analysesLimit) * 100, 100)}%` }}
@@ -244,7 +264,7 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
 
           {/* Enrichments Usage */}
           {usage && (
-            <div className="space-y-1">
+            <div className="relative z-10 space-y-1">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1">
                   <Users className="h-2.5 w-2.5 text-muted-foreground" />
@@ -254,7 +274,7 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
                   {usage.enrichmentsUsed}/{usage.enrichmentsLimit}
                 </span>
               </div>
-              <div className="h-1 rounded-full bg-muted overflow-hidden">
+              <div className="h-1 rounded-full bg-muted/50 overflow-hidden">
                 <div 
                   className={cn("h-full rounded-full transition-all", getProgressColor(usage.enrichmentsUsed, usage.enrichmentsLimit))}
                   style={{ width: `${Math.min((usage.enrichmentsUsed / usage.enrichmentsLimit) * 100, 100)}%` }}
@@ -265,14 +285,14 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
 
           {/* Warning or Upgrade */}
           {usage && (usage.analysesUsed >= usage.analysesLimit || usage.enrichmentsUsed >= usage.enrichmentsLimit) ? (
-            <div className="flex items-center gap-1.5 p-1.5 rounded bg-red-500/10 border border-red-500/20">
+            <div className="relative z-10 flex items-center gap-1.5 p-1.5 rounded bg-red-500/10 border border-red-500/20">
               <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />
               <span className="text-[9px] text-red-500">Limit reached</span>
             </div>
           ) : usage?.plan === 'free' ? (
             <Link
               href="/dashboard/settings?tab=billing"
-              className="flex items-center justify-center gap-1 rounded-md bg-primary/90 hover:bg-primary px-2 py-1.5 text-[10px] font-medium text-primary-foreground transition-colors"
+              className="relative z-10 flex items-center justify-center gap-1 rounded-md bg-primary hover:bg-primary/90 px-2 py-1.5 text-[10px] font-medium text-primary-foreground transition-all shadow-lg shadow-primary/30 hover:scale-[1.02]"
             >
               <Sparkles className="h-2.5 w-2.5" />
               Upgrade

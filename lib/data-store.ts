@@ -272,12 +272,12 @@ export function getOnboardingStep(user: User): number {
   if (!user.full_name || !user.company || !user.role || user.locations.length === 0) {
     return 1;
   }
-  
+
   // Step 2: ICP config (industries)
   if (user.industries.length === 0) {
     return 2;
   }
-  
+
   // Step 3: Ready for completion
   return 3;
 }
@@ -315,7 +315,7 @@ export async function activateUserPlan(
 ): Promise<{ user: User | null; subscription: Subscription | null }> {
   const now = new Date();
   const trialEnd = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000);
-  
+
   // Calculate period end based on billing period
   let periodEnd: Date;
   if (period === 'annual') {
@@ -367,7 +367,7 @@ export async function createSubscription(
   trialEnd: Date
 ): Promise<Subscription | null> {
   const now = new Date();
-  
+
   // Calculate period end based on billing period
   let periodEnd: Date;
   if (period === 'annual') {
@@ -492,7 +492,7 @@ export async function getUserBillingInfo(userId: string): Promise<{
   if (error || !user) return null;
 
   const subscription = await getUserSubscription(userId);
-  
+
   // Import plan limits dynamically to avoid circular deps
   const { getPlanLimits } = await import('./plans');
   const limits = getPlanLimits(user.plan || 'free');

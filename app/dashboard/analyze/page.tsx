@@ -30,7 +30,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { analyzePost, filterByICP } from "@/app/actions/analyze-post";
+import { fetchPostDetails, fetchReactions, fetchComments, trackAnalysisUsage, filterByICP, PostData, Reactor, Commenter } from "@/app/actions/analyze-post";
 
 const STEPS = [
   { id: 1, label: "Post Analysis", icon: Search },
@@ -56,6 +56,8 @@ interface Lead {
   profileUrl: string;
   profilePicture?: string;
   matchesICP: boolean;
+  source?: 'reaction' | 'comment';
+  commentText?: string;
 }
 
 function LinkedInPostCard({ post }: { post: PostInfo }) {
@@ -305,38 +307,32 @@ export default function AnalyzePage() {
     if (!url) return;
 
     try {
-      // Usage limit is checked by the server action (canAnalyze)
-      // We show a warning in UI but the real check happens server-side
+      // ========================================
+      // STEP 1: Fetch Post Details
+      // ========================================
       setStatus('processing');
       setProgressStep(1);
       setActiveTab(1);
       setError(null);
       setSavedAnalysisId(null);
-      setLogs(["🔄 Connecting to LinkedIn...", "🔍 Analyzing post URL..."]);
+      setLogs(["🔄 Connecting to LinkedIn...", "🔍 Fetching post details..."]);
 
-      const result = await analyzePost(url);
+      const postResult = await fetchPostDetails(url);
 
       // Handle limit reached error
-      if (result.limitReached) {
-        setError(result.error || "You've reached your analysis limit for this month. Upgrade for more.");
+      if (postResult.limitReached) {
+        setError(postResult.error || "You've reached your analysis limit for this month. Upgrade for more.");
         setStatus('error');
         return;
       }
 
-      if (!result.success || !result.data) {
-        throw new Error(result.error || "Failed to analyze post");
-      }
-      
-      // Update usage from result
-      if (result.usage) {
-        setUsage({
-          analysesUsed: result.usage.analysesUsed,
-          analysesLimit: result.usage.analysesLimit
-        });
+      if (!postResult.success || !postResult.post) {
+        throw new Error(postResult.error || "Failed to fetch post");
       }
 
-      const { post, reactors, totalReactors } = result.data;
+      const post = postResult.post;
 
+      // Show post card immediately
       setPostInfo({
         author: post.author,
         authorHeadline: post.authorHeadline,
@@ -354,100 +350,191 @@ export default function AnalyzePage() {
         `📊 Total engagement: ${post.totalReactions.toLocaleString()} reactions, ${post.totalComments} comments`
       ]);
 
-      setTimeout(() => {
-        setProgressStep(2);
-        setActiveTab(2);
-        setTotalReactorsCount(totalReactors);
+      // Small delay to show post card before moving on
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // ========================================
+      // STEP 2: Fetch Reactions
+      // ========================================
+      setProgressStep(2);
+      setActiveTab(2);
+      setTotalReactorsCount(post.totalReactions);
+      setLogs(prev => [
+        ...prev,
+        `🎯 Found ${post.totalReactions.toLocaleString()} total reactions`,
+        `📥 Fetching reactor profiles...`
+      ]);
+
+      const reactionsResult = await fetchReactions(post.postUrl);
+
+      if (!reactionsResult.success || !reactionsResult.reactors) {
+        throw new Error(reactionsResult.error || "Failed to fetch reactions");
+      }
+
+      const reactors = reactionsResult.reactors;
+      setLogs(prev => [...prev, `✅ Fetched ${reactors.length} reactor profiles`]);
+
+      // ========================================
+      // STEP 2B: Fetch Comments (if post has comments)
+      // ========================================
+      let commenters: Commenter[] = [];
+      if (post.totalComments > 0) {
         setLogs(prev => [
           ...prev,
-          `🎯 Found ${totalReactors.toLocaleString()} total reactions`,
-          `📥 Fetching reactor profiles... (${reactors.length} sampled)`
-        ]);
-      }, 1500);
-
-      setTimeout(async () => {
-        setProgressStep(3);
-        setActiveTab(3);
-        setLogs(prev => [
-          ...prev,
-          "🔬 Analyzing profiles against ICP criteria...",
-          "🚫 Removing unqualified leads (students, recruiters, etc.)"
+          `💬 Found ${post.totalComments} comments`,
+          `📥 Fetching commenter profiles...`
         ]);
 
-        const leads: Lead[] = reactors.map(r => ({
-          name: r.name,
-          headline: r.headline,
-          profileUrl: r.profileUrl,
-          profilePicture: r.profilePicture,
-          matchesICP: false
-        }));
-
-        setAllReactors(leads);
-
-        const filtered = await filterByICP(reactors);
-        const qualifiedLeadsList: Lead[] = filtered.map(r => ({
-          name: r.name,
-          headline: r.headline,
-          profileUrl: r.profileUrl,
-          profilePicture: r.profilePicture,
-          matchesICP: true
-        }));
-
-        setQualifiedLeads(qualifiedLeadsList);
-
-        setLogs(prev => [
-          ...prev,
-          `✅ ${qualifiedLeadsList.length} leads match your ICP criteria`
-        ]);
-
-        // Save the analysis (usage is already tracked by server action)
-        try {
-          const saveRes = await fetch('/api/analyses', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              post_url: url,
-              post_data: {
-                author: post.author,
-                author_headline: post.authorHeadline,
-                author_image: post.image,
-                content: post.content,
-                post_image: post.postImage,
-                total_reactions: post.totalReactions,
-                total_comments: post.totalComments,
-                total_shares: post.totalShares
-              },
-              total_reactors: totalReactors,
-              qualified_leads_count: qualifiedLeadsList.length,
-              leads: qualifiedLeadsList.map(l => ({
-                name: l.name,
-                headline: l.headline,
-                profile_url: l.profileUrl,
-                profile_picture: l.profilePicture,
-                matches_icp: l.matchesICP
-              }))
-            })
-          });
-          
-          const saveData = await saveRes.json();
-          if (saveData.analysis?.id) {
-            setSavedAnalysisId(saveData.analysis.id);
-          }
-        } catch (e) {
-          console.error('Failed to save analysis:', e);
+        const commentsResult = await fetchComments(post.postUrl);
+        
+        if (commentsResult.success && commentsResult.commenters) {
+          commenters = commentsResult.commenters;
+          setLogs(prev => [...prev, `✅ Fetched ${commenters.length} commenter profiles`]);
+        } else {
+          // Don't fail the whole analysis if comments fail - just log it
+          setLogs(prev => [...prev, `⚠️ Could not fetch comments (continuing with reactions)`]);
         }
-      }, 4000);
+      }
 
-      setTimeout(() => {
-        setStatus('complete');
-        setProgressStep(4);
-        setActiveTab(4);
-        setLogs(prev => [
-          ...prev,
-          "📧 Email enrichment ready",
-          `🎉 Analysis complete!`
-        ]);
-      }, 6000);
+      // Small delay before ICP filtering
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // ========================================
+      // STEP 3: ICP Filtering
+      // ========================================
+      setProgressStep(3);
+      setActiveTab(3);
+      setLogs(prev => [
+        ...prev,
+        "🔬 Analyzing profiles against ICP criteria...",
+        "🚫 Filtering out unqualified leads..."
+      ]);
+
+      // Combine reactors and commenters into leads
+      const reactorLeads: Lead[] = reactors.map(r => ({
+        name: r.name,
+        headline: r.headline,
+        profileUrl: r.profileUrl,
+        profilePicture: r.profilePicture,
+        matchesICP: false,
+        source: 'reaction' as const
+      }));
+
+      const commenterLeads: Lead[] = commenters.map(c => ({
+        name: c.name,
+        headline: c.headline,
+        profileUrl: c.profileUrl,
+        profilePicture: c.profilePicture,
+        matchesICP: false,
+        source: 'comment' as const,
+        commentText: c.commentText
+      }));
+
+      // Combine and dedupe by profileUrl (same person might react AND comment)
+      const allLeadsMap = new Map<string, Lead>();
+      [...reactorLeads, ...commenterLeads].forEach(lead => {
+        if (!allLeadsMap.has(lead.profileUrl)) {
+          allLeadsMap.set(lead.profileUrl, lead);
+        }
+      });
+      const leads: Lead[] = Array.from(allLeadsMap.values());
+
+      setAllReactors(leads);
+
+      // Filter by ICP - convert leads back to Reactor format for the filter function
+      const leadsAsReactors: Reactor[] = leads.map(l => ({
+        name: l.name,
+        headline: l.headline,
+        profileUrl: l.profileUrl,
+        profilePicture: l.profilePicture,
+        reactionType: l.source === 'comment' ? 'COMMENT' : 'LIKE'
+      }));
+
+      const filtered = await filterByICP(leadsAsReactors);
+      const qualifiedLeadsList: Lead[] = filtered.map(r => {
+        const originalLead = leads.find(l => l.profileUrl === r.profileUrl);
+        return {
+          name: r.name,
+          headline: r.headline,
+          profileUrl: r.profileUrl,
+          profilePicture: r.profilePicture,
+          matchesICP: true,
+          source: originalLead?.source,
+          commentText: originalLead?.commentText
+        };
+      });
+
+      setQualifiedLeads(qualifiedLeadsList);
+
+      setLogs(prev => [
+        ...prev,
+        `✅ ${qualifiedLeadsList.length} leads match your ICP criteria`
+      ]);
+
+      // Track usage (now includes both reactions and comments)
+      const updatedUsage = await trackAnalysisUsage(url, reactors.length, commenters.length);
+      if (updatedUsage) {
+        setUsage({
+          analysesUsed: updatedUsage.analysesUsed,
+          analysesLimit: updatedUsage.analysesLimit
+        });
+        // Notify sidebar to refresh usage
+        window.dispatchEvent(new CustomEvent('usage-updated'));
+      }
+
+      // Save the analysis
+      try {
+        const saveRes = await fetch('/api/analyses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            post_url: url,
+            post_data: {
+              author: post.author,
+              author_headline: post.authorHeadline,
+              author_image: post.image,
+              content: post.content,
+              post_image: post.postImage,
+              total_reactions: post.totalReactions,
+              total_comments: post.totalComments,
+              total_shares: post.totalShares
+            },
+            total_reactors: post.totalReactions,
+            qualified_leads_count: qualifiedLeadsList.length,
+            leads: qualifiedLeadsList.map(l => ({
+              name: l.name,
+              headline: l.headline,
+              profile_url: l.profileUrl,
+              profile_picture: l.profilePicture,
+              matches_icp: l.matchesICP,
+              source: l.source || 'reaction',
+              comment_text: l.commentText
+            }))
+          })
+        });
+        
+        const saveData = await saveRes.json();
+        if (saveData.analysis?.id) {
+          setSavedAnalysisId(saveData.analysis.id);
+        }
+      } catch (e) {
+        console.error('Failed to save analysis:', e);
+      }
+
+      // Small delay before showing results
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // ========================================
+      // STEP 4: Show Results
+      // ========================================
+      setStatus('complete');
+      setProgressStep(4);
+      setActiveTab(4);
+      setLogs(prev => [
+        ...prev,
+        "📧 Email enrichment ready",
+        `🎉 Analysis complete!`
+      ]);
 
     } catch (err) {
       setStatus('error');
@@ -614,17 +701,35 @@ export default function AnalyzePage() {
             {/* Tab Content */}
             <div className="flex-1 min-h-[280px] relative">
               {/* Tab 1: Post Analysis */}
-              {activeTab === 1 && postInfo && (
+              {activeTab === 1 && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 h-full flex flex-col">
                   <div className="text-center mb-4">
                     <h2 className="text-base font-bold mb-1">Scanning Target Post</h2>
                     <p className="text-muted-foreground text-xs">Analyzing content and engagement...</p>
                   </div>
-                  <div className="flex-1 flex items-center justify-center p-3 bg-muted/20 rounded-lg border border-border/50 overflow-y-auto">
-                    <div className="w-full max-w-lg">
-                      <LinkedInPostCard post={postInfo} />
+                  {postInfo ? (
+                    <div className="flex-1 flex items-center justify-center p-3 bg-muted/20 rounded-lg border border-border/50 overflow-y-auto">
+                      <div className="w-full max-w-lg">
+                        <LinkedInPostCard post={postInfo} />
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 bg-muted/20 rounded-lg border border-border/50">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+                      <p className="text-sm font-medium mb-2">Fetching post data from LinkedIn...</p>
+                      <p className="text-xs text-muted-foreground text-center max-w-sm">
+                        This may take a few minutes depending on the post's engagement level
+                      </p>
+                      <div className="mt-4 space-y-1.5 text-left w-full max-w-sm">
+                        {logs.map((log, i) => (
+                          <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="text-primary">→</span>
+                            <span>{log}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

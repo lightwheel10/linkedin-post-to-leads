@@ -208,21 +208,21 @@ export function Hero() {
                         {/* Badge */}
                         <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-medium text-primary/80 w-fit animate-fade-in-up" style={{ animationDelay: '0ms' }}>
                             <Sparkles className="w-3 h-3" />
-                            <span>AI-Powered Lead Generation</span>
+                            <span>Intent-Based Lead Discovery</span>
                         </div>
 
                         {/* Headline */}
                         <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
                             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight leading-tight text-foreground pl-1">
-                                Turn Your LinkedIn Engagement Into <br className="hidden lg:block" />
+                                Turn Social Engagement <br className="hidden lg:block" />
                                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-emerald-400 to-primary bg-[length:200%_auto] animate-shimmer">
-                                    Qualified Leads
+                                    Into Warm Leads
                                 </span>
                             </h1>
 
                             {/* Subheadline */}
                             <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-lg pl-1">
-                                Stop losing warm leads hiding in your notifications. Get qualified profiles with emails, ready for outreach.
+                                Find people actively engaging with content about problems you solve. Reach out while they're still thinking about it, not months later.
                             </p>
                         </div>
 
@@ -233,7 +233,7 @@ export function Hero() {
                                 size="default"
                                 className="h-10 px-5 text-sm font-medium rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_-5px_rgba(16,185,129,0.4)] transition-all hover:scale-[1.02] w-full sm:w-auto"
                             >
-                                <Link href="/signup">
+                                <Link href="/waitlist">
                                     Start Free Trial
                                     <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
                                 </Link>
@@ -269,7 +269,7 @@ export function Hero() {
                                     <div className="flex text-yellow-500 text-[10px] gap-0.5">
                                         {[1, 2, 3, 4, 5].map(s => <span key={s}>★</span>)}
                                     </div>
-                                    <p className="text-[10px] font-medium text-muted-foreground">Trusted by Founders & Sales Teams</p>
+                                    <p className="text-[10px] font-medium text-muted-foreground">Trusted by B2B Sales Teams & Agencies</p>
                                 </div>
                             </div>
 
@@ -277,7 +277,7 @@ export function Hero() {
 
                             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/5 border border-primary/10">
                                 <TrendingUp className="w-3 h-3 text-primary" />
-                                <span className="text-[10px] font-medium text-primary/80">3x faster outreach</span>
+                                <span className="text-[10px] font-medium text-primary/80">10-15% response rates</span>
                             </div>
                         </div>
 
