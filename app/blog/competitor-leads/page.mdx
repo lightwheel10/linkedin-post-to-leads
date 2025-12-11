@@ -1,0 +1,303 @@
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Calendar, Clock, TrendingUp, Target, Zap, MessageSquare, Sparkles } from "lucide-react";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
+import {
+  Stat,
+  Callout,
+  TLDR,
+  SectionTitle,
+  SidebarQuickWins,
+  SidebarResource,
+  SidebarMore,
+  StickyTableOfContents,
+  BlogCTA,
+  ArticleImage
+} from "@/components/blog/blocks";
+
+export const metadata = {
+  title: "Steal Competitors' LinkedIn Audience: 3 Ethical Methods",
+  description: "Extract LinkedIn post engagers from competitor content and turn them into warm leads. Get 14.6% close rates vs 1.7% cold. Try free with $150 credits.",
+};
+
+<div className="relative min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 selection:text-primary">
+
+  <Navbar />
+
+  <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 pb-24 relative z-10 pt-24 md:pt-32">
+
+    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_300px] gap-12 pt-8">
+
+        <aside className="hidden lg:block relative h-full">
+            <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar pb-10">
+                <StickyTableOfContents items={[
+                    { id: "section-1", label: "1) Why Competitor Audiences Are Warmer" },
+                    { id: "section-2", label: "2) The Post Engager Advantage" },
+                    { id: "section-3", label: "3) Three Methods" },
+                    { id: "section-4", label: "4) Ethics and Legality" },
+                    { id: "section-5", label: "5) Tools That Work" },
+                    { id: "cta", label: "Your Next Move" }
+                ]} />
+            </div>
+        </aside>
+
+        <main className="max-w-3xl mx-auto lg:mx-0 w-full min-w-0">
+
+            <header className="mb-12 animate-fade-in-up">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-xs font-bold text-primary mb-6">
+                    <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                    LEAD GENERATION
+                </div>
+
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-foreground mb-6 text-balance">
+                  Steal Competitors' LinkedIn Audience: 3 Ethical Methods
+                </h1>
+
+                <div className="flex items-center gap-4 py-6 border-y border-border/50">
+                     <div className="relative">
+                        <div className="w-12 h-12 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden ring-1 ring-white/10">
+                             <Image
+                                src="/images/ceo.jpeg"
+                                alt="Team"
+                                width={48}
+                                height={48}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-foreground">Guffles Team</div>
+                        <div className="text-sm text-muted-foreground">Lead Generation Experts</div>
+                     </div>
+                     <div className="h-8 w-px bg-border mx-2 hidden sm:block" />
+                     <div className="hidden sm:flex flex-col text-sm text-muted-foreground">
+                        <span>Published Dec 11, 2025</span>
+                        <span>8 min read</span>
+                     </div>
+                </div>
+            </header>
+
+            <div className="relative mb-12 rounded-2xl overflow-hidden shadow-2xl bg-muted aspect-[16/9] animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                <Image
+                    src="/images/blog/competitor-leads/header.png"
+                    alt="Professional analyzing competitor LinkedIn content for warm lead discovery"
+                    fill
+                    className="object-cover"
+                    priority
+                />
+            </div>
+
+            <TLDR>
+                Your competitors have already warmed up the exact audience you want to reach. Post engagers beat followers because they're actively engaged right now, not years ago. Extract them ethically, filter by ICP, and reach out with context. Warm leads close at 14.6% vs 1.7% cold. Start manually or use Guffles ($79/month with $150 credits) to scale.
+            </TLDR>
+
+            <article className="prose prose-lg dark:prose-invert prose-headings:scroll-mt-32 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:shadow-lg max-w-none">
+
+                <div className="lead text-xl md:text-2xl text-foreground font-medium mb-8 leading-relaxed">
+                    Your competitors have something you want. An audience that's warmed up, engaged, and thinking about problems your product solves. Cold outreach is brutal. You send a hundred emails. Crickets. According to <a href="https://martal.ca/b2b-cold-email-statistics-lb/">Martal Group's 2025 research</a>, 91% of cold emails get no reply. Meanwhile, your competitors are posting content that gets likes, comments, and real engagement from the exact people you're trying to reach.
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 not-prose my-10">
+                   <Stat label="Cold Email Response" value="1-2%" sub="Average rate" />
+                   <Stat label="Warm Lead Close" value="14.6%" sub="vs 1.7% cold" />
+                   <Stat label="Post Engagement" value="15x" sub="more powerful than likes" />
+                </div>
+
+                <div id="section-1">
+                    <SectionTitle title="1) Why Competitor Audiences Are Warmer Leads">
+                        Let me explain why this approach works so well.
+
+                        **A warm lead is someone who has already shown interest through engagement.** When someone engages with your competitor's content about "sales automation challenges" or "lead generation pain points," they're telling you something important. They're actively thinking about that problem. Right now. Today.
+
+                        Contrast that with a cold list. You're interrupting someone who might not care about your category at all. The data backs this up: warm leads close at 14.6% compared to just 1.7% for cold leads, according to <a href="https://www.searchenginejournal.com">Search Engine Journal</a>. That's nearly a 9x difference. (And yes, I was skeptical of that stat until I tested it myself.)
+
+                        And here's what really convinced me: 84% of C-level executives use social media in their buying process, per <a href="https://business.linkedin.com">LinkedIn's research with Edelman</a>. These aren't passive scrollers. They're researching, evaluating, and making decisions based on what they see.
+
+                        **Intent signals are actions that indicate buying interest.** Likes, comments, shares on relevant content. Your competitors have already done the hard work of attracting and engaging these buyers. You don't need to start from zero. You just need to tap into the <a href="https://guffles.com">intent-based lead discovery</a> signals they've already created.
+                    </SectionTitle>
+                </div>
+
+                <div id="section-2">
+                    <SectionTitle title="2) The Post Engager Advantage: Why Likers and Commenters Beat Followers">
+                        Most guides on this topic treat followers and post engagers as equals. They're not. Understanding this difference changed how I approach competitor targeting entirely.
+
+                        **Engagers are people who liked, commented on, or shared a specific post.** A follower might have clicked that button two years ago. They could have switched jobs, lost interest, or forgotten they ever followed. But someone who commented on a competitor's post yesterday? They're actively engaged in that topic right now.
+
+                        The numbers tell the story. According to <a href="https://www.breakcold.com/blog/linkedin-engagement">Breakcold's LinkedIn algorithm research</a>, comments are 15x more powerful than likes for engagement. That's not just about algorithm reach. It reflects genuine investment. Someone who takes time to write a thoughtful comment is demonstrating real interest.
+
+                        I've seen this play out countless times. When I reach out to someone who commented on a competitor's post about a problem I solve, the conversation starts warmer. They already know the space. They've already been thinking about solutions. I'm not educating from scratch.
+
+                        **The most effective way to improve response rates is targeting engaged prospects.** 78% of salespeople who use social selling outperform their peers who don't, according to <a href="https://business.linkedin.com">LinkedIn</a>. And the secret isn't just being on LinkedIn. It's knowing which signals to follow for <a href="https://guffles.com/blog">warm lead generation</a>.
+
+                        **Finding the Right Posts to Mine**
+
+                        Not all competitor posts are worth mining. You want problem-focused content, not company announcements. Look for posts discussing challenges, sharing failures, asking questions, or sparking debates. High engagement with thoughtful comments signals an audience that actually cares.
+
+                        Tools like Guffles let you paste any LinkedIn post URL and extract everyone who engaged. Likers, commenters, the works. You can then filter by job title, company size, or industry to find the ones matching your ICP (Ideal Customer Profile). This turns hours of manual clicking into a few minutes of focused work.
+                    </SectionTitle>
+                </div>
+
+                <div id="section-3">
+                    <SectionTitle title="3) Three Methods to Find Your Competitors' Audience">
+                        Not all methods are created equal. I'm going to rank these by lead quality, not popularity. That's what actually matters for your pipeline.
+
+                        **Method 1: Extract Post Engagers (Highest Quality)**
+
+                        Here's the gold standard. Find your competitors' best-performing posts on topics related to problems you solve. Extract everyone who engaged. Filter by your ICP criteria.
+
+                        The process is straightforward:
+
+                        - Identify 3-5 competitors posting regularly about relevant topics
+                        - Find their posts with high engagement (50+ reactions, meaningful comments)
+                        - Extract the engagers from those specific posts
+                        - Filter by job title, company size, industry
+                        - Reach out with context about the topic they engaged with
+
+                        The result? You're connecting with people who showed interest in your problem space within the last few days or weeks. That's about as warm as cold outreach gets.
+
+                        **Method 2: Event Attendees (High Quality)**
+
+                        LinkedIn events hosted by competitors attract warm audiences. Webinars, workshops, product launches. These people are investing their time to learn about topics in your space.
+
+                        The intent signal here is strong. Someone who blocks an hour for a competitor's webinar is actively researching solutions. The limitation? Events aren't always available. Attendee lists can be harder to access. But when you find them, the quality is excellent.
+
+                        **Method 3: Company Page Followers (Moderate Quality)**
+
+                        So why do most articles lead with this method? Honestly, I think it's because it sounds intuitive. But I'm putting it last because the quality is lower.
+
+                        Followers might be stale. People who clicked follow years ago and forgot. You need Sales Navigator ($100/month) for effective filtering. It's higher volume but lower intent.
+
+                        LinkedIn generates 80% of all B2B leads from social media, according to <a href="https://sopro.io/resources/blog/linkedin-lead-generation-statistics/">Sopro</a>. But that doesn't mean all those leads are equal. Followers are better than cold lists. They're just not as good as active engagers.
+                    </SectionTitle>
+                </div>
+
+                <ArticleImage
+                    src="/images/blog/competitor-leads/mid.png"
+                    alt="Sales professional comparing different methods for finding competitor audiences on LinkedIn"
+                    caption="Post engagers represent the highest quality leads because they're actively engaged right now"
+                />
+
+                <div id="section-4">
+                    <SectionTitle title="4) Playing by the Rules: The Ethics and Legality of Competitor Targeting">
+                        I'm going to be straight with you here. Some guides recommend creating fake accounts or aggressive automation. That's a fast track to getting banned. And it's just not necessary.
+
+                        **LinkedIn's ToS (Terms of Service) prohibit automated scraping and third-party tools that extract data without permission.** Violate this and you risk account suspension or a permanent ban. I've seen it happen to colleagues who pushed too hard. (Trust me, rebuilding your network from scratch is no fun.)
+
+                        The legal picture is more nuanced. The hiQ Labs v. LinkedIn case established that scraping publicly available data doesn't violate federal computer fraud laws. But ToS violations can still lead to civil issues. And more practically, losing your account.
+
+                        If you're reaching out to EU contacts, GDPR (General Data Protection Regulation) comes into play. **GDPR is the EU's data privacy law that governs how you can collect and use personal data.** You need a lawful basis for processing personal data. Legitimate business interest is often cited, but it's contested territory.
+
+                        **The Do's and Don'ts**
+
+                        *What's generally okay:*
+                        - Using publicly available engagement data
+                        - Respecting reasonable rate limits
+                        - Providing genuine value in your outreach
+                        - Having a legitimate business purpose
+
+                        *What's clearly off-limits:*
+                        - Creating fake accounts (ever)
+                        - Bad-mouthing competitors in your messages
+                        - Scraping aggressively (this triggers detection)
+                        - Harassing or spamming the leads you extract
+
+                        The bottom line? You can do this ethically. Stay within reasonable limits, focus on public data, and treat the people you reach out to with respect. Your account and your reputation will thank you.
+                    </SectionTitle>
+                </div>
+
+                <div id="section-5">
+                    <SectionTitle title="5) Tools That Make Competitor Lead Extraction Work">
+                        Let's talk about how to actually do this at scale. I'll be honest. Doing this manually is tedious.
+
+                        **The Manual Approach (When Budget Is Zero)**
+
+                        You can click through post engagers one by one. Open profiles in new tabs. Copy information to a spreadsheet. It works. It's free.
+
+                        But realistically, you'll cap out at 5-10 posts per week before the tedium breaks you. I tried this when I started. It got old fast.
+
+                        **Sales Navigator ($100/month)**
+
+                        Sales Navigator is solid for follower research and saved searches. But it's not designed for post engager extraction. You still end up doing significant manual work. The filtering takes time. Better for ongoing prospecting than competitor-specific research.
+
+                        **Enterprise Tools ($300-500/month)**
+
+                        Apollo, ZoomInfo. These are powerful platforms. But they're built for broad prospecting, not this specific workflow. You're paying enterprise prices for features you won't use.
+
+                        <a href="https://belkins.io/blog/cold-email-response-rates">Belkins</a> found that cold email reply rates dropped 15% year-over-year in 2024 versus 2023. The game is changing. Warm approaches are becoming essential, not optional.
+
+                        **Purpose-Built Extraction Tools ($79/month)**
+
+                        This is where purpose-built <a href="https://guffles.com">LinkedIn lead extraction</a> tools shine. Guffles runs $79/month. That's significantly less than Apollo ($300+) or ZoomInfo ($500+). You paste the post URL, it extracts all engagers with their contact info, and you filter down to your ICP in minutes instead of hours.
+
+                        The workflow is dead simple: find competitor post, paste URL, get leads. No complex setup. No enterprise contract negotiations. Companies using social selling see 48% larger deals on average, according to <a href="https://optinmonster.com/social-selling-statistics/">OptinMonster's research</a>. Having the right tools makes that accessible to everyone, not just teams with big budgets.
+                    </SectionTitle>
+                </div>
+
+                <div className="not-prose my-12 p-8 rounded-3xl bg-card border border-border shadow-lg space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                        <Sparkles className="w-4 h-4" /> Quick Workflow: Competitor Lead Extraction
+                    </div>
+                    <ul className="list-disc pl-5 text-muted-foreground space-y-2">
+                        <li>Find competitor posts with 50+ reactions on relevant topics</li>
+                        <li>Extract engagers and filter by ICP (title, company size, industry)</li>
+                        <li>Reach out with context about the specific post they engaged with</li>
+                    </ul>
+                </div>
+
+                <ArticleImage
+                    src="/images/blog/competitor-leads/data.png"
+                    alt="Chart comparing warm lead close rates (14.6%) vs cold lead close rates (1.7%)"
+                    caption="Warm leads from competitor content close at nearly 9x the rate of cold outreach"
+                />
+
+                <div id="cta">
+                    <SectionTitle
+                        eyebrow="Ready to scale?"
+                        title="Your Next Move"
+                    >
+                        Let's bring this together.
+
+                        Competitor audiences are pre-warmed. They already know the problem space. They've engaged with content about challenges you solve. That's a massive head start over cold outreach.
+
+                        Post engagers are the gold standard. A commenter from yesterday beats a follower from two years ago. Every time. Focus your energy where the intent signals are strongest.
+
+                        Stay ethical. Protect your account and your reputation. The shortcuts aren't worth it.
+
+                        LinkedIn outreach response rates average 10.3% compared to 5.1% for cold email. That's 101% more replies, according to <a href="https://belkins.io/blog/linkedin-outreach-study">Belkins</a>. And when you personalize those messages based on specific posts they engaged with? Response rates jump another 30%, per <a href="https://business.linkedin.com">LinkedIn's own research</a>.
+
+                        You can start manual. Pick one competitor. Find their best-performing post from the last month. Spend an afternoon clicking through engagers and building a list.
+
+                        Or skip the tedium. Try Guffles with $150 in free credits. Paste the URL, filter by your ICP, and have a targeted list ready in minutes.
+
+                        Either way, you're building a warmer pipeline than cold outreach ever gave you. In a world where 91% of cold emails go ignored, that's the edge you need to steal competitors' audience on LinkedIn.
+                    </SectionTitle>
+
+                    <Callout title="Key Takeaway" icon={<Target className="w-5 h-5 text-primary" />}>
+                        **Your competitors have already done the hard work of warming up your ideal prospects. Tap into their post engagers for leads that are 9x more likely to close than cold outreach.**
+                    </Callout>
+                </div>
+
+                <BlogCTA
+                    title="Ready to Steal Your Competitors' Audience?"
+                    description="Stop sending cold emails to strangers. Guffles extracts engaged prospects from any LinkedIn post in minutes. Get $150 in free credits to start building your warm pipeline today."
+                    buttonText="Try Guffles Free"
+                    buttonHref="/waitlist"
+                />
+            </article>
+        </main>
+
+        <aside className="hidden xl:block relative h-full">
+             <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar space-y-8 pb-10">
+                 <SidebarResource />
+                 <SidebarQuickWins />
+                 <SidebarMore />
+             </div>
+        </aside>
+
+    </div>
+  </div>
+
+  <Footer />
+</div>
