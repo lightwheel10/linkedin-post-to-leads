@@ -59,6 +59,17 @@ const POSTS = [
     date: "Dec 11, 2025",
     readTime: "8 min read",
     image: "/images/blog/competitor-leads/header.png"
+  },
+  {
+    id: 4,
+    slug: "linkedin-engagement-leads",
+    title: "LinkedIn Post Engagers: 5 Steps to Find Warm Leads",
+    excerpt: "Turn LinkedIn post engagers into warm leads that close 8.5x better than cold prospects. Step-by-step guide without expensive tools.",
+    category: "Lead Generation",
+    author: "Guffles Team",
+    date: "Dec 12, 2024",
+    readTime: "8 min read",
+    image: "/images/blog/linkedin-engagement-leads/header.png"
   }
 ];
 
@@ -77,7 +88,7 @@ export default function BlogPage() {
       <Navbar />
 
       <main className="flex-1 pt-24 pb-20">
-        
+
         {/* Header / Hero */}
         <section className="relative px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto mb-16 md:mb-24">
            {/* Background Decoration */}
@@ -100,8 +111,8 @@ export default function BlogPage() {
               <div className="max-w-md mx-auto mt-8 flex gap-2 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input 
-                        placeholder="Search articles..." 
+                    <Input
+                        placeholder="Search articles..."
                         className="pl-9 bg-background/50 border-white/10"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -112,17 +123,17 @@ export default function BlogPage() {
         </section>
 
         <div className="px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-16">
-            
+
             {/* Featured Post (Only show if no search/filter active) */}
             {activeCategory === "All" && !searchQuery && (
                 <section className="animate-fade-in-up" style={{ animationDelay: '400ms' }}>
                     <div className="group relative grid lg:grid-cols-2 gap-8 items-center bg-card rounded-3xl p-6 md:p-10 border border-border shadow-2xl overflow-hidden hover:border-primary/20 transition-all duration-300">
                         {/* Glow */}
                         <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-transparent opacity-0 group-hover:opacity-100 blur-2xl transition-opacity duration-500 pointer-events-none" />
-                        
+
                         <div className="relative aspect-[16/9] lg:aspect-[4/3] rounded-2xl overflow-hidden shadow-lg">
-                             <Image 
-                                src={FEATURED_POST.image} 
+                             <Image
+                                src={FEATURED_POST.image}
                                 alt={FEATURED_POST.title}
                                 fill
                                 className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -142,13 +153,13 @@ export default function BlogPage() {
                                 <span className="w-1 h-1 rounded-full bg-border" />
                                 <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {FEATURED_POST.readTime}</span>
                             </div>
-                            
+
                             <h2 className="text-3xl md:text-4xl font-bold text-foreground leading-tight group-hover:text-primary transition-colors">
                                 <Link href={`/blog/${FEATURED_POST.slug}`}>
                                     {FEATURED_POST.title}
                                 </Link>
                             </h2>
-                            
+
                             <p className="text-lg text-muted-foreground leading-relaxed line-clamp-3">
                                 {FEATURED_POST.excerpt}
                             </p>
@@ -180,8 +191,8 @@ export default function BlogPage() {
                                 onClick={() => setActiveCategory(cat)}
                                 className={cn(
                                     "px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
-                                    activeCategory === cat 
-                                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/20" 
+                                    activeCategory === cat
+                                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
                                         : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
                                 )}
                              >
@@ -201,8 +212,8 @@ export default function BlogPage() {
                             <Link key={post.id} href={`/blog/${post.slug}`} className="group flex flex-col h-full">
                                 <Card className="flex-1 bg-card border-border hover:border-primary/50 transition-all duration-300 overflow-hidden hover:shadow-xl hover:shadow-primary/5 group-hover:-translate-y-1">
                                     <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-                                        <Image 
-                                            src={post.image} 
+                                        <Image
+                                            src={post.image}
                                             alt={post.title}
                                             fill
                                             className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -252,8 +263,8 @@ export default function BlogPage() {
                         </div>
                         <h3 className="text-lg font-semibold">No posts found</h3>
                         <p className="text-muted-foreground">Try adjusting your search or category filter.</p>
-                        <Button 
-                            variant="outline" 
+                        <Button
+                            variant="outline"
                             className="mt-4"
                             onClick={() => {setActiveCategory("All"); setSearchQuery("");}}
                         >
@@ -315,20 +326,19 @@ export default function BlogPage() {
 
 function ChevronRight({ className }: { className?: string }) {
   return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      width="24" 
-      height="24" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       className={className}
     >
       <path d="m9 18 6-6-6-6"/>
     </svg>
   );
 }
-
