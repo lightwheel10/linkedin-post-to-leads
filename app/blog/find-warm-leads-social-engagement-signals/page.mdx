@@ -1,0 +1,266 @@
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Calendar, Clock, TrendingUp, Target, Zap, MessageSquare, Sparkles } from "lucide-react";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
+import {
+  Stat,
+  Callout,
+  TLDR,
+  SectionTitle,
+  SidebarQuickWins,
+  SidebarResource,
+  SidebarMore,
+  StickyTableOfContents,
+  BlogCTA,
+  ArticleImage
+} from "@/components/blog/blocks";
+
+export const metadata = {
+  title: "Find Warm Leads: 5 Social Engagement Signals That Work",
+  description: "Learn how to find warm leads by tracking social engagement signals. Discover 5 intent signals on LinkedIn that reveal buyers ready to hear from you today.",
+};
+
+<div className="relative min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 selection:text-primary">
+
+  <Navbar />
+
+  <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 pb-24 relative z-10 pt-24 md:pt-32">
+
+    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_300px] gap-12 pt-8">
+
+        <aside className="hidden lg:block relative h-full">
+            <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar pb-10">
+                <StickyTableOfContents items={[
+                    { id: "section-1", label: "1) What Are Warm Leads" },
+                    { id: "section-2", label: "2) Social Engagement Signals" },
+                    { id: "section-3", label: "3) 5 LinkedIn Signals" },
+                    { id: "section-4", label: "4) How to Track Signals" },
+                    { id: "section-5", label: "5) Outreach Best Practices" },
+                    { id: "cta", label: "Start Finding Warm Leads" }
+                ]} />
+            </div>
+        </aside>
+
+        <main className="max-w-3xl mx-auto lg:mx-0 w-full min-w-0">
+
+            <header className="mb-12 animate-fade-in-up">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-xs font-bold text-primary mb-6">
+                    <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                    LEAD GENERATION
+                </div>
+
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-foreground mb-6 text-balance">
+                  Find Warm Leads: 5 Social Engagement Signals That Work
+                </h1>
+
+                <div className="flex items-center gap-4 py-6 border-y border-border/50">
+                     <div className="relative">
+                        <div className="w-12 h-12 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden ring-1 ring-white/10">
+                             <Image
+                                src="/images/ceo.jpeg"
+                                alt="Team"
+                                width={48}
+                                height={48}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-foreground">Guffles Team</div>
+                        <div className="text-sm text-muted-foreground">Lead Generation Experts</div>
+                     </div>
+                     <div className="h-8 w-px bg-border mx-2 hidden sm:block" />
+                     <div className="hidden sm:flex flex-col text-sm text-muted-foreground">
+                        <span>Published Dec 11, 2025</span>
+                        <span>8 min read</span>
+                     </div>
+                </div>
+            </header>
+
+            <div className="relative mb-12 rounded-2xl overflow-hidden shadow-2xl bg-muted aspect-[16/9] animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                <Image
+                    src="/images/blog/find-warm-leads-social-engagement-signals/header.jpg"
+                    alt="Professional discovering warm leads through social engagement signals on LinkedIn"
+                    fill
+                    className="object-cover"
+                    priority
+                />
+            </div>
+
+            <TLDR>
+                Stop wasting time on cold outreach with 1-2% response rates. Warm leads convert at 14.6% vs 1.7% for cold leads. Track social engagement signals (likes, comments, shares) on relevant LinkedIn posts to find prospects already interested in your topic. Tools like Guffles automate this process, helping you discover 50-100+ warm leads per week instead of 5-10 manually.
+            </TLDR>
+
+            <article className="prose prose-lg dark:prose-invert prose-headings:scroll-mt-32 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:shadow-lg max-w-none">
+
+                <div className="lead text-xl md:text-2xl text-foreground font-medium mb-8 leading-relaxed">
+                    You sent 100 cold emails last week. Maybe two people replied. One said "not interested." The other asked to be removed from your list. Meanwhile, somewhere on LinkedIn, someone just commented on a post about the exact problem your product solves. They practically raised their hand saying "I need help with this." But you didn't see it. Your competitor did.
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 not-prose my-10">
+                   <Stat label="Cold Email Response" value="1-2%" sub="Average rate" />
+                   <Stat label="Warm Lead Close Rate" value="14.6%" sub="vs 1.7% cold" />
+                   <Stat label="Sales Cycle" value="30-60 days" sub="vs 90-180 cold" />
+                </div>
+
+                <div id="section-1">
+                    <SectionTitle title="1) What Are Warm Leads and Why Do They Convert Better?">
+                        Let me start with a simple distinction. **A cold lead is a prospect who has never heard of you, never interacted with your content, and has no idea you exist.** A warm lead, on the other hand, is a prospect who has already shown some level of interest or engagement before you reach out.
+
+                        The difference in conversion rates is dramatic. [Warm leads have a 14.6% close rate compared to just 1.7% for cold leads](https://spp.co/blog/understanding-lead-types/), according to industry research from 2024. That's nearly ten times better.
+
+                        And it's not just about close rates. Warm leads move through your sales pipeline faster. While cold leads typically take 90-180 days to close, warm leads convert in 30-60 days. When you factor in the time and effort required, the math is clear: **spending an hour finding warm leads beats spending ten hours blasting cold emails.**
+
+                        [Warm outreach can achieve response rates up to 45%](https://www.salesrobot.co/blogs/warm-vs-cold-outreach), compared to the dismal 1-5% you get from cold outreach. So the question isn't whether warm leads are better. The question is how do you find warm leads systematically?
+                    </SectionTitle>
+                </div>
+
+                <div id="section-2">
+                    <SectionTitle title="2) Why Social Engagement Signals Reveal Buyer Intent">
+                        **Social engagement signals are the actions people take on social platforms.** These actions include likes, comments, shares, and questions. When someone engages with a piece of content, they're telling you something about their interests, their problems, and their priorities.
+
+                        Here's why this matters for sales: [75% of B2B buyers use social media to support their purchasing decisions](https://business.linkedin.com/sales-solutions/social-selling). For C-level executives, that number jumps to 84%. These decision-makers aren't just passive scrollers. They're actively engaging with content related to their business challenges.
+
+                        Consider these examples. When someone comments on a post about CRM implementation struggles, they probably have CRM implementation struggles. When they like a post from your competitor, they're probably in research mode for solutions like yours. When they share an article about sales team challenges, they're thinking about those challenges.
+
+                        **Buyer intent signals are observable actions that indicate a prospect is actively researching or considering a purchase.** According to research, [97% of B2B companies now believe that intent data provides a competitive advantage](https://www.theinsightcollective.com/insights/b2b-intent-data-statistics).
+
+                        You can track these signals manually by setting up LinkedIn notifications and checking post engagement daily. Or you can use tools that automate the process. Platforms like [Guffles](https://guffles.com) monitor posts across your industry and extract everyone who engaged with relevant content. Whether you do it manually or with automation, the principle is the same: **engagement equals intent.**
+                    </SectionTitle>
+                </div>
+
+                <div id="section-3">
+                    <SectionTitle title="3) 5 Engagement Signals That Help You Find Warm Leads on LinkedIn">
+                        Now let me get specific. Here are the five engagement signals I look for when identifying warm leads on LinkedIn.
+
+                        **Signal 1: Comments on Pain-Point Posts**
+                        This is the highest-intent signal. When someone takes the time to comment on a post about a specific problem, they almost certainly have that problem themselves. Look for posts discussing challenges your product solves. Read the comments carefully. When someone writes "we struggle with this too" or "this is exactly what our team faces," you've found a warm lead.
+
+                        **Signal 2: Likes on Competitor Content**
+                        People who like content from your competitors are in the market. They may be current customers looking for alternatives, prospects evaluating options, or industry watchers staying informed. All of these are warmer than random strangers.
+
+                        **Signal 3: Shares of Industry Insights**
+                        When someone shares an industry report or thought leadership piece, they're signaling active engagement with the topic. They care enough to put their name behind the content. These people are often decision-makers or influencers within their organizations.
+
+                        **Signal 4: Questions Asked in Groups or Discussions**
+                        This is another high-intent signal. When someone asks "what tools do you use for X?" or "how do you handle Y at your company?" they're actively shopping or researching. LinkedIn Groups and post comments are gold mines for these questions.
+
+                        **Signal 5: Engagement with Hiring or Growth Posts**
+                        Companies hiring for specific roles often need tools to support those roles. A company posting about hiring five new SDRs probably needs sales tools. Look for engagement on hiring announcements, growth milestones, and team expansion posts.
+                    </SectionTitle>
+                </div>
+
+                <ArticleImage
+                    src="/images/blog/find-warm-leads-social-engagement-signals/mid.jpg"
+                    alt="Sales professional analyzing LinkedIn engagement data"
+                    caption="Tracking engagement signals reveals buyer intent before you reach out"
+                />
+
+                <div id="section-4">
+                    <SectionTitle title="4) How to Track Engagement Signals to Find Warm Leads">
+                        Understanding which signals to look for is one thing. Tracking them systematically is another. Let me walk you through both the manual approach and how to scale it.
+
+                        **The Manual Approach**
+
+                        You can start tracking engagement signals today without any tools. Here's how:
+
+                        **Step 1:** Identify 10-15 posts per week that are relevant to your product or industry. Look for posts from influencers, competitors, and industry voices discussing topics your prospects care about.
+
+                        **Step 2:** Check the engagement on each post. Click through to see who liked, commented, and shared. Look at their profiles. Do they match your ideal customer profile?
+
+                        **Step 3:** Create a spreadsheet to track engaged prospects. Note the post they engaged with, what type of engagement it was, and any relevant profile details.
+
+                        **Step 4:** Use this context in your outreach. Reference the specific post and topic when you reach out.
+
+                        This approach works, but it has a ceiling. You can realistically track engagement on 5-10 posts per week manually. Anything more becomes a full-time job.
+
+                        **Scaling with Intent-Based Prospecting Tools**
+
+                        The challenge with manual tracking is that it doesn't scale. If you want to monitor engagement across hundreds of posts, you need automation.
+
+                        **Intent-based lead discovery is the process of identifying prospects based on their behavioral signals rather than static demographic data.** [Guffles](https://guffles.com), for example, lets you paste any LinkedIn post URL and extracts everyone who engaged. It scores each person based on how closely they match your ideal customer profile.
+
+                        At $79/month compared to $300+ for traditional tools like Apollo or ZoomInfo, it's accessible for smaller teams. And unlike those tools, which rely on static demographic data, Guffles identifies people based on behavioral signals.
+                    </SectionTitle>
+                </div>
+
+                <div id="section-5">
+                    <SectionTitle title="5) How to Reach Out to Warm Leads Without Sounding Generic">
+                        Finding warm leads is only half the equation. You still need to reach out in a way that converts. The good news is that warm leads give you built-in context for personalization.
+
+                        Here's the structure I use:
+
+                        **Reference the engagement first.** Start by mentioning the specific post or content they engaged with. This immediately differentiates you from cold outreach. It shows you're paying attention.
+
+                        **Lead with the topic, not your product.** If they commented on a post about sales pipeline challenges, talk about sales pipeline challenges. Don't jump straight into your pitch.
+
+                        **Ask a question that continues the conversation.** You want a dialogue, not a monologue. Ask about their experience with the problem or their thoughts on the topic.
+
+                        **Keep it short.** Three to four sentences maximum. Warm leads are more likely to respond, but only if your message is easy to respond to.
+
+                        Here's an example:
+
+                        "Hi Sarah, I saw your comment on John's post about the challenges of tracking prospect engagement. It resonated because I hear that frustration a lot from sales teams. What have you tried so far to get better visibility into who's actually interested? Would love to compare notes."
+
+                        Notice what's not in that message: no pitch, no product name, no call to schedule a demo. **The best practice for warm outreach is to start a conversation, not close a deal.**
+                    </SectionTitle>
+                </div>
+
+                <div className="not-prose my-12 p-8 rounded-3xl bg-card border border-border shadow-lg space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                        <Sparkles className="w-4 h-4" /> Quick Workflow: Manual Signal Tracking
+                    </div>
+                    <ul className="list-disc pl-5 text-muted-foreground space-y-2">
+                        <li>Identify 10-15 relevant posts weekly from influencers and competitors</li>
+                        <li>Check engagement, filter by ICP match, track in spreadsheet</li>
+                        <li>Reference specific posts in personalized outreach messages</li>
+                    </ul>
+                </div>
+
+                <ArticleImage
+                    src="/images/blog/find-warm-leads-social-engagement-signals/data.jpg"
+                    alt="Comparison chart showing warm lead vs cold lead conversion rates"
+                    caption="Warm leads convert at 14.6% vs 1.7% for cold leads - nearly 10x better"
+                />
+
+                <div id="cta">
+                    <SectionTitle
+                        eyebrow="Ready to scale?"
+                        title="Start Finding Warm Leads Today"
+                    >
+                        The shift from cold to warm outreach isn't just a trend. It's a necessity. When most cold emails go ignored and warm leads convert at nearly ten times the rate of cold leads, the math is clear.
+
+                        Learning to find warm leads using social engagement signals comes down to a simple principle: pay attention to what people engage with, and reach out with context.
+
+                        Start by tracking engagement manually to prove the concept. When you're ready to scale, give [Guffles](https://guffles.com) a try. You'll get $150 in credits to start with your first month at $79.
+                    </SectionTitle>
+
+                    <Callout title="Key Takeaway" icon={<Target className="w-5 h-5 text-primary" />}>
+                        **The most effective way to improve your outreach results is to stop emailing strangers and start finding warm leads who actually want to hear from you.**
+                    </Callout>
+                </div>
+
+                <BlogCTA
+                    title="Ready to Find Warm Leads?"
+                    description="Stop guessing who might be interested. Guffles shows you exactly who's engaging with your industry's top content. Get $150 in free credits to start."
+                    buttonText="Try Guffles Free"
+                    buttonHref="/waitlist"
+                />
+            </article>
+        </main>
+
+        <aside className="hidden xl:block relative h-full">
+             <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar space-y-8 pb-10">
+                 <SidebarResource />
+                 <SidebarQuickWins />
+                 <SidebarMore />
+             </div>
+        </aside>
+
+    </div>
+  </div>
+
+  <Footer />
+</div>

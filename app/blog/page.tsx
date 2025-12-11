@@ -37,6 +37,17 @@ const POSTS = [
     date: "Dec 08, 2025",
     readTime: "9 min read",
     image: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=800&q=80"
+  },
+  {
+    id: 2,
+    slug: "find-warm-leads-social-engagement-signals",
+    title: "Find Warm Leads: 5 Social Engagement Signals That Work",
+    excerpt: "Learn how to find warm leads by tracking social engagement signals. Discover 5 intent signals on LinkedIn that reveal buyers ready to hear from you today.",
+    category: "Strategy",
+    author: "Guffles Team",
+    date: "Dec 11, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/find-warm-leads-social-engagement-signals/header.jpg"
   }
 ];
 
