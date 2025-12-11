@@ -13,7 +13,7 @@ import { Search, ArrowRight, Clock, Calendar, TrendingUp, Sparkles, Filter } fro
 import { cn } from "@/lib/utils";
 
 // Blog Data
-const CATEGORIES = ["All", "Strategy", "Growth"];
+const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation"];
 
 const FEATURED_POST = {
   slug: "15-linkedin-lead-generation-tips",
@@ -48,6 +48,17 @@ const POSTS = [
     date: "Dec 11, 2025",
     readTime: "8 min read",
     image: "/images/blog/find-warm-leads-social-engagement-signals/header.jpg"
+  },
+  {
+    id: 3,
+    slug: "competitor-leads",
+    title: "Steal Competitors' LinkedIn Audience: 3 Ethical Methods",
+    excerpt: "Extract LinkedIn post engagers from competitor content and turn them into warm leads. Get 14.6% close rates vs 1.7% cold. Try free with $150 credits.",
+    category: "Lead Generation",
+    author: "Guffles Team",
+    date: "Dec 11, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/competitor-leads/header.png"
   }
 ];
 
