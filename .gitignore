@@ -46,3 +46,6 @@ next-env.d.ts
 .data/
 Guffles_Pricing_Financial_Document.pdf
 SUPABASE_AUTH_MIGRATION.md
+
+/templates
+

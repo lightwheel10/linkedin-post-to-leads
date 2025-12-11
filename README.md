@@ -21,7 +21,6 @@ People who engage with LinkedIn posts are warm leads — they're actively intere
 ## Tech Stack
 
 - Next.js 16 (App Router)
-- Supabase (PostgreSQL)
+- Supabase (PostgreSQL + Auth)
 - Apify (LinkedIn scraping)
 - Tailwind CSS
-- Resend (Email OTP auth)

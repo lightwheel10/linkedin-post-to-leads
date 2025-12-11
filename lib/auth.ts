@@ -1,38 +1,87 @@
-import { cookies } from "next/headers";
-import { jwtVerify } from "jose";
+/**
+ * Authentication Utilities
+ * 
+ * MIGRATION NOTE: This file was REPLACED as part of the Supabase Auth migration.
+ * 
+ * BEFORE (Old Implementation):
+ * - Used jose library to verify JWT tokens from cookies
+ * - JWT was created by our custom OTP verification endpoint
+ * - Relied on OTP_SECRET environment variable
+ * 
+ * AFTER (New Implementation - Supabase Auth):
+ * - Uses Supabase Auth for session management
+ * - Sessions are automatically managed via cookies by @supabase/ssr
+ * - No custom JWT handling needed
+ * 
+ * The function signatures remain the same to avoid breaking existing code:
+ * - getAuthenticatedUser() - returns email or null
+ * - requireAuth() - returns email or throws error
+ * 
+ * @see SUPABASE_AUTH_MIGRATION.md for full migration documentation
+ */
+
+import { createClient } from '@/lib/supabase/server'
+import { getOrCreateUser } from './data-store'
 
 /**
- * Gets the authenticated user's email from the JWT token in cookies.
- * Returns null if not authenticated or token is invalid.
+ * Gets the authenticated user's email from Supabase Auth session.
+ * Returns null if not authenticated.
+ * 
+ * MIGRATION NOTE: Previously used jwtVerify from jose to verify custom JWT.
+ * Now uses Supabase Auth's getUser() which automatically handles session cookies.
  */
 export async function getAuthenticatedUser(): Promise<string | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
+  const supabase = await createClient()
 
-  if (!token) {
-    return null;
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (error || !user?.email) {
+    return null
   }
 
-  try {
-    const secret = new TextEncoder().encode(
-      process.env.OTP_SECRET || "dev-secret-do-not-use-in-prod"
-    );
-    const { payload } = await jwtVerify(token, secret);
-    return payload.email as string;
-  } catch {
-    return null;
-  }
+  return user.email
 }
 
 /**
- * Requires authentication - throws redirect to login if not authenticated.
- * Returns the user's email if authenticated.
+ * Gets the authenticated user with full profile from your users table.
+ * Creates user if doesn't exist (for first-time OAuth users).
+ * 
+ * MIGRATION NOTE: This is a new helper function added during migration.
+ * Useful when you need both auth status and user profile data.
  */
-export async function requireAuth(): Promise<string> {
-  const email = await getAuthenticatedUser();
+export async function getAuthenticatedUserWithProfile() {
+  const email = await getAuthenticatedUser()
+
   if (!email) {
-    throw new Error("Unauthorized");
+    return null
   }
-  return email;
+
+  return getOrCreateUser(email)
 }
 
+/**
+ * Requires authentication - throws error if not authenticated.
+ * Returns the user's email if authenticated.
+ * 
+ * MIGRATION NOTE: Function signature unchanged from old implementation.
+ * Existing code using requireAuth() will work without changes.
+ */
+export async function requireAuth(): Promise<string> {
+  const email = await getAuthenticatedUser()
+  if (!email) {
+    throw new Error('Unauthorized')
+  }
+  return email
+}
+
+/**
+ * Sign out the current user.
+ * 
+ * MIGRATION NOTE: This is a new helper function added during migration.
+ * Call this from server-side code to sign out the user.
+ * For client-side sign out, use the logout API route or supabase client directly.
+ */
+export async function signOut() {
+  const supabase = await createClient()
+  await supabase.auth.signOut()
+}

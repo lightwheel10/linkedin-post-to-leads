@@ -1,0 +1,258 @@
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Calendar, Clock, TrendingUp, Target, Zap, MessageSquare, Sparkles } from "lucide-react";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
+import {
+  Stat,
+  Callout,
+  TLDR,
+  SectionTitle,
+  SidebarQuickWins,
+  SidebarResource,
+  SidebarMore,
+  StickyTableOfContents,
+  BlogCTA
+} from "@/components/blog/blocks";
+
+export const metadata = {
+  title: "15 LinkedIn Lead Generation Tips You Can Use Today",
+  description:
+    "Practical, human LinkedIn lead-gen plays for SMB marketers—turn posts and comments into booked calls without spamming.",
+};
+
+<div className="relative min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 selection:text-primary">
+  
+  <Navbar />
+
+  <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 pb-24 relative z-10 pt-24 md:pt-32">
+    
+    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_300px] gap-12 pt-8">
+        
+        {/* LEFT COLUMN: Sticky TOC & Share */}
+        <aside className="hidden lg:block relative h-full">
+            <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar pb-10">
+                <StickyTableOfContents items={[
+                    { id: "optimize-profile", label: "1) Tighten your buyer line" },
+                    { id: "pinned-post", label: "2) Pin a post that sells" },
+                    { id: "signal-post", label: "3) Ship a weekly signal post" },
+                    { id: "comment-first", label: "4) Comment-first, post-second" },
+                    { id: "personalize-requests", label: "5) Personalize requests" },
+                    { id: "capture-engagement", label: "6) Capture every engager" },
+                    { id: "dm-context", label: "7) DM with context" },
+                    { id: "value-assets", label: "8) Rotate 3 value assets" },
+                    { id: "navigator-filters", label: "9) Use Navigator filters" },
+                    { id: "groups", label: "10) Join relevant groups" },
+                    { id: "articles", label: "11) Publish LinkedIn Articles" },
+                    { id: "lead-gen-forms", label: "12) Use Lead Gen Forms" },
+                    { id: "live-teardown", label: "13) Host live teardowns" },
+                    { id: "multichannel", label: "14) Multichannel nudge" },
+                    { id: "measure", label: "15) Measure & adjust" },
+                    { id: "cta", label: "Turn engagement into pipeline" }
+                ]} />
+            </div>
+        </aside>
+
+        {/* CENTER COLUMN: Main Content */}
+        <main className="max-w-3xl mx-auto lg:mx-0 w-full min-w-0">
+            
+            {/* Header */}
+            <header className="mb-12 animate-fade-in-up">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-xs font-bold text-primary mb-6">
+                    <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                    LinkedIn Playbook
+                </div>
+                
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-foreground mb-6 text-balance">
+                  15 LinkedIn Lead Generation Tips You Can Use Today
+                </h1>
+
+                <div className="flex items-center gap-4 py-6 border-y border-border/50">
+                     <div className="relative">
+                        <div className="w-12 h-12 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden ring-1 ring-white/10">
+                             <Image 
+                                src="/images/ceo.jpeg" 
+                                alt="Team" 
+                                width={48} 
+                                height={48} 
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-foreground">Growth Team</div>
+                        <div className="text-sm text-muted-foreground">For SMB marketers</div>
+                     </div>
+                     <div className="h-8 w-px bg-border mx-2 hidden sm:block" />
+                     <div className="hidden sm:flex flex-col text-sm text-muted-foreground">
+                        <span>Published Dec 08, 2025</span>
+                        <span>9 min read</span>
+                     </div>
+                </div>
+            </header>
+
+            {/* Featured Image */}
+            <div className="relative mb-12 rounded-2xl overflow-hidden shadow-2xl bg-muted aspect-[16/9] animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                <Image
+                    src="https://images.unsplash.com/photo-1506784983877-45594efa4cbe?auto=format&fit=crop&w=2400&q=80"
+                    alt="LinkedIn lead generation"
+                    fill
+                    className="object-cover"
+                    priority
+                />
+            </div>
+
+            {/* TL;DR Box */}
+            <TLDR>
+                <strong>The gist:</strong> Cold email reply rates hover at ~1%. These 15 LinkedIn moves help small teams capture intent that’s already in the open—comments, reactions, and posts—then turn it into warm, contextual outreach.
+            </TLDR>
+
+            {/* Article Body */}
+            <article className="prose prose-lg dark:prose-invert prose-headings:scroll-mt-32 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:shadow-lg max-w-none">
+                
+                <div className="lead text-xl md:text-2xl text-foreground font-medium mb-8 leading-relaxed">
+                    LinkedIn is where your buyers say what they need in public. The trick is catching those signals quickly and responding like a human—not an auto-sender.
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 not-prose my-10">
+                   <Stat label="Reply Rate" value="12–18%" sub="Warm LinkedIn DMs" />
+                   <Stat label="Reply Rate" value="~1%" sub="Generic cold email" />
+                   <Stat label="Time to first meeting" value="2–3x faster" sub="When you act on fresh engagement" />
+                </div>
+
+                <div id="optimize-profile">
+                    <SectionTitle title="1) Tighten your buyer line">
+                        State who you help, with what, and the outcome. One line beats jargon. Example: “We turn LinkedIn post engagement into booked calls for B2B teams.”
+                    </SectionTitle>
+                </div>
+
+                <div id="pinned-post">
+                    <SectionTitle title="2) Pin a post that sells softly">
+                        Share a mini case win and invite people to comment “playbook” for the resource. Your pinned post becomes a steady, low-friction lead magnet.
+                    </SectionTitle>
+                </div>
+
+                <div id="signal-post">
+                    <SectionTitle title="3) Ship a weekly signal post">
+                        Call out a specific pain (e.g., “reply rates stuck at 1%”), add a 3-step fix, and end with “DM me ‘signals’ for the checklist.” One dependable post beats five random ones.
+                    </SectionTitle>
+                </div>
+
+                <div id="comment-first">
+                    <SectionTitle title="4) Comment-first, post-second">
+                        Spend 15 minutes daily commenting on big creators your ICP follows. Add one crisp insight or datapoint—comments ride their reach and earn profile clicks from the right buyers.
+                    </SectionTitle>
+                </div>
+
+                <div id="personalize-requests">
+                    <SectionTitle title="5) Personalize connection requests">
+                        Reference something real (“Saw your post on SDR ramp times—loved the ramp-to-first-meeting metric.”). Skip pitching. You’re building a door, not forcing it.
+                    </SectionTitle>
+                </div>
+
+                <div id="capture-engagement">
+                    <SectionTitle title="6) Capture every engager">
+                        Every comment on a relevant post is intent. Capture names, roles, and context before it scrolls away. If you’re posting, our LinkedIn Post to Leads tool can auto-pull commenters and reactors into a clean list so you don’t lose the moment.
+                    </SectionTitle>
+                </div>
+
+                <div id="dm-context">
+                    <SectionTitle title="7) DM with context, not scripts">
+                        Lead with why you’re reaching out, anchor to their comment, and offer a tiny next step (a 90-second loom, a checklist, a one-liner fix). No walls of text.
+                    </SectionTitle>
+                </div>
+
+                <div id="value-assets">
+                    <SectionTitle title="8) Rotate 3 value assets">
+                        Keep three ready: a checklist, a mini case, and a 2–3 slide teardown. Swap based on the prospect’s role and pain. Assets beat adjectives.
+                    </SectionTitle>
+                </div>
+
+                <div id="navigator-filters">
+                    <SectionTitle title="9) Use Sales Navigator filters that actually matter">
+                        Filter by job title + company size + industry + “posted on LinkedIn in 30 days.” Active posters reply faster. Save 3–5 searches and work them weekly.
+                    </SectionTitle>
+                </div>
+
+                <div id="groups">
+                    <SectionTitle title="10) Join 3–5 relevant groups (and post)">
+                        Drop one useful post per week in groups your ICP reads. End with a question that invites replies (“What’s your best opener this quarter?”).
+                    </SectionTitle>
+                </div>
+
+                <div id="articles">
+                    <SectionTitle title="11) Publish one LinkedIn Article per month">
+                        Repurpose a strong post thread into an article, add a single CTA block (“Comment ‘checklist’”), and let Articles rank in LinkedIn search.
+                    </SectionTitle>
+                </div>
+
+                <div id="lead-gen-forms">
+                    <SectionTitle title="12) Use Lead Gen Forms sparingly, but smartly">
+                        For webinars or downloads, forms reduce friction. Follow up within 24 hours referencing what they grabbed to keep response rates high.
+                    </SectionTitle>
+                </div>
+
+                <div id="live-teardown">
+                    <SectionTitle title="13) Host a 30-minute live teardown">
+                        Teardown a prospect’s profile or outbound message live. It’s interactive, shows expertise, and gives you a natural follow-up (“Here’s your before/after doc.”).
+                    </SectionTitle>
+                </div>
+
+                <div id="multichannel">
+                    <SectionTitle title="14) Multichannel nudge">
+                        After a meaningful LinkedIn touch, send a short email referencing that touch. Keep it under 80 words and specific (“We traded comments on Jamie’s post about intent signals…”).
+                    </SectionTitle>
+                </div>
+
+                <div id="measure">
+                    <SectionTitle title="15) Measure weekly, adjust monthly">
+                        Track connection accept %, reply %, meetings booked, and post saves/comments from ICPs. Trim what isn’t moving replies or meetings. Small teams win by editing fast.
+                    </SectionTitle>
+                </div>
+
+                <div id="workflow" className="not-prose my-12 p-8 rounded-3xl bg-card border border-border shadow-lg space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                        <Sparkles className="w-4 h-4" /> A lightweight weekly workflow
+                    </div>
+                    <ul className="list-disc pl-5 text-muted-foreground space-y-2">
+                        <li>Daily: 15 mins comments, 10 mins DMs, capture new engagers.</li>
+                        <li>Weekly: 1 signal post, 1 group post, refresh your asset of the week.</li>
+                        <li>Monthly: 1 LinkedIn Article, one live teardown.</li>
+                    </ul>
+                </div>
+
+                <div id="cta">
+                    <SectionTitle eyebrow="Where the leads part gets easier" title="Turn engagement into pipeline while intent is hot">
+                        If you're already posting, the fastest win is capturing who engages the moment they do. The LinkedIn Post to Leads tool can pull commenters/reactors into a tidy list and pair them with your outreach snippets—so you spend time on conversations, not copy/pasting names.
+                    </SectionTitle>
+
+                    <Callout title="Ready to try it?" icon={<Target className="w-5 h-5 text-primary" />}>
+                        Start capturing leads from your LinkedIn posts today. Paste any post URL, and we'll extract every commenter and reactor into a clean, exportable list—complete with their job titles and companies. No more manual copy-pasting.
+                    </Callout>
+                </div>
+
+                <BlogCTA
+                    title="Turn LinkedIn Engagement Into Pipeline"
+                    description="Capture commenters and reactors the moment they engage. Reach out while intent is fresh."
+                    buttonText="Get Started Free"
+                    buttonHref="/waitlist"
+                />
+            </article>
+        </main>
+
+        {/* RIGHT COLUMN: Sticky Sidebar */}
+        <aside className="hidden xl:block relative h-full">
+             <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar space-y-8 pb-10">
+                 <SidebarResource />
+                 <SidebarQuickWins />
+                 <SidebarMore />
+             </div>
+        </aside>
+
+    </div>
+  </div>
+
+  <Footer />
+</div>
+

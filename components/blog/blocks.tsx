@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import { ReactNode } from "react";
-import { BadgeCheck, BarChart3, Sparkles, Share2, Clock, List, Zap, ArrowRight, FileText } from "lucide-react";
+import Image from "next/image";
+import { ReactNode, useState, useEffect } from "react";
+import { BadgeCheck, BarChart3, Sparkles, Share2, Clock, List, Zap, ArrowRight, FileText, LinkedinIcon, TwitterIcon, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -107,9 +110,9 @@ export const SidebarQuickWins = () => (
     </div>
     <ul className="space-y-4">
       {[
-          "Launch a “comment-to-lead” alert in 1 day.",
-          "Publish 1 flagship + 4 support posts in 2 weeks.",
-          "Embed product clips in every post."
+          "Extract 100+ warm leads from a single viral post",
+          "Get verified emails for 80%+ of engaged prospects",
+          "Export to your CRM with one click"
       ].map((item, i) => (
           <li key={i} className="flex gap-3 text-sm text-muted-foreground">
               <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
@@ -120,54 +123,203 @@ export const SidebarQuickWins = () => (
   </div>
 );
 
-export const StickyTableOfContents = () => (
-  <div className="hidden lg:block max-h-[calc(100vh-8rem)] overflow-auto pr-4">
-    <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 pl-3">
-      On this page
+type TOCItem = {
+  id: string;
+  label: string;
+};
+
+type StickyTableOfContentsProps = {
+  items: TOCItem[];
+};
+
+export const StickyTableOfContents = ({ items }: StickyTableOfContentsProps) => {
+  const [activeId, setActiveId] = useState<string>("");
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveId(entry.target.id);
+          }
+        });
+      },
+      {
+        rootMargin: "-100px 0px -66% 0px",
+        threshold: 0
+      }
+    );
+
+    // Observe all sections
+    items.forEach((item) => {
+      const element = document.getElementById(item.id);
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [items]);
+
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      const navbarHeight = 96; // Account for fixed navbar
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: elementPosition - navbarHeight,
+        behavior: "smooth"
+      });
+      setActiveId(id);
+    }
+  };
+
+  return (
+    <div className="space-y-12">
+      <div>
+        <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-4 pl-3">
+          On this page
+        </div>
+        <nav className="flex flex-col space-y-1 relative border-l border-border/50">
+          {items.map((item) => (
+            <a
+              key={item.id}
+              href={`#${item.id}`}
+              onClick={(e) => handleClick(e, item.id)}
+              className={cn(
+                "pl-3 py-1.5 text-sm transition-all block -ml-px border-l-2",
+                activeId === item.id
+                  ? "text-primary border-primary font-medium"
+                  : "text-muted-foreground border-transparent hover:text-primary hover:border-primary/50"
+              )}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+
+      {/* Share Section */}
+      <div className="space-y-4">
+        <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-3">Share</div>
+        <div className="flex flex-col gap-2 pl-3">
+          <Button variant="ghost" size="icon" className="rounded-full hover:bg-blue-500/10 hover:text-blue-500">
+            <LinkedinIcon className="w-5 h-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="rounded-full hover:bg-sky-500/10 hover:text-sky-500">
+            <TwitterIcon className="w-5 h-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary">
+            <LinkIcon className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
     </div>
-    <nav className="flex flex-col space-y-1 relative border-l border-border/50">
-       <a href="#the-problem" className="pl-3 py-1.5 text-sm text-muted-foreground hover:text-primary hover:border-l-2 hover:border-primary -ml-px transition-all block">Silence is Expensive</a>
-       <a href="#the-solution" className="pl-3 py-1.5 text-sm text-muted-foreground hover:text-primary hover:border-l-2 hover:border-primary -ml-px transition-all block">The Intent Mining Loop</a>
-       <a href="#results" className="pl-3 py-1.5 text-sm text-muted-foreground hover:text-primary hover:border-l-2 hover:border-primary -ml-px transition-all block">Results & Metrics</a>
-       <a href="#start-mining" className="pl-3 py-1.5 text-sm text-muted-foreground hover:text-primary hover:border-l-2 hover:border-primary -ml-px transition-all block">Start Mining Intent</a>
-    </nav>
-  </div>
-);
+  );
+};
 
 
 export const SidebarResource = () => (
   <div className="rounded-2xl bg-primary/5 border border-primary/10 p-6">
     <div className="text-xs uppercase tracking-widest text-primary font-bold mb-3">
-      Free Template
+      Free Calculator
     </div>
     <h3 className="text-lg font-bold text-foreground mb-2">
-      The Intent Mining Starter Pack
+      See Your Cost Per Lead
     </h3>
     <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-      Copy-paste templates for alerts, comment angles, and 15+ follow-up scripts.
+      Plug in how many posts you want to analyze and we'll show projected leads, wallet credits, and the best plan.
     </p>
     <Button asChild className="w-full font-semibold shadow-lg shadow-primary/20">
-        <Link href="/waitlist">Download Free Pack</Link>
+        <Link href="/calculator">Open Calculator</Link>
     </Button>
   </div>
 );
 
 export const SidebarMore = () => (
   <div className="space-y-4 pt-6 border-t border-border">
-    <div className="text-sm font-bold text-foreground">Related Articles</div>
+    <div className="text-sm font-bold text-foreground">More Resources</div>
     <div className="flex flex-col gap-3">
       {[
-          "Cold Email is Dead: Here's What's Next",
-          "How to Scrape LinkedIn Comments Legally",
-          "3 Tools to Automate Social Selling"
-      ].map((title, i) => (
-          <Link key={i} href="/blog/sample" className="group flex gap-3 items-start">
+          { title: "Try the Free Calculator", href: "/calculator" },
+          { title: "Join the Waitlist", href: "/waitlist" },
+          { title: "Browse All Articles", href: "/blog" }
+      ].map((item, i) => (
+          <Link key={i} href={item.href} className="group flex gap-3 items-start">
              <div className="mt-1 w-1 h-1 rounded-full bg-muted-foreground/40 group-hover:bg-primary transition-colors" />
              <span className="text-sm text-muted-foreground group-hover:text-primary transition-colors leading-snug">
-                 {title}
+                 {item.title}
              </span>
           </Link>
       ))}
     </div>
   </div>
+);
+
+type BlogCTAProps = {
+  title?: string;
+  description?: string;
+  buttonText?: string;
+  buttonHref?: string;
+  subText?: string;
+};
+
+export const BlogCTA = ({
+  title = "Stop Buying Cold Lists. Start Mining Intent.",
+  description = "Try Guffles today and see who's actually looking for what you sell right now.",
+  buttonText = "Get Started Free",
+  buttonHref = "/waitlist",
+  subText = "No credit card required • Cancel anytime"
+}: BlogCTAProps) => (
+  <div className="not-prose mt-16">
+    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-emerald-500/10 to-card/50 border border-primary/30 p-8 md:p-12 text-center shiny-border">
+      {/* Noise Texture */}
+      <div
+        className="absolute inset-0 opacity-20 pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+        }}
+      />
+      {/* Decorative Blurs */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/30 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/30 rounded-full blur-[100px] pointer-events-none" />
+
+      <div className="relative z-10 space-y-6 max-w-2xl mx-auto">
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{title}</h2>
+        <p className="text-muted-foreground text-lg">{description}</p>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+          <Button asChild size="lg" className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 w-full sm:w-auto transition-all hover:scale-105">
+            <Link href={buttonHref}>{buttonText} <ArrowRight className="ml-2 w-4 h-4" /></Link>
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-4">{subText}</p>
+      </div>
+    </div>
+  </div>
+);
+
+// ArticleImage - For in-article images with consistent styling
+type ArticleImageProps = {
+  src: string;
+  alt: string;
+  caption?: string;
+};
+
+export const ArticleImage = ({ src, alt, caption }: ArticleImageProps) => (
+  <figure className="not-prose my-10">
+    <div className="relative rounded-2xl overflow-hidden shadow-xl bg-muted aspect-[16/9]">
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        className="object-cover"
+      />
+    </div>
+    {caption && (
+      <figcaption className="mt-3 text-center text-sm text-muted-foreground">
+        {caption}
+      </figcaption>
+    )}
+  </figure>
 );

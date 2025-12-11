@@ -1,9 +1,17 @@
-import { cookies } from "next/headers";
+/**
+ * Dashboard Page
+ * 
+ * MIGRATION NOTE: Updated to use shared auth utility.
+ * Removed duplicated getAuthenticatedUser() function that used jose.
+ * Now imports from @/lib/auth which uses Supabase Auth.
+ */
+
 import { redirect } from "next/navigation";
-import { jwtVerify } from "jose";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StatsCards } from "@/components/dashboard/stats-cards";
+// MIGRATION: Using shared auth utility instead of local jose implementation
+import { getAuthenticatedUser } from "@/lib/auth";
 import { getOrCreateUser, getUserStats, getAnalyses, getUserBillingInfo } from "@/lib/data-store";
 import {
   ArrowRight,
@@ -13,23 +21,6 @@ import {
   Zap,
   AlertTriangle
 } from "lucide-react";
-
-async function getAuthenticatedUser() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
-
-  if (!token) return null;
-
-  try {
-    const secret = new TextEncoder().encode(
-      process.env.OTP_SECRET || "dev-secret-do-not-use-in-prod"
-    );
-    const { payload } = await jwtVerify(token, secret);
-    return payload.email as string;
-  } catch {
-    return null;
-  }
-}
 
 export default async function DashboardPage() {
   const userEmail = await getAuthenticatedUser();

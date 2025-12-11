@@ -149,8 +149,10 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
     return pathname.startsWith(item.href);
   };
 
+  // MIGRATION: Updated to use Supabase Auth logout endpoint
+  // Previously just cleared the auth_token cookie manually
   const handleLogout = async () => {
-    document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/login');
     router.refresh();
   };

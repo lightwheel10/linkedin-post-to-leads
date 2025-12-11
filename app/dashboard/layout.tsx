@@ -1,35 +1,37 @@
-import { cookies } from "next/headers";
+/**
+ * Dashboard Layout
+ * 
+ * MIGRATION NOTE: This file was UPDATED as part of the Supabase Auth migration.
+ * 
+ * CHANGES MADE:
+ * - Removed duplicated getAuthenticatedUser() function that was defined locally
+ * - Now imports getAuthenticatedUser from @/lib/auth (shared auth utility)
+ * - Removed jose import (no longer needed)
+ * - Removed direct cookie access (handled by lib/auth.ts now)
+ * 
+ * The layout still:
+ * - Verifies authentication
+ * - Redirects to login if not authenticated
+ * - Redirects to onboarding if not completed
+ * - Passes user data to Sidebar
+ * 
+ * @see SUPABASE_AUTH_MIGRATION.md for full migration documentation
+ */
+
 import { redirect } from "next/navigation";
-import { jwtVerify } from "jose";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Providers } from "@/components/providers";
+// MIGRATION: Now using shared auth utility instead of local implementation
+import { getAuthenticatedUser } from "@/lib/auth";
 import { getOrCreateUser, getCRMLeads, getUserBillingInfo } from "@/lib/data-store";
-
-async function getAuthenticatedUser() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
-
-  if (!token) {
-    return null;
-  }
-
-  try {
-    const secret = new TextEncoder().encode(
-      process.env.OTP_SECRET || "dev-secret-do-not-use-in-prod"
-    );
-    const { payload } = await jwtVerify(token, secret);
-    return payload.email as string;
-  } catch {
-    return null;
-  }
-}
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Verify authentication
+  // MIGRATION: Using shared getAuthenticatedUser() which now uses Supabase Auth
+  // Previously, this layout had its own JWT verification logic using jose
   const userEmail = await getAuthenticatedUser();
 
   if (!userEmail) {
