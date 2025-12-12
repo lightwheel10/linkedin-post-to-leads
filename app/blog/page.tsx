@@ -70,6 +70,17 @@ const POSTS = [
     date: "Dec 12, 2024",
     readTime: "8 min read",
     image: "/images/blog/linkedin-engagement-leads/header.png"
+  },
+  {
+    id: 5,
+    slug: "prospect-list",
+    title: "Build a B2B Prospect List in 30 Minutes (2025 Guide)",
+    excerpt: "Learn how to build a B2B prospect list in 30 minutes without expensive tools. Get warm leads that convert 8.5x better than cold outreach.",
+    category: "Lead Generation",
+    author: "Sarah Chen",
+    date: "Dec 12, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/prospect-list/header.png"
   }
 ];
 

@@ -1,0 +1,677 @@
+{/*
+  ============================================================================
+  BLOG POST: Build a B2B Prospect List in 30 Minutes (2025 Guide)
+  ============================================================================
+  Generated: 2025-12-12
+  Author: Sarah Chen, Head of Growth
+  Slug: prospect-list
+  ============================================================================
+*/}
+
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Calendar, Clock, TrendingUp, Target, Zap, MessageSquare, Sparkles } from "lucide-react";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
+import {
+  Stat,
+  Callout,
+  TLDR,
+  SectionTitle,
+  SidebarQuickWins,
+  SidebarResource,
+  SidebarMore,
+  StickyTableOfContents,
+  BlogCTA,
+  ArticleImage
+} from "@/components/blog/blocks";
+
+{/* ============================================================================
+    METADATA - Required for SEO
+    ============================================================================ */}
+export const metadata = {
+  title: "Build a B2B Prospect List in 30 Minutes (2025 Guide)",
+  description: "Learn how to build a B2B prospect list in 30 minutes without expensive tools. Get warm leads that convert 8.5x better than cold outreach. Free methods included.",
+};
+
+{/* ============================================================================
+    SCHEMA MARKUP - For AI Citation & Rich Results
+    ============================================================================ */}
+
+{/* Article Schema */}
+export const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Build a B2B Prospect List in 30 Minutes (2025 Guide)",
+  "description": "Learn how to build a B2B prospect list in 30 minutes without expensive tools. Get warm leads that convert 8.5x better than cold outreach. Free methods included.",
+  "image": "https://guffles.com/images/blog/prospect-list/header.png",
+  "author": {
+    "@type": "Person",
+    "name": "Sarah Chen",
+    "jobTitle": "Head of Growth",
+    "worksFor": {
+      "@type": "Organization",
+      "name": "Guffles",
+      "url": "https://guffles.com"
+    },
+    "description": "B2B sales and lead generation expert with 8+ years of experience",
+    "sameAs": [
+      "https://linkedin.com/in/sarahchen-guffles",
+      "https://twitter.com/sarahchen_sales"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Guffles",
+    "url": "https://guffles.com",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://guffles.com/logo.png"
+    }
+  },
+  "datePublished": "2025-12-12",
+  "dateModified": "2025-12-12",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://guffles.com/blog/prospect-list"
+  }
+};
+
+{/* FAQ Schema */}
+export const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I build a prospect list from scratch?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Start by defining your ICP. Use LinkedIn free search or Apollo.io to find matching contacts. Collect names, emails, and company data. Organize in a spreadsheet with consistent fields."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What should be included in a sales prospect list?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Include contact name, job title, email, phone, company name, industry, company size, LinkedIn URL, and engagement history. Engagement history separates great lists from okay ones."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long does it take to build a quality prospect list?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Manual list building takes 15-20 hours weekly. With engagement-based tools and a clear ICP, you can build a qualified list in 30 minutes to 2 hours."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What's the difference between cold leads and warm leads?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Cold leads have no prior interaction and close at 1.7%. Warm leads have shown interest through engagement and close at 14.6%. That's an 8.5x improvement."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I find B2B leads without expensive tools?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use LinkedIn free search, Google queries, referrals, and engagement-based prospecting. These cost $0-79/month versus $300-15,000 for enterprise tools."
+      }
+    }
+  ]
+};
+
+{/* HowTo Schema */}
+export const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Build a B2B Prospect List in 30 Minutes",
+  "description": "A step-by-step process to build a qualified B2B prospect list quickly without expensive enterprise tools.",
+  "totalTime": "PT30M",
+  "estimatedCost": {
+    "@type": "MonetaryAmount",
+    "currency": "USD",
+    "value": "0-79"
+  },
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Define Your ICP",
+      "text": "Get specific about your ideal customer profile. 'VP of Sales at B2B SaaS companies with 50-200 employees' is better than just 'salespeople'. Profile your best existing customers to identify patterns.",
+      "estimatedTime": "PT5M"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Choose Your Data Source",
+      "text": "Select from manual methods (LinkedIn free search, Google), engagement-based tools (find people interacting with relevant content), or database tools (Apollo, ZoomInfo). The source determines lead quality.",
+      "estimatedTime": "PT2M"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Collect and Verify Contact Information",
+      "text": "Verify emails before adding them since B2B data decays by 2.1% per month. Use LinkedIn profiles as your anchor. Organize in a spreadsheet or CRM with consistent fields: name, title, company, email, phone, LinkedIn URL.",
+      "estimatedTime": "PT15M"
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Score and Segment Leads by Priority",
+      "text": "Segment leads into Hot (engaged + ICP match), Warm (engaged OR strong ICP), and Cool (demographic match only). Start outreach with the hot leads first.",
+      "estimatedTime": "PT8M"
+    }
+  ]
+};
+
+{/* ============================================================================
+    PAGE WRAPPER
+    ============================================================================ */}
+<div className="relative min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 selection:text-primary">
+
+  {/* Schema Markup - Injected as JSON-LD */}
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(articleSchema)
+    }}
+  />
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(faqSchema)
+    }}
+  />
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(howToSchema)
+    }}
+  />
+
+  <Navbar />
+
+  <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 pb-24 relative z-10 pt-24 md:pt-32">
+
+    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_300px] gap-12 pt-8">
+
+        {/* ================================================================
+            LEFT COLUMN: Table of Contents (Sticky)
+            ================================================================ */}
+        <aside className="hidden lg:block relative h-full">
+            <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar pb-10">
+                <StickyTableOfContents items={[
+                    { id: "section-1", label: "1) What Makes a List Valuable" },
+                    { id: "section-2", label: "2) Cold vs Warm Leads" },
+                    { id: "section-3", label: "3) 4-Step Process" },
+                    { id: "section-4", label: "4) Free & Affordable Methods" },
+                    { id: "section-5", label: "5) Common Mistakes" },
+                    { id: "section-6", label: "6) Keeping Lists Fresh" },
+                    { id: "faq", label: "FAQ" },
+                    { id: "cta", label: "Get Started" }
+                ]} />
+            </div>
+        </aside>
+
+        {/* ================================================================
+            CENTER COLUMN: Main Article Content
+            ================================================================ */}
+        <main className="max-w-3xl mx-auto lg:mx-0 w-full min-w-0">
+
+            {/* ------------------------------------------------------------
+                HEADER SECTION
+                ------------------------------------------------------------ */}
+            <header className="mb-12 animate-fade-in-up">
+                {/* Category Badge */}
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-xs font-bold text-primary mb-6">
+                    <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                    Lead Generation
+                </div>
+
+                {/* Title */}
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-foreground mb-6 text-balance">
+                  Build a B2B Prospect List in 30 Minutes (2025 Guide)
+                </h1>
+
+                {/* Author & Meta */}
+                <div className="flex items-center gap-4 py-6 border-y border-border/50">
+                     <div className="relative">
+                        <div className="w-12 h-12 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden ring-1 ring-white/10">
+                             <Image
+                                src="/images/ceo.jpeg"
+                                alt="Team"
+                                width={48}
+                                height={48}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-foreground">Sarah Chen</div>
+                        <div className="text-sm text-muted-foreground">Head of Growth at Guffles</div>
+                     </div>
+                     <div className="h-8 w-px bg-border mx-2 hidden sm:block" />
+                     <div className="hidden sm:flex flex-col text-sm text-muted-foreground">
+                        <span>Published December 12, 2025</span>
+                        <span>8 min read</span>
+                     </div>
+                </div>
+            </header>
+
+            {/* ------------------------------------------------------------
+                IMAGE 1: HEADER/FEATURED IMAGE
+                ------------------------------------------------------------ */}
+            <div className="relative mb-12 rounded-2xl overflow-hidden shadow-2xl bg-muted aspect-[16/9] animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                <Image
+                    src="/images/blog/prospect-list/header.png"
+                    alt="B2B prospect list building process visualization showing warm leads versus cold outreach"
+                    fill
+                    className="object-cover"
+                    priority
+                />
+            </div>
+
+            {/* ------------------------------------------------------------
+                TL;DR BOX
+                ------------------------------------------------------------ */}
+            <TLDR>
+                Building a B2B prospect list doesn't require expensive tools or endless hours. Focus on warm leads (14.6% close rate) over cold contacts (1.7% close rate). Use the 4-step process: Define ICP, choose your source, collect and verify, then score and segment. You can do this in 30 minutes for $0-79/month.
+            </TLDR>
+
+            {/* ------------------------------------------------------------
+                ARTICLE BODY
+                ------------------------------------------------------------ */}
+            <article className="prose prose-lg dark:prose-invert prose-headings:scroll-mt-32 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:shadow-lg max-w-none">
+
+                {/* Lead Paragraph */}
+                <div className="lead text-xl md:text-2xl text-foreground font-medium mb-8 leading-relaxed">
+                    Here's a stat that should make you angry: sales reps spend up to <a href="https://spotio.com/blog/sales-statistics/" target="_blank" rel="noopener noreferrer"><strong>40% of their time</strong></a> just searching for someone to call (SPOTIO, 2025). That's nearly half your day gone before you've had a single conversation.
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 not-prose my-10">
+                   <Stat label="Cold Lead Close Rate" value="1.7%" sub="Industry average" />
+                   <Stat label="Warm Lead Close Rate" value="14.6%" sub="8.5x improvement" />
+                   <Stat label="Time to Build List" value="30 min" sub="With right process" />
+                </div>
+
+                <p>I've been there. In my 8 years of B2B sales, I've watched teams blow thousands on ZoomInfo subscriptions and still end up with lists of people who never respond. The problem isn't finding contacts. It's finding the <em>right</em> contacts.</p>
+
+                <p>The good news? You don't need a $15,000 annual contract to build a B2B prospect list that actually converts. In this guide, I'll show you how to build a B2B prospect list in 30 minutes, for under $100 a month, or even free. The secret isn't working harder. It's starting with signals instead of guesses.</p>
+
+                {/* SECTION 1 */}
+                <div id="section-1">
+                    <SectionTitle title="1) What Makes a Prospect List Actually Valuable">
+                        Before we get into the how, let's talk about what you're actually building.
+                    </SectionTitle>
+
+                    <p><strong>A B2B prospect list is a curated database of potential business customers containing contact information, company data, and qualifying criteria that help sales teams prioritize outreach to the most likely buyers.</strong></p>
+
+                    <p>Sound familiar? Most lists stop there. They're just databases of people who <em>might</em> fit your ICP.</p>
+
+                    <p>Here's what I've learned after generating $12M+ in pipeline: the type of list matters more than the size. Fifty warm leads will outperform 500 cold contacts every single time. Teams that nail lead qualification see <a href="https://salesso.com/blog/sales-qualified-lead-statistics-2025-key-data-insights/" target="_blank" rel="noopener noreferrer"><strong>7x higher conversion rates</strong></a> (Sales So, 2025).</p>
+
+                    <p>So what should your prospect list actually include?</p>
+
+                    <ul>
+                        <li>Contact name and job title</li>
+                        <li>Email address and phone number</li>
+                        <li>Company name, industry, and size</li>
+                        <li>LinkedIn profile URL</li>
+                        <li><strong>Engagement history</strong> (this is the part most people skip)</li>
+                    </ul>
+
+                    <p>That last bullet is the difference between a good list and a great one. But we'll get to that.</p>
+                </div>
+
+                {/* SECTION 2 */}
+                <div id="section-2">
+                    <SectionTitle title="2) Cold Leads vs Warm Leads: The 8.5x Conversion Difference">
+                        This is where most prospect list guides get it wrong. They focus on <em>finding</em> contacts but ignore <em>which</em> contacts to find.
+                    </SectionTitle>
+
+                    <p><strong>A warm lead is a prospect who has shown interest in your product category through observable actions before any direct sales contact.</strong> These actions include engaging with relevant content, attending webinars, or interacting with competitor posts.</p>
+
+                    <p>Cold leads? They're just people who match a demographic profile. No prior interaction. No indication they're thinking about the problem you solve.</p>
+
+                    <p>Look at the numbers:</p>
+
+                    <div className="not-prose my-8 overflow-x-auto">
+                        <table className="min-w-full border border-border rounded-lg">
+                            <thead className="bg-muted">
+                                <tr>
+                                    <th className="px-4 py-3 text-left font-semibold">Metric</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Cold Leads</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Warm Leads</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr className="border-t border-border">
+                                    <td className="px-4 py-3">Response Rate</td>
+                                    <td className="px-4 py-3">1-5%</td>
+                                    <td className="px-4 py-3 text-primary font-medium">10-34%</td>
+                                </tr>
+                                <tr className="border-t border-border">
+                                    <td className="px-4 py-3">Close Rate</td>
+                                    <td className="px-4 py-3">1.7%</td>
+                                    <td className="px-4 py-3 text-primary font-medium">14.6%</td>
+                                </tr>
+                                <tr className="border-t border-border">
+                                    <td className="px-4 py-3">Sales Cycle</td>
+                                    <td className="px-4 py-3">90-180 days</td>
+                                    <td className="px-4 py-3 text-primary font-medium">30-60 days</td>
+                                </tr>
+                                <tr className="border-t border-border">
+                                    <td className="px-4 py-3">Touches Required</td>
+                                    <td className="px-4 py-3">8-12</td>
+                                    <td className="px-4 py-3 text-primary font-medium">2-5</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p className="text-sm text-muted-foreground mt-2">Sources: <a href="https://www.b2bdrum.com/blog/cold-email-vs-warm-outreach-which-works-better-in-2025" target="_blank" rel="noopener noreferrer">B2B Drum</a> (2025), Industry benchmarks</p>
+                    </div>
+
+                    <p>Warm leads close at <strong>14.6%</strong> compared to just <strong>1.7%</strong> for cold leads. That's an <strong>8.5x improvement</strong> in close rates. And you need half the touches to get there.</p>
+
+                    <p>I'd rather have an okay fit who's actively engaging with competitor content than a perfect ICP match who's never heard of the problem we solve. Engagement is intent. Intent is everything.</p>
+
+                    <p>So how do you find these warm leads? This is where engagement-based prospecting changes the game. When someone likes or comments on a LinkedIn post about a specific pain point, they're publicly signaling interest in that topic. Learning to identify these <Link href="/blog/warm-leads-social">social engagement signals that reveal buyer intent</Link> is the first step. Tools like Guffles let you extract these engagers and filter them by your ICP criteria, turning public engagement into a warm prospect list. Instead of guessing who might be interested based on job title alone, you're finding people who've already raised their hand.</p>
+
+                    <p>Now let's talk about how to actually build this list in 30 minutes.</p>
+                </div>
+
+                {/* SECTION 3 */}
+                <div id="section-3">
+                    <SectionTitle title="3) The 4-Step Process to Build Your Prospect List in 30 Minutes">
+                        Alright, let's get practical. Here's the exact process I use:
+                    </SectionTitle>
+
+                    <h3>Step 1: Define Your ICP (5 minutes)</h3>
+
+                    <p>Get specific. "Salespeople" isn't an ICP. "VP of Sales at B2B SaaS companies with 50-200 employees" is.</p>
+
+                    <p>If you have existing customers, profile your best ones. What industry? What company size? What job titles sign the checks? Write it down. You can't find the right people if you don't know who you're looking for.</p>
+
+                    <h3>Step 2: Choose Your Data Source (2 minutes)</h3>
+
+                    <p>You have three options:</p>
+                    <ul>
+                        <li><strong>Manual</strong>: LinkedIn free search, Google (free, slower)</li>
+                        <li><strong>Engagement-based</strong>: Find people already interacting with relevant content (faster, warmer)</li>
+                        <li><strong>Database tools</strong>: Apollo, ZoomInfo (complete, expensive)</li>
+                    </ul>
+
+                    <p>The source you choose determines lead quality. Demographic match gets you cold leads. Demonstrated interest gets you warm ones.</p>
+
+                    <h3>Step 3: Collect and Verify Contact Information (15 minutes)</h3>
+
+                    <p>This is where most people waste time. Here's the reality: <a href="https://reply.io/blog/b2b-list-building/" target="_blank" rel="noopener noreferrer"><strong>B2B data decays by 2.1% per month</strong></a> (Reply.io). That's <strong>22.5%</strong> of your list outdated within a year.</p>
+
+                    <p>Verify emails before you add them. Use LinkedIn profiles as your anchor. Organize everything in a spreadsheet or CRM with consistent fields: name, title, company, email, phone, LinkedIn URL, and any engagement notes.</p>
+
+                    <h3>Step 4: Score and Segment Leads by Priority (8 minutes)</h3>
+
+                    <p>Not all leads deserve equal attention. Segment them:</p>
+
+                    <ul>
+                        <li><strong>Hot</strong>: Engaged + ICP match (contact immediately)</li>
+                        <li><strong>Warm</strong>: Engaged OR strong ICP match (add to sequence)</li>
+                        <li><strong>Cool</strong>: Demographic match only (nurture first)</li>
+                    </ul>
+
+                    <p>Start with the hot leads. Always.</p>
+                </div>
+
+                {/* IMAGE 2: MID-ARTICLE */}
+                <ArticleImage
+                    src="/images/blog/prospect-list/mid.png"
+                    alt="The 4-step prospect list building process: Define ICP, Choose Source, Collect and Verify, Score and Segment"
+                    caption="The 4-step process for building a qualified prospect list in 30 minutes"
+                />
+
+                {/* SECTION 4 */}
+                <div id="section-4">
+                    <SectionTitle title="4) Free and Affordable Prospect List Building Methods ($0-79/month)">
+                        Let me be honest: manual methods work. They're just slow.
+                    </SectionTitle>
+
+                    <h3>Manual Methods (Free but Time-Intensive)</h3>
+
+                    <p><strong>LinkedIn free search</strong> lets you filter by title, company, and industry. It's limited, but it works for small volumes.</p>
+
+                    <p><strong>Google advanced searches</strong> like <code>"VP Sales" + "company name" + email</code> can uncover contact info. Tedious? Yes. Free? Also yes.</p>
+
+                    <p><strong>Referrals and networking</strong> produce the highest-quality leads, but the lowest volume. You can't scale word-of-mouth.</p>
+
+                    <p>Reality check: manual prospecting caps at about <strong>10-20 verified leads per hour</strong>. And you're still guessing who's actually interested.</p>
+
+                    <h3>Affordable Tools That Actually Work</h3>
+
+                    <p>Here's where the math gets interesting:</p>
+
+                    <div className="not-prose my-8 overflow-x-auto">
+                        <table className="min-w-full border border-border rounded-lg">
+                            <thead className="bg-muted">
+                                <tr>
+                                    <th className="px-4 py-3 text-left font-semibold">Tool</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Starting Price</th>
+                                    <th className="px-4 py-3 text-left font-semibold">Best For</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr className="border-t border-border">
+                                    <td className="px-4 py-3">LinkedIn Free</td>
+                                    <td className="px-4 py-3">$0</td>
+                                    <td className="px-4 py-3">Basic demographic search</td>
+                                </tr>
+                                <tr className="border-t border-border bg-primary/5">
+                                    <td className="px-4 py-3 font-medium">Guffles</td>
+                                    <td className="px-4 py-3 text-primary font-medium">$79/month</td>
+                                    <td className="px-4 py-3">Engagement-based warm leads</td>
+                                </tr>
+                                <tr className="border-t border-border">
+                                    <td className="px-4 py-3">Apollo.io</td>
+                                    <td className="px-4 py-3">$99/month</td>
+                                    <td className="px-4 py-3">Volume prospecting</td>
+                                </tr>
+                                <tr className="border-t border-border">
+                                    <td className="px-4 py-3">Sales Navigator</td>
+                                    <td className="px-4 py-3">$100/month</td>
+                                    <td className="px-4 py-3">LinkedIn-native advanced search</td>
+                                </tr>
+                                <tr className="border-t border-border">
+                                    <td className="px-4 py-3">ZoomInfo</td>
+                                    <td className="px-4 py-3">$15,000+/year</td>
+                                    <td className="px-4 py-3">Enterprise data needs</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <p>Manual methods work for small volumes, but they don't scale and you're still guessing who's actually interested. This is where purpose-built tools make sense.</p>
+
+                    <p>Guffles costs <strong>$79/month</strong> with <strong>$150 in free credits</strong> to start. That's a fraction of Apollo ($300+) or ZoomInfo ($15,000+/year). The difference? Guffles focuses specifically on engagement-based leads: paste a LinkedIn post URL, extract everyone who engaged, filter by your ICP. You're building a list of people who've already shown interest, not just a demographic match.</p>
+
+                    <p>I'm not saying expensive tools don't have their place. They do. But for most teams, $79/month beats $15,000/year when you're trying to find warm leads.</p>
+                </div>
+
+                {/* SECTION 5 */}
+                <div id="section-5">
+                    <SectionTitle title="5) Common Mistakes That Kill Your Response Rates">
+                        I've made all of these mistakes. Multiple times. Learn from my pain.
+                    </SectionTitle>
+
+                    <p><strong>1. Prioritizing quantity over quality</strong></p>
+                    <p>500 cold contacts feel productive. But 50 engaged prospects will generate more pipeline. Every time. I've tested this across hundreds of campaigns.</p>
+
+                    <p><strong>2. Skipping verification</strong></p>
+                    <p>Inaccurate contact data wastes <a href="https://taskdrive.com/sales/sales-statistics/" target="_blank" rel="noopener noreferrer"><strong>27.3% of sales reps' time</strong></a>. That's <strong>546 hours per year</strong> per rep (TaskDrive, 2025). An hour spent verifying saves ten hours chasing bounced emails.</p>
+
+                    <p><strong>3. Ignoring engagement signals</strong></p>
+                    <p>A demographic match without intent is just a guess. Someone who commented on a competitor's post about your exact problem? That's a signal. Don't ignore it.</p>
+
+                    <p><strong>4. Letting your list go stale</strong></p>
+                    <p>Remember that 2.1% monthly decay? A list you built six months ago is missing a quarter of its accuracy. Clean it or trash it.</p>
+
+                    <p><strong>5. Generic outreach to a targeted list</strong></p>
+                    <p>You spent time building a great list. Don't waste it with "Hi &#123;First_Name&#125;, I'd love to connect." Reference something specific. Their engagement. Their company news. Something.</p>
+                </div>
+
+                {/* SECTION 6 */}
+                <div id="section-6">
+                    <SectionTitle title="6) Keeping Your Prospect List Fresh">
+                        Your prospect list isn't a one-time project. It's a living document.
+                    </SectionTitle>
+
+                    <p><strong>The 22.5% problem</strong>: B2B contact data decays by <strong>2.1% every month</strong>. People change jobs. Companies get acquired. Emails bounce. Within a year, nearly a quarter of your list is garbage.</p>
+
+                    <p>Here's what I do:</p>
+
+                    <ul>
+                        <li><strong>Monthly cleaning</strong>: Remove bounces, update job changes, flag inactive contacts</li>
+                        <li><strong>Continuous prospecting</strong>: Add 5-10 new warm leads weekly instead of batch-building quarterly</li>
+                        <li><strong>Re-engage through new signals</strong>: Someone who went cold might be showing interest again on LinkedIn. Watch for it.</li>
+                    </ul>
+
+                    <p>The teams that win aren't the ones with the biggest lists. They're the ones who keep their lists accurate and fresh.</p>
+                </div>
+
+                {/* IMAGE 3: DATA VISUAL */}
+                <ArticleImage
+                    src="/images/blog/prospect-list/data.png"
+                    alt="Chart comparing cold lead vs warm lead conversion rates showing 8.5x improvement"
+                    caption="Warm leads close at 14.6% compared to 1.7% for cold leads - an 8.5x improvement"
+                />
+
+                {/* FAQ SECTION */}
+                <div id="faq" className="not-prose my-12">
+                    <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+
+                    <div className="space-y-6">
+                        {/* FAQ Item 1 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">How do I build a prospect list from scratch?</h3>
+                            <p className="text-muted-foreground">Start by defining your ICP. Use LinkedIn free search or Apollo.io to find matching contacts. Collect names, emails, and company data. Organize in a spreadsheet with consistent fields.</p>
+                        </div>
+
+                        {/* FAQ Item 2 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">What should be included in a sales prospect list?</h3>
+                            <p className="text-muted-foreground">Include contact name, job title, email, phone, company name, industry, company size, LinkedIn URL, and engagement history. Engagement history separates great lists from okay ones.</p>
+                        </div>
+
+                        {/* FAQ Item 3 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">How long does it take to build a quality prospect list?</h3>
+                            <p className="text-muted-foreground">Manual list building takes 15-20 hours weekly. With engagement-based tools and a clear ICP, you can build a qualified list in 30 minutes to 2 hours.</p>
+                        </div>
+
+                        {/* FAQ Item 4 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">What's the difference between cold leads and warm leads?</h3>
+                            <p className="text-muted-foreground">Cold leads have no prior interaction and close at 1.7%. Warm leads have shown interest through engagement and close at 14.6%. That's an 8.5x improvement.</p>
+                        </div>
+
+                        {/* FAQ Item 5 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">How do I find B2B leads without expensive tools?</h3>
+                            <p className="text-muted-foreground">Use LinkedIn free search, Google queries, referrals, and engagement-based prospecting. These cost $0-79/month versus $300-15,000 for enterprise tools.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* WORKFLOW BOX */}
+                <div className="not-prose my-12 p-8 rounded-3xl bg-card border border-border shadow-lg space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                        <Sparkles className="w-4 h-4" /> Quick Recap: Build Your List in 30 Minutes
+                    </div>
+                    <ul className="list-disc pl-5 text-muted-foreground space-y-2">
+                        <li>Define your ICP with specific criteria (title, company size, industry)</li>
+                        <li>Choose engagement-based sources for warm leads over demographic databases</li>
+                        <li>Verify contacts and score them by engagement + ICP match</li>
+                    </ul>
+                </div>
+
+                {/* CTA SECTION */}
+                <div id="cta">
+                    <SectionTitle
+                        eyebrow="Ready to Start?"
+                        title="Get Your First Warm Prospect List"
+                    >
+                        Let's cut to it: building a B2B prospect list doesn't have to eat your whole week or your whole budget. The three things that matter: quality beats quantity, speed is possible with the right process, and expensive isn't necessary.
+                    </SectionTitle>
+
+                    <p>After building hundreds of prospect lists, I'd take 50 engaged prospects over 500 cold contacts every time. The math just works.</p>
+
+                    <p>If you want to test engagement-based prospecting without the manual work, Guffles offers <strong>$150 in free credits</strong> to get started. Paste a LinkedIn post URL, filter by your ICP, and have a warm prospect list in minutes. No annual contract, no $15,000 commitment. Just $79/month if you decide to continue.</p>
+
+                    <p>Or take the manual route. Either way, start with warm signals and watch your response rates climb.</p>
+
+                    <Callout title="Key Takeaway" icon={<Target className="w-5 h-5 text-primary" />}>
+                        Warm leads convert at 14.6% vs 1.7% for cold leads. That's an 8.5x improvement. The fastest path to warm leads? Find people who've already engaged with content about the problem you solve.
+                    </Callout>
+                </div>
+
+                {/* BLOG CTA */}
+                <BlogCTA
+                    title="Build Your Warm Prospect List Today"
+                    description="Stop guessing who might be interested. Find leads who've already shown intent through social engagement. Get $150 in free credits to start."
+                    buttonText="Start Free Trial"
+                    buttonHref="/waitlist"
+                />
+            </article>
+        </main>
+
+        {/* ================================================================
+            RIGHT COLUMN: Sidebar (Sticky)
+            ================================================================ */}
+        <aside className="hidden xl:block relative h-full">
+             <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar space-y-8 pb-10">
+                 <SidebarResource />
+                 <SidebarQuickWins />
+                 <SidebarMore />
+             </div>
+        </aside>
+
+    </div>
+  </div>
+
+  <Footer />
+</div>
+
+{/*
+  ============================================================================
+  POSTS ARRAY ENTRY
+  ============================================================================
+
+  Add the following entry to the POSTS array in app/blog/page.tsx:
+
+  {
+    id: [NEXT_ID],
+    slug: "prospect-list",
+    title: "Build a B2B Prospect List in 30 Minutes (2025 Guide)",
+    excerpt: "Learn how to build a B2B prospect list in 30 minutes without expensive tools. Get warm leads that convert 8.5x better than cold outreach.",
+    category: "Lead Generation",
+    author: "Sarah Chen",
+    date: "December 12, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/prospect-list/header.png"
+  }
+
+  ============================================================================
+
+  FILES TO COMMIT:
+  1. app/blog/prospect-list/page.mdx (this file)
+  2. public/images/blog/prospect-list/header.png
+  3. public/images/blog/prospect-list/mid.png
+  4. public/images/blog/prospect-list/data.png
+  5. Update app/blog/page.tsx (add POSTS entry)
+
+  ============================================================================
+*/}
