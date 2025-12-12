@@ -1,0 +1,581 @@
+{/*
+  ============================================================================
+  BLOG POST: Why Your Cold Emails Get Ignored (And How to Fix It)
+  ============================================================================
+  Run ID: 20251212-193000
+  Slug: cold-email-response
+  Generated: 2025-12-12
+  ============================================================================
+*/}
+
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Calendar, Clock, TrendingUp, Target, Zap, MessageSquare, Sparkles } from "lucide-react";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
+import {
+  Stat,
+  Callout,
+  TLDR,
+  SectionTitle,
+  SidebarQuickWins,
+  SidebarResource,
+  SidebarMore,
+  StickyTableOfContents,
+  BlogCTA,
+  ArticleImage
+} from "@/components/blog/blocks";
+
+{/* ============================================================================
+    METADATA - Required for SEO
+    ============================================================================ */}
+export const metadata = {
+  title: "Cold Emails Get Ignored: Why 91% Fail + How to Fix It",
+  description: "Why do cold emails get ignored? 91% never get replies. Learn the real reason cold outreach fails and the warm signal method that gets 10-15% response rates.",
+};
+
+{/* ============================================================================
+    SCHEMA MARKUP - For AI Citation & Rich Results
+    ============================================================================ */}
+
+{/* Article Schema */}
+export const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Cold Emails Get Ignored: Why 91% Fail + How to Fix It",
+  "description": "Why do cold emails get ignored? 91% never get replies. Learn the real reason cold outreach fails and the warm signal method that gets 10-15% response rates.",
+  "image": "https://guffles.com/images/blog/cold-email-response/header.png",
+  "author": {
+    "@type": "Person",
+    "name": "Sarah Chen",
+    "jobTitle": "Head of Growth",
+    "worksFor": {
+      "@type": "Organization",
+      "name": "Guffles",
+      "url": "https://guffles.com"
+    },
+    "description": "B2B sales and lead generation expert with 8+ years of experience",
+    "sameAs": [
+      "https://linkedin.com/in/sarahchen-guffles",
+      "https://twitter.com/sarahchen_sales"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Guffles",
+    "url": "https://guffles.com",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://guffles.com/logo.png"
+    }
+  },
+  "datePublished": "2025-12-12",
+  "dateModified": "2025-12-12",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://guffles.com/blog/cold-email-response"
+  },
+  "keywords": ["cold emails get ignored", "cold email response rate", "warm leads", "intent signals", "cold email best practices 2025"],
+  "wordCount": 1523,
+  "articleSection": "Sales Outreach"
+};
+
+{/* FAQ Schema */}
+export const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why do cold emails fail?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Cold emails fail because they target people with no prior interest. Over 91% get no reply because recipients receive too many irrelevant pitches from strangers."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a good cold email reply rate?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A good cold email reply rate is 5-10% in 2025. The average sits at 1-5%. Top performers achieve 10-15% by targeting prospects who have already shown interest."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is cold email still effective in 2025?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Cold email can still work, but effectiveness has dropped significantly. Open rates fell to 27.7% and response rates sit at 1-5%. Warm outreach achieves 10-15%."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How to improve cold email response rate?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Improve response rates by personalizing beyond first names, keeping emails under 125 words, following up 2-3 times, and targeting people who have shown intent signals through engagement."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is warm vs cold outreach?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Cold outreach contacts prospects with no prior relationship, achieving 1-5% response rates. Warm outreach contacts people who have shown interest through engagement signals, achieving 10-15%."
+      }
+    }
+  ]
+};
+
+{/* HowTo Schema */}
+export const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Shift from Cold Email to Warm Signal Outreach",
+  "description": "A 4-step process to transition from ignored cold emails to warm outreach that gets 10-15% response rates.",
+  "totalTime": "PT30M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Signal Identification",
+      "text": "Find 3-5 LinkedIn posts in your industry that got solid engagement. Look for posts about problems your product solves or competitors discussing your space. These are goldmines of interested prospects."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Intent Validation",
+      "text": "Go through the engagers (people who liked, commented, or shared). Check if they match your ICP: right title, right company size, right industry. Not everyone who engages is a fit."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Warm Outreach",
+      "text": "Reach out within 72 hours. Reference the specific post they engaged with. Something like: I noticed your comment on [person's] post about [topic]. Thought you might find this interesting. You're not cold anymore. You have context."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Measure and Iterate",
+      "text": "Track your response rates from warm outreach versus your cold baseline. You'll likely see at least a 3x improvement, probably more."
+    }
+  ]
+};
+
+{/* ============================================================================
+    PAGE WRAPPER
+    ============================================================================ */}
+<div className="relative min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 selection:text-primary">
+
+  {/* Schema Markup - Injected as JSON-LD */}
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(articleSchema)
+    }}
+  />
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(faqSchema)
+    }}
+  />
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(howToSchema)
+    }}
+  />
+
+  <Navbar />
+
+  <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 pb-24 relative z-10 pt-24 md:pt-32">
+
+    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_300px] gap-12 pt-8">
+
+        {/* ================================================================
+            LEFT COLUMN: Table of Contents (Sticky)
+            ================================================================ */}
+        <aside className="hidden lg:block relative h-full">
+            <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar pb-10">
+                <StickyTableOfContents items={[
+                    { id: "section-1", label: "1) Why Cold Emails Fail" },
+                    { id: "section-2", label: "2) The Numbers" },
+                    { id: "section-3", label: "3) Technique Limits" },
+                    { id: "section-4", label: "4) Warm Signal Method" },
+                    { id: "section-5", label: "5) How to Shift" },
+                    { id: "faq", label: "FAQ" },
+                    { id: "cta", label: "Take Action" }
+                ]} />
+            </div>
+        </aside>
+
+        {/* ================================================================
+            CENTER COLUMN: Main Article Content
+            ================================================================ */}
+        <main className="max-w-3xl mx-auto lg:mx-0 w-full min-w-0">
+
+            {/* ------------------------------------------------------------
+                HEADER SECTION
+                ------------------------------------------------------------ */}
+            <header className="mb-12 animate-fade-in-up">
+                {/* Category Badge */}
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-xs font-bold text-primary mb-6">
+                    <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                    Sales Outreach
+                </div>
+
+                {/* Title */}
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-foreground mb-6 text-balance">
+                  Why Your Cold Emails Get Ignored (And How to Fix It)
+                </h1>
+
+                {/* Author & Meta */}
+                <div className="flex items-center gap-4 py-6 border-y border-border/50">
+                     <div className="relative">
+                        <div className="w-12 h-12 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden ring-1 ring-white/10">
+                             <Image
+                                src="/images/ceo.jpeg"
+                                alt="Team"
+                                width={48}
+                                height={48}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-foreground">Sarah Chen</div>
+                        <div className="text-sm text-muted-foreground">Head of Growth at Guffles</div>
+                     </div>
+                     <div className="h-8 w-px bg-border mx-2 hidden sm:block" />
+                     <div className="hidden sm:flex flex-col text-sm text-muted-foreground">
+                        <span>Published December 12, 2025</span>
+                        <span>7 min read</span>
+                     </div>
+                </div>
+            </header>
+
+            {/* ------------------------------------------------------------
+                IMAGE 1: HEADER/FEATURED IMAGE
+                ------------------------------------------------------------ */}
+            <div className="relative mb-12 rounded-2xl overflow-hidden shadow-2xl bg-muted aspect-[16/9] animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                <Image
+                    src="/images/blog/cold-email-response/header.png"
+                    alt="Cold email outreach failing with low response rates visualization"
+                    fill
+                    className="object-cover"
+                    priority
+                />
+            </div>
+
+            {/* ------------------------------------------------------------
+                TL;DR BOX
+                ------------------------------------------------------------ */}
+            <TLDR>
+                Over 91% of cold emails get ignored because they target people with zero prior interest. Warm leads from engagement signals convert at 14.6% versus 1.7% for cold leads. The fix is not better copywriting. It is targeting people who have already shown buying signals through social engagement.
+            </TLDR>
+
+            {/* ------------------------------------------------------------
+                ARTICLE BODY
+                ------------------------------------------------------------ */}
+            <article className="prose prose-lg dark:prose-invert prose-headings:scroll-mt-32 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:shadow-lg max-w-none">
+
+                {/* Lead Paragraph */}
+                <div className="lead text-xl md:text-2xl text-foreground font-medium mb-8 leading-relaxed">
+                    A cold email is an unsolicited message sent to someone with no prior relationship. Over <strong>91%</strong> of these messages get ignored, according to <a href="https://martal.ca/b2b-cold-email-statistics-lb/" target="_blank" rel="noopener noreferrer">Martal Group's 2025 research</a>. I've sent thousands of cold emails. Most got ignored. And after years of testing subject lines, personalization, and timing, I finally realized the problem was never my emails. It was who I was emailing.
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 not-prose my-10">
+                   <Stat label="Cold Email Ignored" value="91%" sub="Martal Group 2025" />
+                   <Stat label="Warm Lead Conversion" value="14.6%" sub="vs 1.7% cold" />
+                   <Stat label="Response Improvement" value="8.5x" sub="warm vs cold" />
+                </div>
+
+                <p>I've sent thousands of cold emails. Most of them got ignored. And after years of testing subject lines, personalization, and timing, I finally realized something: the problem was never my emails.</p>
+
+                <p>It was who I was emailing.</p>
+
+                <p>Honestly? Most cold email advice is garbage. If you're hitting send on another batch of cold outreach knowing most will disappear into the void, this article is for you. I'm not going to tell you to write better subject lines or personalize harder. (That stuff barely moves the needle.) Instead, I'm going to show you why <strong>91%</strong> of cold emails fail and what to do about it. Spoiler: it involves an 8.5x improvement in response rates.</p>
+
+                {/* SECTION 1 */}
+                <div id="section-1">
+                    <SectionTitle title="1) The Real Reason Your Cold Emails Get Ignored">
+                        <p>Here's the thing nobody wants to admit: the people ignoring your emails aren't being rude. They legitimately don't care. And why would they? You're a stranger asking for their time.</p>
+
+                        <p><strong>A cold email is an unsolicited message sent to someone with no prior relationship or engagement.</strong> According to <a href="https://martal.ca/b2b-cold-email-statistics-lb/" target="_blank" rel="noopener noreferrer">Martal Group's 2025 research</a>, over <strong>91%</strong> of these emails get no reply whatsoever. Not a "no thanks." Not a "not interested." Just silence.</p>
+
+                        <p>The fundamental flaw isn't your copy. It's targeting people based on demographics (job title, company size, industry) instead of intent. You're hoping that the right job title at the right company size equals interest in what you're selling.</p>
+
+                        <p>It doesn't work that way.</p>
+
+                        <p>Your perfectly crafted email is competing with 100 other perfectly crafted emails in their inbox. All from strangers. All asking for something. Sound familiar?</p>
+
+                        <p>I remember when I was an SDR sending 80 emails a day. I'd celebrate a 3% response rate like I'd won the lottery. Looking back, I was playing a losing game. Even perfect copywriting can't overcome zero interest. It's like polishing a car with no engine. It might look great, but it's not going anywhere.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* SECTION 2 */}
+                <div id="section-2">
+                    <SectionTitle title="2) Cold Email Response Rates: The Numbers Paint a Grim Picture">
+                        <p>Let me hit you with some numbers that should make any sales leader nervous.</p>
+
+                        <p>Cold email response rates have dropped to just <strong>1-5%</strong> according to <a href="https://martal.ca/b2b-cold-email-statistics-lb/" target="_blank" rel="noopener noreferrer">Martal Group's 2025 data</a>. And it's getting worse, not better. Open rates fell from <strong>36%</strong> in 2023 to <strong>27.7%</strong> in 2024. New Gmail and Yahoo authentication requirements are making deliverability even harder.</p>
+
+                        <p>But here's where it gets interesting. <a href="https://www.searchenginejournal.com/" target="_blank" rel="noopener noreferrer">Search Engine Journal research</a> shows that warm leads convert at <strong>14.6%</strong> compared to just <strong>1.7%</strong> for cold leads. That's an 8.5x improvement. Not 8.5%. 8.5 times better.</p>
+
+                        <p><strong>A warm lead is a prospect who has already shown interest through engagement signals like comments, likes, or content consumption before you ever reach out.</strong> They've raised their hand. They've shown they care about topics related to what you sell.</p>
+
+                        <p><a href="https://business.linkedin.com/" target="_blank" rel="noopener noreferrer">LinkedIn data</a> backs this up: <strong>75%</strong> of B2B buyers use social media to help make buying decisions. They're out there engaging with content, commenting on posts, liking industry insights. These <Link href="/blog/warm-leads-social">social engagement signals</Link> tell you exactly who's thinking about the problems you solve.</p>
+
+                        <p>Some teams are solving this by using tools that identify <Link href="/blog/intent-signals">intent-based leads</Link> before reaching out. Platforms like Guffles track who is liking, commenting, and engaging with relevant LinkedIn content, giving you a list of people who have already shown interest in your space.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* Comparison Table */}
+                <div className="not-prose my-8 overflow-x-auto">
+                    <table className="min-w-full border border-border rounded-lg">
+                        <thead className="bg-muted">
+                            <tr>
+                                <th className="px-4 py-3 text-left font-semibold">Metric</th>
+                                <th className="px-4 py-3 text-left font-semibold">Cold Outreach</th>
+                                <th className="px-4 py-3 text-left font-semibold">Warm Outreach</th>
+                                <th className="px-4 py-3 text-left font-semibold">Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr className="border-t border-border">
+                                <td className="px-4 py-3">Response rate</td>
+                                <td className="px-4 py-3">1-5%</td>
+                                <td className="px-4 py-3 text-primary font-semibold">10-15%</td>
+                                <td className="px-4 py-3 text-muted-foreground">Martal Group 2025</td>
+                            </tr>
+                            <tr className="border-t border-border">
+                                <td className="px-4 py-3">Conversion rate</td>
+                                <td className="px-4 py-3">1.7%</td>
+                                <td className="px-4 py-3 text-primary font-semibold">14.6%</td>
+                                <td className="px-4 py-3 text-muted-foreground">Search Engine Journal</td>
+                            </tr>
+                            <tr className="border-t border-border">
+                                <td className="px-4 py-3">Sales cycle length</td>
+                                <td className="px-4 py-3">90-180 days</td>
+                                <td className="px-4 py-3 text-primary font-semibold">30-60 days</td>
+                                <td className="px-4 py-3 text-muted-foreground">Guffles analysis</td>
+                            </tr>
+                            <tr className="border-t border-border">
+                                <td className="px-4 py-3">Cost efficiency</td>
+                                <td className="px-4 py-3">High volume required</td>
+                                <td className="px-4 py-3 text-primary font-semibold">Quality over quantity</td>
+                                <td className="px-4 py-3 text-muted-foreground">Industry benchmark</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* SECTION 3 */}
+                <div id="section-3">
+                    <SectionTitle title="3) Why Fixing Your Cold Email Technique Misses the Point">
+                        <p>I stopped believing in cold email fixes after testing 47 different subject line variations and seeing a 0.3% improvement. Seriously. Forty-seven variations for a fraction of a percent. It was exhausting.</p>
+
+                        <p>Don't get me wrong. The tactical stuff helps a little. <a href="https://belkins.io/blog/cold-email-response-rates" target="_blank" rel="noopener noreferrer">Belkins' 2025 research</a> shows personalized emails get <strong>18%</strong> response rates compared to <strong>9%</strong> for generic messages. Follow-up emails can boost response by <strong>49%</strong>. But here's what nobody tells you: you're still optimizing a fundamentally flawed approach.</p>
+
+                        <p>Think about it this way. If your baseline is 2%, doubling it gets you to 4%. That's still 96% of people ignoring you. Frustrating, right? And according to <a href="https://www.smartlead.ai/blog/reasons-cold-emails-are-ignored" target="_blank" rel="noopener noreferrer">Smartlead</a>, <strong>66%</strong> of B2B buyers expect solutions over sales pitches when contacted. They can smell a cold pitch from a mile away.</p>
+
+                        <p>The ceiling is just too low.</p>
+
+                        <p>I used to spend hours A/B testing send times (Thursday mornings, if you're curious). I'd obsess over personalization tokens and opening lines. All of it was rearranging deck chairs on the Titanic. The ship was still sinking because I was targeting people who didn't know me and didn't care.</p>
+
+                        <p>The real question isn't "how do I write better cold emails?" It's "why am I emailing cold prospects at all when warm ones are right there?"</p>
+                    </SectionTitle>
+                </div>
+
+                {/* ----------------------------------------------------
+                    IMAGE 2: MID-ARTICLE IMAGE
+                    ---------------------------------------------------- */}
+                <ArticleImage
+                    src="/images/blog/cold-email-response/mid.png"
+                    alt="Sales professional analyzing engagement signals on LinkedIn for warm outreach"
+                    caption="Switching from cold to warm outreach means finding prospects who have already shown interest."
+                />
+
+                {/* SECTION 4 */}
+                <div id="section-4">
+                    <SectionTitle title="4) The Modern Alternative: Warm Signal Method for Better Response Rates">
+                        <p>This is what I call the Warm Signal Method: finding leads who've already raised their hand through engagement (likes, comments, shares) rather than cold-targeting people who fit a demographic profile.</p>
+
+                        <p><strong>An intent signal is an observable action that indicates buying interest.</strong> Someone commenting on a competitor's post. Someone liking thought leadership about problems your product solves. Someone sharing an article about challenges in their industry. These actions tell you they're thinking about topics related to what you sell.</p>
+
+                        <p><a href="https://business.linkedin.com/sales-solutions/social-selling" target="_blank" rel="noopener noreferrer">LinkedIn data</a> shows <strong>78%</strong> of salespeople using social selling outsell their peers who rely on cold outreach alone. And LinkedIn messages achieve a <strong>10.3%</strong> response rate on average compared to <strong>5.1%</strong> for cold email, according to <a href="https://www.breakcold.com/blog/social-selling-statistics" target="_blank" rel="noopener noreferrer">Breakcold</a>. That's not a minor difference. It's double.</p>
+
+                        <p><strong>The key is timing.</strong> I call this the 72-Hour Engagement Window. When someone engages with relevant content, you have about 72 hours to reach out while the context is fresh. After that, response rates drop back to cold levels because they've moved on mentally.</p>
+
+                        <p>The challenge? Manually tracking LinkedIn engagement caps at maybe 5-10 posts per week. Tools like <Link href="https://guffles.com">Guffles</Link> automate this process: paste a LinkedIn post URL, and it extracts everyone who engaged. Filter by your ICP criteria, and you can <Link href="/blog/prospect-list">build a prospect list in minutes</Link> instead of hours. At $79/month, it costs a fraction of traditional sales intelligence platforms like Apollo ($300+) or ZoomInfo ($500+) that still rely on cold demographic targeting.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* SECTION 5 */}
+                <div id="section-5">
+                    <SectionTitle title="5) How to Make the Shift">
+                        <p>Here's the thing: you don't need fancy tools to start. You can test this approach manually first.</p>
+
+                        <p><strong>Step 1: Signal Identification</strong><br />
+                        Find 3-5 LinkedIn posts in your industry that got solid engagement. Look for posts about problems your product solves or competitors discussing your space. These are goldmines of interested prospects.</p>
+
+                        <p><strong>Step 2: Intent Validation</strong><br />
+                        Go through the engagers (people who liked, commented, or shared). Check if they match your ICP: right title, right company size, right industry. Not everyone who engages is a fit. That's okay.</p>
+
+                        <p><strong>Step 3: Warm Outreach</strong><br />
+                        Reach out within 72 hours. Reference the specific post they engaged with. Something like: "I noticed your comment on [person's] post about [topic]. Thought you might find this interesting..." You're not cold anymore. You have context.</p>
+
+                        <p><strong>Step 4: Measure and Iterate</strong><br />
+                        Track your response rates from warm outreach versus your cold baseline. I'm willing to bet you'll see at least a 3x improvement, probably more.</p>
+
+                        <p>The manual approach works, but it doesn't scale. You can realistically cover 5-10 posts per week by hand. That's why teams eventually look for automation. But start manual first. Prove the concept to yourself before investing in tools.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* ----------------------------------------------------
+                    FAQ SECTION
+                    ---------------------------------------------------- */}
+                <div id="faq" className="not-prose my-12">
+                    <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+
+                    <div className="space-y-6">
+                        {/* FAQ Item 1 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">Why do cold emails fail?</h3>
+                            <p className="text-muted-foreground">Cold emails fail because they target people with no prior interest. Over 91% get no reply because recipients receive too many irrelevant pitches from strangers.</p>
+                        </div>
+
+                        {/* FAQ Item 2 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">What is a good cold email reply rate?</h3>
+                            <p className="text-muted-foreground">A good cold email reply rate is 5-10% in 2025. The average sits at 1-5%. Top performers achieve 10-15% by targeting prospects who have already shown interest.</p>
+                        </div>
+
+                        {/* FAQ Item 3 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">Is cold email still effective in 2025?</h3>
+                            <p className="text-muted-foreground">Cold email can still work, but effectiveness has dropped significantly. Open rates fell to 27.7% and response rates sit at 1-5%. Warm outreach achieves 10-15%.</p>
+                        </div>
+
+                        {/* FAQ Item 4 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">How to improve cold email response rate?</h3>
+                            <p className="text-muted-foreground">Improve response rates by personalizing beyond first names, keeping emails under 125 words, following up 2-3 times, and targeting people who have shown intent signals through engagement.</p>
+                        </div>
+
+                        {/* FAQ Item 5 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">What is warm vs cold outreach?</h3>
+                            <p className="text-muted-foreground">Cold outreach contacts prospects with no prior relationship, achieving 1-5% response rates. Warm outreach contacts people who have shown interest through engagement signals, achieving 10-15%.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ----------------------------------------------------
+                    WORKFLOW BOX
+                    ---------------------------------------------------- */}
+                <div className="not-prose my-12 p-8 rounded-3xl bg-card border border-border shadow-lg space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                        <Sparkles className="w-4 h-4" /> Warm Signal Method: Quick Start
+                    </div>
+                    <ul className="list-disc pl-5 text-muted-foreground space-y-2">
+                        <li>Find 3-5 LinkedIn posts with engagement from your target audience</li>
+                        <li>Filter engagers by ICP criteria (title, company size, industry)</li>
+                        <li>Reach out within 72 hours referencing the specific post they engaged with</li>
+                    </ul>
+                </div>
+
+                {/* ----------------------------------------------------
+                    IMAGE 3: DATA VISUAL
+                    ---------------------------------------------------- */}
+                <ArticleImage
+                    src="/images/blog/cold-email-response/data.png"
+                    alt="Chart comparing cold email vs warm outreach response rates showing 8.5x improvement"
+                    caption="Data shows warm outreach converts at 14.6% versus 1.7% for cold leads - an 8.5x improvement."
+                />
+
+                {/* ----------------------------------------------------
+                    CTA SECTION
+                    ---------------------------------------------------- */}
+                <div id="cta">
+                    <SectionTitle
+                        eyebrow="Take Action"
+                        title="Stop Sending Emails Into the Void"
+                    >
+                        <p>Look, I get it. Cold email is familiar. You've got your sequences dialed in, your templates ready to go. Switching feels risky. Scary, even.</p>
+
+                        <p>But the numbers don't lie. <strong>91%</strong> of cold emails get ignored. The trend is getting worse, not better. And there's an alternative that performs 8.5x better. I wasted years figuring this out. You don't have to.</p>
+
+                        <p>Ready to stop sending emails into the void? You can start manually by tracking engagement on posts in your industry. Find the people who are already raising their hands. Or if you want to scale this approach, <Link href="https://guffles.com">Guffles</Link> offers $150 in free credits to get started.</p>
+
+                        <p>Either way, stop targeting strangers and start reaching out to people who've already shown they care. That's the real fix.</p>
+                    </SectionTitle>
+
+                    <Callout title="Key Takeaway" icon={<Target className="w-5 h-5 text-primary" />}>
+                        The problem with cold emails is not your copy or subject lines. It is targeting people who have no prior interest in what you offer. Target people showing intent signals for 8.5x better response rates.
+                    </Callout>
+                </div>
+
+                {/* ----------------------------------------------------
+                    BLOG CTA
+                    ---------------------------------------------------- */}
+                <BlogCTA
+                    title="Ready to Find Warm Leads?"
+                    description="Stop guessing who might be interested. Find prospects who have already shown buying signals through social engagement."
+                    buttonText="Get $150 in Free Credits"
+                    buttonHref="https://guffles.com"
+                />
+            </article>
+        </main>
+
+        {/* ================================================================
+            RIGHT COLUMN: Sidebar (Sticky)
+            ================================================================ */}
+        <aside className="hidden xl:block relative h-full">
+             <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar space-y-8 pb-10">
+                 <SidebarResource />
+                 <SidebarQuickWins />
+                 <SidebarMore />
+             </div>
+        </aside>
+
+    </div>
+  </div>
+
+  <Footer />
+</div>
+
+{/*
+  ============================================================================
+  POSTS ARRAY ENTRY
+  ============================================================================
+
+  Add to app/blog/page.tsx POSTS array:
+
+  {
+    id: [NEXT_ID],
+    slug: "cold-email-response",
+    title: "Why Your Cold Emails Get Ignored (And How to Fix It)",
+    excerpt: "91% of cold emails get ignored. Learn why cold outreach is failing in 2025 and discover the warm signal approach that gets 10-15% response rates instead.",
+    category: "Strategy",
+    author: "Sarah Chen",
+    date: "December 12, 2025",
+    readTime: "7 min read",
+    image: "/images/blog/cold-email-response/header.png"
+  }
+
+  ============================================================================
+
+  FILES TO COMMIT:
+  1. app/blog/cold-email-response/page.mdx (this file)
+  2. public/images/blog/cold-email-response/header.png
+  3. public/images/blog/cold-email-response/mid.png
+  4. public/images/blog/cold-email-response/data.png
+  5. Update app/blog/page.tsx (add POSTS entry)
+
+  ============================================================================
+*/}

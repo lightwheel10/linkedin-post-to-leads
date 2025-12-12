@@ -13,7 +13,7 @@ import { Search, ArrowRight, Clock, Calendar, TrendingUp, Sparkles, Filter } fro
 import { cn } from "@/lib/utils";
 
 // Blog Data
-const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation"];
+const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach"];
 
 const FEATURED_POST = {
   slug: "15-linkedin-lead-generation-tips",
@@ -81,6 +81,17 @@ const POSTS = [
     date: "Dec 12, 2025",
     readTime: "8 min read",
     image: "/images/blog/prospect-list/header.png"
+  },
+  {
+    id: 6,
+    slug: "cold-email-response",
+    title: "Why Your Cold Emails Get Ignored (And How to Fix It)",
+    excerpt: "91% of cold emails get ignored. Learn why cold outreach is failing in 2025 and discover the warm signal approach that gets 10-15% response rates instead.",
+    category: "Sales Outreach",
+    author: "Sarah Chen",
+    date: "Dec 12, 2025",
+    readTime: "7 min read",
+    image: "/images/blog/cold-email-response/header.png"
   }
 ];
 
