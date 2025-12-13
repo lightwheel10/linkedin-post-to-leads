@@ -13,7 +13,7 @@ import { Search, ArrowRight, Clock, Calendar, TrendingUp, Sparkles, Filter } fro
 import { cn } from "@/lib/utils";
 
 // Blog Data
-const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach"];
+const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach", "Tool Comparisons"];
 
 const FEATURED_POST = {
   slug: "15-linkedin-lead-generation-tips",
@@ -92,6 +92,17 @@ const POSTS = [
     date: "Dec 12, 2025",
     readTime: "7 min read",
     image: "/images/blog/cold-email-response/header.png"
+  },
+  {
+    id: 7,
+    slug: "sales-tools-100",
+    title: "7 Best B2B Sales Tools Under $100/Month (2025 Guide)",
+    excerpt: "Compare 7 affordable B2B sales tools under $100/month. We tested Apollo, Lusha, Hunter, and more. Find the best ROI tool for your budget.",
+    category: "Tool Comparisons",
+    author: "Guffles Growth Team",
+    date: "Dec 13, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/sales-tools-100/header.png"
   }
 ];
 
