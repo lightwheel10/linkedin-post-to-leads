@@ -410,13 +410,13 @@ export default function CalculatorPage() {
 
                                 {/* CTA */}
                                 <Button asChild size="lg" className="w-full rounded-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-                                    <Link href="/waitlist" className="flex items-center justify-center gap-2">
-                                        Start 3-Day Free Trial
+                                    <Link href="/signup" className="flex items-center justify-center gap-2">
+                                        Start 7-Day Free Trial
                                         <ArrowRight className="w-4 h-4" />
                                     </Link>
                                 </Button>
                                 <p className="text-xs text-center text-muted-foreground mt-3">
-                                    No charges for 3 days. Cancel anytime.
+                                    Cancel anytime during trial.
                                 </p>
                             </div>
                         </div>
@@ -504,7 +504,7 @@ export default function CalculatorPage() {
                                                 isRecommended && "bg-primary hover:bg-primary/90"
                                             )}
                                         >
-                                            <Link href="/waitlist">
+                                            <Link href="/signup">
                                                 {isRecommended ? "Start Free Trial" : "Get Started"}
                                             </Link>
                                         </Button>

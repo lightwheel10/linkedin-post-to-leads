@@ -2,8 +2,16 @@
 // USAGE TRACKING & ENFORCEMENT
 // Functions for checking limits and tracking usage
 // =============================================================================
+//
+// MIGRATION NOTE (14 Dec 2025):
+// Changed from basic Supabase client (lib/supabase.ts) to SSR-aware client
+// (lib/supabase/server.ts) for consistency and proper RLS support.
+//
+// Each function now creates its own client instance via `await createClient()`.
+// This is the recommended pattern for Next.js App Router.
+// =============================================================================
 
-import { supabase } from './supabase';
+import { createClient } from '@/lib/supabase/server';
 import { getPlanLimits, getUsagePercentage, isUsageWarning, isUsageLimitReached } from './plans';
 
 // =============================================================================
@@ -52,6 +60,7 @@ export interface UsageStats {
  * Get current usage info for a user
  */
 export async function getUsageInfo(userId: string): Promise<UsageInfo | null> {
+  const supabase = await createClient();
   const { data: user, error } = await supabase
     .from('users')
     .select('plan, analyses_used, enrichments_used, trial_ends_at, usage_reset_at')
@@ -177,6 +186,7 @@ export async function incrementAnalysisUsage(
   userId: string,
   metadata: AnalysisMetadata
 ): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
   // Update user's analysis count
   const { error: updateError } = await supabase.rpc('increment_analyses_used', {
     p_user_id: userId,
@@ -228,6 +238,7 @@ export async function incrementAnalysisUsage(
 export async function incrementEnrichmentUsage(
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
   // Update user's enrichment count
   const { data: user } = await supabase
     .from('users')
@@ -263,6 +274,7 @@ export async function incrementEnrichmentUsage(
  * Get usage statistics for a user
  */
 export async function getUsageStats(userId: string): Promise<UsageStats> {
+  const supabase = await createClient();
   const { data: user } = await supabase
     .from('users')
     .select('usage_reset_at')
@@ -310,6 +322,7 @@ export async function getUsageStats(userId: string): Promise<UsageStats> {
  * Reset monthly usage for a user (called on billing cycle reset)
  */
 export async function resetMonthlyUsage(userId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
   const { error } = await supabase
     .from('users')
     .update({
@@ -331,6 +344,7 @@ export async function resetMonthlyUsage(userId: string): Promise<{ success: bool
  * Get the reaction/comment caps for a user's plan
  */
 export async function getScrapingCaps(userId: string): Promise<{ reactionCap: number; commentCap: number }> {
+  const supabase = await createClient();
   const { data: user } = await supabase
     .from('users')
     .select('plan')

@@ -74,7 +74,7 @@ export function Navbar() {
                     {/* Actions */}
                     <div className="hidden md:flex items-center gap-3">
                         <Link
-                            href="/waitlist"
+                            href="/login"
                             className="text-[13px] font-medium text-muted-foreground/80 hover:text-primary transition-colors"
                         >
                             Log in
@@ -89,7 +89,7 @@ export function Navbar() {
                                 "border border-white/10"
                             )}
                         >
-                            <Link href="/waitlist">Get Started</Link>
+                            <Link href="/signup">Get Started</Link>
                         </Button>
                     </div>
 
@@ -128,14 +128,14 @@ export function Navbar() {
                         </Link>
                         <div className="h-px bg-border/50 my-1" />
                         <Link
-                            href="/waitlist"
+                            href="/login"
                             className="text-sm font-medium text-muted-foreground hover:text-primary p-2 rounded-lg hover:bg-white/5 transition-colors"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             Log in
                         </Link>
                         <Button asChild className="w-full bg-primary hover:bg-primary/90 rounded-xl">
-                            <Link href="/waitlist">Get Started</Link>
+                            <Link href="/signup">Get Started</Link>
                         </Button>
                     </div>
                 )}

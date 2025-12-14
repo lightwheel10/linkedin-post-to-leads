@@ -1,7 +1,18 @@
-import { supabase } from './supabase';
+import { createClient } from '@/lib/supabase/server';
 
 // ============================================================================
 // DATA STORE - Supabase PostgreSQL Storage
+// ============================================================================
+//
+// MIGRATION NOTE (14 Dec 2025):
+// Changed from basic Supabase client (lib/supabase.ts) to SSR-aware client
+// (lib/supabase/server.ts) for consistency and proper RLS support.
+//
+// Each function now creates its own client instance via `await createClient()`.
+// This is the recommended pattern for Next.js App Router as it ensures
+// proper cookie handling and user session context for Row Level Security.
+//
+// See: https://supabase.com/docs/guides/auth/server-side/nextjs
 // ============================================================================
 
 // ============================================================================
@@ -84,6 +95,7 @@ export interface Lead {
 // ============================================================================
 
 export async function getUser(email: string): Promise<User | null> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -95,6 +107,7 @@ export async function getUser(email: string): Promise<User | null> {
 }
 
 export async function createUser(email: string): Promise<User> {
+  const supabase = await createClient();
   const now = new Date().toISOString();
   const id = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -156,6 +169,7 @@ export async function getOrCreateUser(email: string): Promise<User> {
 }
 
 export async function updateUserSettings(email: string, settings: Partial<UserSettings>): Promise<User | null> {
+  const supabase = await createClient();
   // First get current user to merge settings
   const user = await getUser(email);
   if (!user) return null;
@@ -203,6 +217,7 @@ export interface OnboardingData {
  * Updates user onboarding data (partial save during wizard steps)
  */
 export async function updateUserOnboarding(email: string, data: OnboardingData): Promise<User | null> {
+  const supabase = await createClient();
   const user = await getUser(email);
   if (!user) return null;
 
@@ -250,6 +265,7 @@ export async function updateUserOnboarding(email: string, data: OnboardingData):
  * Marks onboarding as complete for a user
  */
 export async function completeOnboarding(email: string): Promise<User | null> {
+  const supabase = await createClient();
   const { error } = await supabase
     .from('users')
     .update({
@@ -313,6 +329,7 @@ export async function activateUserPlan(
   period: string,
   trialDays: number = 7
 ): Promise<{ user: User | null; subscription: Subscription | null }> {
+  const supabase = await createClient();
   const now = new Date();
   const trialEnd = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000);
 
@@ -366,6 +383,7 @@ export async function createSubscription(
   period: string,
   trialEnd: Date
 ): Promise<Subscription | null> {
+  const supabase = await createClient();
   const now = new Date();
 
   // Calculate period end based on billing period
@@ -412,6 +430,7 @@ export async function createSubscription(
  * Get user's active subscription
  */
 export async function getUserSubscription(userId: string): Promise<Subscription | null> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('subscriptions')
     .select('*')
@@ -432,6 +451,7 @@ export async function updateSubscriptionStatus(
   subscriptionId: string,
   status: Subscription['status']
 ): Promise<Subscription | null> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('subscriptions')
     .update({
@@ -483,6 +503,7 @@ export async function getUserBillingInfo(userId: string): Promise<{
   cardBrand: string | null;
   cardExpiry: string | null;
 } | null> {
+  const supabase = await createClient();
   const { data: user, error } = await supabase
     .from('users')
     .select('plan, billing_period, trial_ends_at, plan_expires_at, analyses_used, enrichments_used, card_last_four, card_brand, card_expiry')
@@ -526,6 +547,7 @@ export async function getUserBillingInfo(userId: string): Promise<{
 // ============================================================================
 
 export async function getAnalyses(userId: string): Promise<Analysis[]> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('analyses')
     .select('*')
@@ -537,6 +559,7 @@ export async function getAnalyses(userId: string): Promise<Analysis[]> {
 }
 
 export async function getAnalysis(id: string, userId: string): Promise<Analysis | null> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('analyses')
     .select('*')
@@ -549,6 +572,7 @@ export async function getAnalysis(id: string, userId: string): Promise<Analysis 
 }
 
 export async function saveAnalysis(analysis: Omit<Analysis, 'id' | 'created_at'>): Promise<Analysis> {
+  const supabase = await createClient();
   const id = `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   const created_at = new Date().toISOString();
 
@@ -568,7 +592,8 @@ export async function saveAnalysis(analysis: Omit<Analysis, 'id' | 'created_at'>
 }
 
 export async function deleteAnalysis(id: string, userId: string): Promise<boolean> {
-  const { error, count } = await supabase
+  const supabase = await createClient();
+  const { error } = await supabase
     .from('analyses')
     .delete()
     .eq('id', id)
@@ -679,6 +704,7 @@ export interface EnrichedData {
 }
 
 export async function getCRMLeads(userId: string): Promise<CRMLead[]> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('crm_leads')
     .select('*')
@@ -690,6 +716,7 @@ export async function getCRMLeads(userId: string): Promise<CRMLead[]> {
 }
 
 export async function getCRMLead(id: string, userId: string): Promise<CRMLead | null> {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('crm_leads')
     .select('*')
@@ -702,6 +729,7 @@ export async function getCRMLead(id: string, userId: string): Promise<CRMLead | 
 }
 
 export async function addCRMLeads(userId: string, leads: Omit<CRMLead, 'id' | 'user_id' | 'added_at' | 'enrichment_status'>[]): Promise<CRMLead[]> {
+  const supabase = await createClient();
   // Get existing profile URLs to avoid duplicates
   const { data: existingLeads } = await supabase
     .from('crm_leads')
@@ -738,6 +766,7 @@ export async function addCRMLeads(userId: string, leads: Omit<CRMLead, 'id' | 'u
 }
 
 export async function updateCRMLead(id: string, userId: string, updates: Partial<CRMLead>): Promise<CRMLead | null> {
+  const supabase = await createClient();
   // Don't allow updating id or user_id
   const { id: _, user_id: __, ...safeUpdates } = updates as any;
 
@@ -753,7 +782,8 @@ export async function updateCRMLead(id: string, userId: string, updates: Partial
 }
 
 export async function deleteCRMLeads(userId: string, ids: string[]): Promise<number> {
-  const { error, count } = await supabase
+  const supabase = await createClient();
+  const { error } = await supabase
     .from('crm_leads')
     .delete()
     .eq('user_id', userId)

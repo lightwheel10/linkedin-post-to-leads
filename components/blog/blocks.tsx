@@ -243,7 +243,7 @@ export const SidebarMore = () => (
     <div className="flex flex-col gap-3">
       {[
           { title: "Try the Free Calculator", href: "/calculator" },
-          { title: "Join the Waitlist", href: "/waitlist" },
+          { title: "Start Free Trial", href: "/signup" },
           { title: "Browse All Articles", href: "/blog" }
       ].map((item, i) => (
           <Link key={i} href={item.href} className="group flex gap-3 items-start">
@@ -269,8 +269,8 @@ export const BlogCTA = ({
   title = "Stop Buying Cold Lists. Start Mining Intent.",
   description = "Try Guffles today and see who's actually looking for what you sell right now.",
   buttonText = "Get Started Free",
-  buttonHref = "/waitlist",
-  subText = "No credit card required • Cancel anytime"
+  buttonHref = "/signup",
+  subText = "7-day free trial • Cancel anytime"
 }: BlogCTAProps) => (
   <div className="not-prose mt-16">
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-emerald-500/10 to-card/50 border border-primary/30 p-8 md:p-12 text-center shiny-border">

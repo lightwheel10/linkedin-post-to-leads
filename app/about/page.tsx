@@ -273,7 +273,7 @@ export default function AboutPage() {
                                 Stop cold outreach. Start warm conversations with people actively engaging with content about problems you solve.
                             </p>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                                <Link href="/waitlist">
+                                <Link href="/signup">
                                     <button className="h-14 px-8 rounded-full bg-primary text-primary-foreground font-bold text-base hover:bg-primary/90 transition-all hover:scale-105 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)]">
                                         Get Started Free
                                     </button>

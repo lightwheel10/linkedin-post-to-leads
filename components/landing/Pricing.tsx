@@ -130,8 +130,8 @@ export function Pricing() {
                         Wallet credits let you spend on what matters: AI Search, Post Analysis, or Profile Monitoring. Your choice.
                     </p>
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20">
-                        <span className="text-sm font-semibold text-green-600">🎉 3-Day Free Trial</span>
-                        <span className="text-xs text-muted-foreground">• Credit card required</span>
+                        <span className="text-sm font-semibold text-green-600">🎉 7-Day Free Trial</span>
+                        <span className="text-xs text-muted-foreground">• Cancel anytime</span>
                     </div>
                 </div>
 
@@ -230,7 +230,7 @@ export function Pricing() {
 
                                 {/* CTA */}
                                 <div>
-                                    <Button 
+                                    <Button
                                         asChild
                                         variant={plan.highlight ? "default" : "outline"}
                                         size="lg"
@@ -240,12 +240,12 @@ export function Pricing() {
                                             !plan.highlight ? "border-primary/20 hover:bg-primary/5" : ""
                                         )}
                                     >
-                                        <Link href="/waitlist">
-                                            Start 3-Day Free Trial
+                                        <Link href="/signup">
+                                            Start 7-Day Free Trial
                                         </Link>
                                     </Button>
                                     <p className="text-xs text-center text-muted-foreground mt-2">
-                                        No charges for 3 days
+                                        Cancel anytime
                                     </p>
                                 </div>
                             </div>
@@ -277,8 +277,8 @@ export function Pricing() {
                 {/* Trial Terms */}
                 <div className="max-w-2xl mx-auto text-center">
                     <p className="text-sm text-muted-foreground">
-                        Start your 3-day free trial with any plan. Credit card required. 
-                        Cancel anytime during the trial period and you won't be charged. 
+                        Start your 7-day free trial with any plan.
+                        Cancel anytime during the trial period and you won't be charged.
                         After the trial, you'll be automatically charged the monthly rate.
                     </p>
                 </div>

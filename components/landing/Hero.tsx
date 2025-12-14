@@ -233,7 +233,7 @@ export function Hero() {
                                 size="default"
                                 className="h-10 px-5 text-sm font-medium rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_-5px_rgba(16,185,129,0.4)] transition-all hover:scale-[1.02] w-full sm:w-auto"
                             >
-                                <Link href="/waitlist">
+                                <Link href="/signup">
                                     Start Free Trial
                                     <ArrowRight className="ml-1.5 w-3.5 h-3.5" />
                                 </Link>
@@ -285,11 +285,11 @@ export function Hero() {
                         <div className="flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-muted-foreground/80 animate-fade-in-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
                             <div className="flex items-center gap-1">
                                 <CheckCircle className="w-3 h-3 text-primary" />
-                                <span>No credit card required</span>
+                                <span>7-day free trial</span>
                             </div>
                             <div className="flex items-center gap-1">
                                 <CheckCircle className="w-3 h-3 text-primary" />
-                                <span>14-day free trial</span>
+                                <span>Cancel anytime</span>
                             </div>
                         </div>
                     </div>

@@ -12,7 +12,8 @@ const STATIC_PAGES = [
   { path: "/calculator", changeFrequency: "monthly" as const, priority: 0.8 },
   { path: "/contact", changeFrequency: "monthly" as const, priority: 0.6 },
   { path: "/demo", changeFrequency: "monthly" as const, priority: 0.7 },
-  { path: "/waitlist", changeFrequency: "monthly" as const, priority: 0.8 },
+  { path: "/signup", changeFrequency: "monthly" as const, priority: 0.9 },
+  { path: "/login", changeFrequency: "monthly" as const, priority: 0.8 },
 ];
 
 // Dynamically get blog post slugs by reading the app/blog directory
