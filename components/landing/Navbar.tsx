@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { trackSignupCTAClick } from "@/lib/analytics";
 
 export function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -88,6 +89,7 @@ export function Navbar() {
                                 "shadow-[0_1px_10px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.15)]",
                                 "border border-white/10"
                             )}
+                            onClick={() => trackSignupCTAClick('navbar', 'Get Started')}
                         >
                             <Link href="/signup">Get Started</Link>
                         </Button>
@@ -134,7 +136,11 @@ export function Navbar() {
                         >
                             Log in
                         </Link>
-                        <Button asChild className="w-full bg-primary hover:bg-primary/90 rounded-xl">
+                        <Button
+                            asChild
+                            className="w-full bg-primary hover:bg-primary/90 rounded-xl"
+                            onClick={() => trackSignupCTAClick('navbar', 'Get Started')}
+                        >
                             <Link href="/signup">Get Started</Link>
                         </Button>
                     </div>

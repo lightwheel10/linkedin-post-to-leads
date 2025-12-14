@@ -6,6 +6,7 @@ import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { Mail, MapPin, Phone, ChevronDown, Zap, Shield, Database, CreditCard, Link2, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { trackFAQExpand } from "@/lib/analytics";
 
 export default function ContactPage() {
     return (
@@ -171,7 +172,13 @@ function FAQSection() {
                             )}
 
                             <button
-                                onClick={() => setOpenIndex(isOpen ? null : index)}
+                                onClick={() => {
+                                    // Track FAQ expand (only when opening, not closing)
+                                    if (!isOpen) {
+                                        trackFAQExpand(index, faq.question);
+                                    }
+                                    setOpenIndex(isOpen ? null : index);
+                                }}
                                 className="relative w-full text-left p-6 flex items-center gap-4 cursor-pointer"
                             >
                                 {/* Icon */}

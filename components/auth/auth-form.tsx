@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, AlertCircle, ArrowRight, Mail, ArrowLeft, CheckCircle } from 'lucide-react'
+import { trackSignupMethod } from '@/lib/analytics'
 
 interface AuthFormProps {
   mode?: 'login' | 'signup'
@@ -49,6 +50,9 @@ export function AuthForm({ mode = 'login' }: AuthFormProps) {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+
+    // Track the email signup method
+    trackSignupMethod('email', isSignup ? 'signup' : 'login')
 
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -79,6 +83,9 @@ export function AuthForm({ mode = 'login' }: AuthFormProps) {
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     setError('')
+
+    // Track the signup method before redirect
+    trackSignupMethod('google', isSignup ? 'signup' : 'login')
 
     try {
       const { error } = await supabase.auth.signInWithOAuth({

@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
+import { trackSignupCTAClick } from "@/lib/analytics";
 
 export function CTA() {
     return (
@@ -29,7 +32,12 @@ export function CTA() {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                        <Button asChild size="lg" className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 w-full sm:w-auto transition-all hover:scale-105">
+                        <Button
+                            asChild
+                            size="lg"
+                            className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 w-full sm:w-auto transition-all hover:scale-105"
+                            onClick={() => trackSignupCTAClick('cta', 'Start Your Free Trial')}
+                        >
                             <Link href="/signup">Start Your Free Trial</Link>
                         </Button>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card/80 px-4 py-2 rounded-full border border-primary/20 shiny-border">

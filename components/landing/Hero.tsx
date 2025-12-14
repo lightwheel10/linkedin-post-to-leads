@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle, Play, Sparkles, TrendingUp, Search, Mail, Building2, MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useCallback, useRef } from "react";
+import { trackSignupCTAClick, trackTryDemoClick } from "@/lib/analytics";
 
 type Lead = {
     id: string;
@@ -232,6 +233,7 @@ export function Hero() {
                                 asChild
                                 size="default"
                                 className="h-10 px-5 text-sm font-medium rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_20px_-5px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_-5px_rgba(16,185,129,0.4)] transition-all hover:scale-[1.02] w-full sm:w-auto"
+                                onClick={() => trackSignupCTAClick('hero', 'Start Free Trial')}
                             >
                                 <Link href="/signup">
                                     Start Free Trial
@@ -243,10 +245,11 @@ export function Hero() {
                                 variant="outline"
                                 size="default"
                                 className="h-10 px-5 text-sm font-medium rounded-full border-primary/20 bg-background/50 hover:bg-primary/5 backdrop-blur-sm transition-all hover:scale-[1.02] w-full sm:w-auto group"
+                                onClick={() => trackTryDemoClick()}
                             >
                                 <Link href="/demo">
                                     <Play className="mr-1.5 w-3.5 h-3.5 fill-current opacity-80 group-hover:opacity-100 transition-opacity" />
-                                    Watch Demo
+                                    Try Demo
                                 </Link>
                             </Button>
                         </div>

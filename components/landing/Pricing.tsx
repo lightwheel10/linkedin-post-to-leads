@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Check, Sparkles, Wallet, Crown, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useEffect, useRef } from "react";
+import { trackSignupCTAClick, trackPricingView, trackContactSalesClick } from "@/lib/analytics";
 
 type PricingPlan = {
     name: string;
@@ -106,9 +108,30 @@ const PRICING_PLANS: PricingPlan[] = [
 ];
 
 export function Pricing() {
+    const sectionRef = useRef<HTMLElement>(null);
+    const hasTrackedView = useRef(false);
+
+    // Track when pricing section comes into view (once per page load)
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !hasTrackedView.current) {
+                    trackPricingView();
+                    hasTrackedView.current = true;
+                }
+            },
+            { threshold: 0.3 } // Trigger when 30% of section is visible
+        );
+
+        if (sectionRef.current) {
+            observer.observe(sectionRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
 
     return (
-        <section id="pricing" className="py-24 relative overflow-hidden">
+        <section ref={sectionRef} id="pricing" className="py-24 relative overflow-hidden">
             {/* Background Decoration */}
             <div className="absolute inset-0 -z-10 pointer-events-none">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-7xl h-[600px] bg-primary/5 blur-[120px] rounded-full opacity-30" />
@@ -239,6 +262,7 @@ export function Pricing() {
                                             plan.highlight ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30" : "",
                                             !plan.highlight ? "border-primary/20 hover:bg-primary/5" : ""
                                         )}
+                                        onClick={() => trackSignupCTAClick('pricing', 'Start 7-Day Free Trial', plan.name.toLowerCase())}
                                     >
                                         <Link href="/signup">
                                             Start 7-Day Free Trial
@@ -262,10 +286,11 @@ export function Pricing() {
                                 Custom limits, dedicated support, and volume discounts available
                             </p>
                         </div>
-                        <Button 
+                        <Button
                             asChild
                             variant="outline"
                             className="rounded-full border-primary/30 hover:bg-primary/10 shrink-0"
+                            onClick={() => trackContactSalesClick()}
                         >
                             <Link href="/contact">
                                 Contact Sales

@@ -6,6 +6,8 @@ import { ReactNode, useState, useEffect } from "react";
 import { BadgeCheck, BarChart3, Sparkles, Share2, Clock, List, Zap, ArrowRight, FileText, LinkedinIcon, TwitterIcon, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
+import { trackBlogCTAClick, trackSignupCTAClick } from "@/lib/analytics";
 
 type StatProps = {
   label: string;
@@ -271,33 +273,49 @@ export const BlogCTA = ({
   buttonText = "Get Started Free",
   buttonHref = "/signup",
   subText = "7-day free trial • Cancel anytime"
-}: BlogCTAProps) => (
-  <div className="not-prose mt-16">
-    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-emerald-500/10 to-card/50 border border-primary/30 p-8 md:p-12 text-center shiny-border">
-      {/* Noise Texture */}
-      <div
-        className="absolute inset-0 opacity-20 pointer-events-none"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
-        }}
-      />
-      {/* Decorative Blurs */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/30 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/30 rounded-full blur-[100px] pointer-events-none" />
+}: BlogCTAProps) => {
+  const pathname = usePathname();
+  // Extract blog slug from pathname (e.g., /blog/linkedin-engagement-leads -> linkedin-engagement-leads)
+  const blogSlug = pathname?.split('/blog/')[1] || 'unknown';
 
-      <div className="relative z-10 space-y-6 max-w-2xl mx-auto">
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{title}</h2>
-        <p className="text-muted-foreground text-lg">{description}</p>
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-          <Button asChild size="lg" className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 w-full sm:w-auto transition-all hover:scale-105">
-            <Link href={buttonHref}>{buttonText} <ArrowRight className="ml-2 w-4 h-4" /></Link>
-          </Button>
+  const handleClick = () => {
+    trackBlogCTAClick(blogSlug, buttonText);
+    trackSignupCTAClick('blog', buttonText);
+  };
+
+  return (
+    <div className="not-prose mt-16">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-emerald-500/10 to-card/50 border border-primary/30 p-8 md:p-12 text-center shiny-border">
+        {/* Noise Texture */}
+        <div
+          className="absolute inset-0 opacity-20 pointer-events-none"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+          }}
+        />
+        {/* Decorative Blurs */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/30 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/30 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="relative z-10 space-y-6 max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">{title}</h2>
+          <p className="text-muted-foreground text-lg">{description}</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <Button
+              asChild
+              size="lg"
+              className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 w-full sm:w-auto transition-all hover:scale-105"
+              onClick={handleClick}
+            >
+              <Link href={buttonHref}>{buttonText} <ArrowRight className="ml-2 w-4 h-4" /></Link>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-4">{subText}</p>
         </div>
-        <p className="text-xs text-muted-foreground mt-4">{subText}</p>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ArticleImage - For in-article images with consistent styling
 type ArticleImageProps = {

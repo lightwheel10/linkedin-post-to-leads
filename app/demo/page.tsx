@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { analyzePost, filterByICP } from "@/app/actions/analyze-post";
+import { trackDemoStarted, trackDemoCompleted, trackEmailFound } from "@/lib/analytics";
 
 const STEPS = [
     { id: 1, label: "Post Analysis", icon: Search },
@@ -188,6 +189,9 @@ function LeadCard({ lead, index }: { lead: Lead; index: number }) {
     const [emailStatus, setEmailStatus] = useState<'idle' | 'finding' | 'found' | 'view'>('idle');
 
     const handleFindEmail = () => {
+        // Track the email found event
+        trackEmailFound(index);
+
         setEmailStatus('finding');
         // Simulate finding email
         setTimeout(() => {
@@ -308,8 +312,18 @@ export default function DemoPage() {
     const [totalReactorsCount, setTotalReactorsCount] = useState(0);
     const [error, setError] = useState<string | null>(null);
 
+    // Track demo completion when status becomes 'complete'
+    useEffect(() => {
+        if (status === 'complete' && qualifiedLeads.length > 0) {
+            trackDemoCompleted(qualifiedLeads.length);
+        }
+    }, [status, qualifiedLeads.length]);
+
     const handleAnalyze = async () => {
         if (!url) return;
+
+        // Track demo started
+        trackDemoStarted();
 
         try {
             // Reset state

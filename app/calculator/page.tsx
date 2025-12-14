@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { Button } from "@/components/ui/button";
-import { 
-    Calculator, 
-    Users, 
-    Mail, 
+import {
+    Calculator,
+    Users,
+    Mail,
     Sparkles,
     ArrowRight,
     Target,
@@ -22,6 +22,7 @@ import {
     Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { trackCalculatorUsed, trackCalculatorCTAClick, trackSignupCTAClick } from "@/lib/analytics";
 
 // =============================================================================
 // PRICING DATA - Based on actual wallet costs
@@ -72,6 +73,47 @@ export default function CalculatorPage() {
     const [monitoredPosts, setMonitoredPosts] = useState(10);
     const [enrichmentsNeeded, setEnrichmentsNeeded] = useState(500);
     const [emailsNeeded, setEmailsNeeded] = useState(200);
+
+    // Track if user has interacted with calculator (for CTA tracking)
+    const hasInteracted = useRef(false);
+
+    // Debounced tracking for calculator usage (avoid firing on every slider tick)
+    const trackingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const trackCalculatorChange = useCallback((inputType: 'posts' | 'ai_searches' | 'profiles' | 'monitored_posts' | 'enrichments' | 'emails', value: number) => {
+        hasInteracted.current = true;
+        if (trackingTimeoutRef.current) {
+            clearTimeout(trackingTimeoutRef.current);
+        }
+        trackingTimeoutRef.current = setTimeout(() => {
+            trackCalculatorUsed(inputType, value);
+        }, 500); // Debounce 500ms
+    }, []);
+
+    // Wrapped setters that also track usage
+    const handlePostsChange = (value: number) => {
+        setPostsToAnalyze(value);
+        trackCalculatorChange('posts', value);
+    };
+    const handleAiSearchesChange = (value: number) => {
+        setAiSearches(value);
+        trackCalculatorChange('ai_searches', value);
+    };
+    const handleProfilesToMonitorChange = (value: number) => {
+        setProfilesToMonitor(value);
+        trackCalculatorChange('profiles', value);
+    };
+    const handleMonitoredPostsChange = (value: number) => {
+        setMonitoredPosts(value);
+        trackCalculatorChange('monitored_posts', value);
+    };
+    const handleEnrichmentsChange = (value: number) => {
+        setEnrichmentsNeeded(value);
+        trackCalculatorChange('enrichments', value);
+    };
+    const handleEmailsChange = (value: number) => {
+        setEmailsNeeded(value);
+        trackCalculatorChange('emails', value);
+    };
 
     // Calculate everything
     const calculations = useMemo(() => {
@@ -191,7 +233,7 @@ export default function CalculatorPage() {
                                         label="LinkedIn Posts to Analyze"
                                         description="Paste post URLs and we extract everyone who engaged"
                                         value={postsToAnalyze}
-                                        onChange={setPostsToAnalyze}
+                                        onChange={handlePostsChange}
                                         min={0}
                                         max={50}
                                         step={1}
@@ -207,7 +249,7 @@ export default function CalculatorPage() {
                                         label="AI-Powered Searches"
                                         description="AI finds relevant posts in your niche and analyzes top 3"
                                         value={aiSearches}
-                                        onChange={setAiSearches}
+                                        onChange={handleAiSearchesChange}
                                         min={0}
                                         max={15}
                                         step={1}
@@ -223,13 +265,13 @@ export default function CalculatorPage() {
                                             <Eye className="w-4 h-4" />
                                             Profile Monitoring
                                         </div>
-                                        
+
                                         <SliderInput
                                             icon={<Users className="w-5 h-5" />}
                                             label="Profiles to Monitor"
                                             description="Track influencers & competitors for new posts"
                                             value={profilesToMonitor}
-                                            onChange={setProfilesToMonitor}
+                                            onChange={handleProfilesToMonitorChange}
                                             min={0}
                                             max={30}
                                             step={1}
@@ -243,7 +285,7 @@ export default function CalculatorPage() {
                                             label="Monitored Posts to Analyze"
                                             description="Analyze posts from your monitored profiles"
                                             value={monitoredPosts}
-                                            onChange={setMonitoredPosts}
+                                            onChange={handleMonitoredPostsChange}
                                             min={0}
                                             max={50}
                                             step={1}
@@ -260,7 +302,7 @@ export default function CalculatorPage() {
                                         label="Profile Enrichments"
                                         description="Get full profile data: job title, company, location, etc."
                                         value={enrichmentsNeeded}
-                                        onChange={setEnrichmentsNeeded}
+                                        onChange={handleEnrichmentsChange}
                                         min={0}
                                         max={5000}
                                         step={100}
@@ -275,7 +317,7 @@ export default function CalculatorPage() {
                                         label="Email Discovery"
                                         description="Find verified business emails via Apollo.io"
                                         value={emailsNeeded}
-                                        onChange={setEmailsNeeded}
+                                        onChange={handleEmailsChange}
                                         min={0}
                                         max={2000}
                                         step={50}
@@ -409,7 +451,18 @@ export default function CalculatorPage() {
                                 </div>
 
                                 {/* CTA */}
-                                <Button asChild size="lg" className="w-full rounded-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+                                <Button
+                                    asChild
+                                    size="lg"
+                                    className="w-full rounded-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20"
+                                    onClick={() => {
+                                        // Track as calculator CTA if user interacted with sliders
+                                        if (hasInteracted.current) {
+                                            trackCalculatorCTAClick(calculations.recommendedPlan.name, calculations.totalMonthlyCost);
+                                        }
+                                        trackSignupCTAClick('calculator', 'Start 7-Day Free Trial');
+                                    }}
+                                >
                                     <Link href="/signup" className="flex items-center justify-center gap-2">
                                         Start 7-Day Free Trial
                                         <ArrowRight className="w-4 h-4" />
@@ -496,13 +549,14 @@ export default function CalculatorPage() {
                                             </li>
                                         </ul>
 
-                                        <Button 
-                                            asChild 
-                                            variant={isRecommended ? "default" : "outline"} 
+                                        <Button
+                                            asChild
+                                            variant={isRecommended ? "default" : "outline"}
                                             className={cn(
                                                 "w-full rounded-full",
                                                 isRecommended && "bg-primary hover:bg-primary/90"
                                             )}
+                                            onClick={() => trackSignupCTAClick('calculator', isRecommended ? 'Start Free Trial' : 'Get Started', plan.name.toLowerCase())}
                                         >
                                             <Link href="/signup">
                                                 {isRecommended ? "Start Free Trial" : "Get Started"}
