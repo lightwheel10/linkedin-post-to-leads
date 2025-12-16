@@ -114,6 +114,17 @@ const POSTS = [
     date: "Dec 16, 2025",
     readTime: "7 min read",
     image: "/images/blog/warm-vs-cold-outreach-data-breakdown/header.png"
+  },
+  {
+    id: 9,
+    slug: "how-many-follow-up-emails",
+    title: "How Many Follow-Up Emails to Send (2025 Data)",
+    excerpt: "Warm leads need 2-3 follow-ups, cold leads need 4-5. Learn the timing frameworks that drive 14.6% vs 1.7% conversion rates based on 16.5M emails analyzed.",
+    category: "Sales Outreach",
+    author: "Sarah Chen",
+    date: "Dec 16, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/how-many-follow-up-emails/header.png"
   }
 ];
 
