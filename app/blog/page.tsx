@@ -13,7 +13,7 @@ import { Search, ArrowRight, Clock, Calendar, TrendingUp, Sparkles, Filter } fro
 import { cn } from "@/lib/utils";
 
 // Blog Data
-const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach", "Tool Comparisons"];
+const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach", "Tool Comparisons", "Case Studies"];
 
 const FEATURED_POST = {
   slug: "15-linkedin-lead-generation-tips",
@@ -103,6 +103,17 @@ const POSTS = [
     date: "Dec 13, 2025",
     readTime: "8 min read",
     image: "/images/blog/sales-tools-100/header.png"
+  },
+  {
+    id: 8,
+    slug: "warm-vs-cold-outreach-data-breakdown",
+    title: "Warm vs Cold Outreach Results: 2025 Data Breakdown",
+    excerpt: "Compare warm vs cold outreach results with real 2025 data. See the exact numbers: 14.6% vs 1.7% conversion rates, 50-67% shorter sales cycles, and 3-10x better ROI.",
+    category: "Case Studies",
+    author: "Sarah Chen",
+    date: "Dec 16, 2025",
+    readTime: "7 min read",
+    image: "/images/blog/warm-vs-cold-outreach-data-breakdown/header.png"
   }
 ];
 
