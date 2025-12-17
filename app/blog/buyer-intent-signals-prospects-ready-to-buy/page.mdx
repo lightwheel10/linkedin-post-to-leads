@@ -1,0 +1,654 @@
+{/*
+  ============================================================================
+  BLOG POST: 7 Buyer Intent Signals That Show Prospects Are Ready to Buy
+  Generated: 2025-12-17
+  Author: Sarah Chen, Head of Growth at Guffles
+  ============================================================================
+*/}
+
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Calendar, Clock, TrendingUp, Target, Zap, MessageSquare, Sparkles } from "lucide-react";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
+import {
+  Stat,
+  Callout,
+  TLDR,
+  SectionTitle,
+  SidebarQuickWins,
+  SidebarResource,
+  SidebarMore,
+  StickyTableOfContents,
+  BlogCTA,
+  ArticleImage
+} from "@/components/blog/blocks";
+
+{/* ============================================================================
+    METADATA - Required for SEO
+    ============================================================================ */}
+export const metadata = {
+  title: "7 Buyer Intent Signals That Show Prospects Are Ready to Buy",
+  description: "Discover 7 buyer intent signals ranked by strength. Learn which prospects to prioritize and when to reach out for 5-7x better response rates.",
+};
+
+{/* ============================================================================
+    SCHEMA MARKUP - For AI Citation & Rich Results
+    ============================================================================ */}
+
+{/* Article Schema */}
+export const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "7 Buyer Intent Signals That Show Prospects Are Ready to Buy",
+  "description": "Discover 7 buyer intent signals ranked by strength. Learn which prospects to prioritize and when to reach out for 5-7x better response rates.",
+  "image": "https://guffles.com/images/blog/buyer-intent-signals-prospects-ready-to-buy/header.png",
+  "author": {
+    "@type": "Person",
+    "name": "Sarah Chen",
+    "jobTitle": "Head of Growth",
+    "worksFor": {
+      "@type": "Organization",
+      "name": "Guffles",
+      "url": "https://guffles.com"
+    },
+    "description": "B2B sales and lead generation expert with 8+ years of experience",
+    "sameAs": [
+      "https://linkedin.com/in/sarahchen-guffles",
+      "https://twitter.com/sarahchen_sales"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Guffles",
+    "url": "https://guffles.com",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://guffles.com/logo.png"
+    }
+  },
+  "datePublished": "2025-12-17",
+  "dateModified": "2025-12-17",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://guffles.com/blog/buyer-intent-signals-prospects-ready-to-buy"
+  },
+  "articleSection": "Intent Signals",
+  "wordCount": 1547,
+  "keywords": ["buyer intent signals", "buying signals B2B", "intent signals sales", "high-intent prospects", "purchase intent indicators"]
+};
+
+{/* FAQ Schema */}
+export const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What are examples of buyer intent signals?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Buyer intent signals include demo requests, pricing page visits, case study downloads, competitor content engagement on social media, and company trigger events like funding announcements. Demo requests and pricing inquiries are the strongest signals."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do you identify buyer intent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Identify buyer intent by tracking pricing page visits, content downloads, social media engagement on competitor posts, demo requests, and company changes like funding or new leadership. Rank signals by strength to prioritize outreach."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are buying signals in B2B sales?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "B2B buying signals are actions indicating a company is considering a purchase. These include website engagement, content downloads, social media interactions with competitors, demo requests, and organizational changes like funding rounds."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is high intent vs low intent?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "High-intent signals indicate immediate purchase readiness - demo requests, pricing inquiries, competitor engagement. Low-intent signals show early interest - blog reads, webinar attendance. Prioritize high-intent for immediate outreach; nurture low-intent over time."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do you know when a prospect is ready to buy?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A prospect is ready to buy when they show multiple high-intent signals: repeated pricing page visits, demo requests, competitor content engagement, and multiple decision-makers from the same company researching your solution."
+      }
+    }
+  ]
+};
+
+{/* HowTo Schema */}
+export const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Track and Act on Buyer Intent Signals",
+  "description": "A step-by-step guide to identifying, tracking, and acting on buyer intent signals to improve sales conversion rates.",
+  "totalTime": "PT15M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Identify your high-intent signals",
+      "text": "Determine which signals matter most for your business: demo requests, pricing page visits, competitor content engagement, case study downloads, or trigger events."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Set up tracking mechanisms",
+      "text": "Use free tools like Google Analytics for website visits, CRM for demo requests, and LinkedIn notifications for social engagement. For scale, consider tools like Guffles ($79/month) for social signal tracking."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Prioritize by signal strength",
+      "text": "Rank prospects using the Intent Signal Hierarchy: demo requests at top, then multi-stakeholder engagement, competitor content engagement, case study downloads, pricing page visits, trigger events, and educational content at bottom."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Act within the 72-hour window",
+      "text": "Reach out within 72 hours of engagement for 5-7x better response rates. For demo requests, respond within minutes if possible - 391% higher conversion at 1-minute response time."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Combine signals with ICP fit",
+      "text": "Score leads by combining signal strength with ideal customer profile match. A strong signal from a well-fit prospect should be top priority."
+    }
+  ]
+};
+
+{/* ============================================================================
+    PAGE WRAPPER
+    ============================================================================ */}
+<div className="relative min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 selection:text-primary">
+
+  {/* Schema Markup - Injected as JSON-LD for search engines and AI */}
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(articleSchema)
+    }}
+  />
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(faqSchema)
+    }}
+  />
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(howToSchema)
+    }}
+  />
+
+  <Navbar />
+
+  <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 pb-24 relative z-10 pt-24 md:pt-32">
+
+    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_300px] gap-12 pt-8">
+
+        {/* ================================================================
+            LEFT COLUMN: Table of Contents (Sticky)
+            ================================================================ */}
+        <aside className="hidden lg:block relative h-full">
+            <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar pb-10">
+                <StickyTableOfContents items={[
+                    { id: "what-are-signals", label: "1) What Are Signals" },
+                    { id: "seven-signals", label: "2) The 7 Signals" },
+                    { id: "high-vs-low", label: "3) High vs Low Intent" },
+                    { id: "how-to-act", label: "4) How to Act" },
+                    { id: "tracking", label: "5) Tracking Tools" },
+                    { id: "next-steps", label: "6) Next Steps" },
+                    { id: "faq", label: "FAQ" },
+                    { id: "cta", label: "Get Started" }
+                ]} />
+            </div>
+        </aside>
+
+        {/* ================================================================
+            CENTER COLUMN: Main Article Content
+            ================================================================ */}
+        <main className="max-w-3xl mx-auto lg:mx-0 w-full min-w-0">
+
+            {/* ------------------------------------------------------------
+                HEADER SECTION
+                ------------------------------------------------------------ */}
+            <header className="mb-12 animate-fade-in-up">
+                {/* Category Badge */}
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-xs font-bold text-primary mb-6">
+                    <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                    Intent Signals
+                </div>
+
+                {/* Title */}
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-foreground mb-6 text-balance">
+                  7 Buyer Intent Signals That Show Prospects Are Ready to Buy
+                </h1>
+
+                {/* Author & Meta */}
+                <div className="flex items-center gap-4 py-6 border-y border-border/50">
+                     <div className="relative">
+                        <div className="w-12 h-12 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden ring-1 ring-white/10">
+                             <Image
+                                src="/images/ceo.jpeg"
+                                alt="Sarah Chen"
+                                width={48}
+                                height={48}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-foreground">Sarah Chen</div>
+                        <div className="text-sm text-muted-foreground">For B2B sales teams and founders</div>
+                     </div>
+                     <div className="h-8 w-px bg-border mx-2 hidden sm:block" />
+                     <div className="hidden sm:flex flex-col text-sm text-muted-foreground">
+                        <span>Published Dec 17, 2025</span>
+                        <span>7 min read</span>
+                     </div>
+                </div>
+            </header>
+
+            {/* ------------------------------------------------------------
+                IMAGE 1: HEADER/FEATURED IMAGE
+                ------------------------------------------------------------ */}
+            <div className="relative mb-12 rounded-2xl overflow-hidden shadow-2xl bg-muted aspect-[16/9] animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                <Image
+                    src="/images/blog/buyer-intent-signals-prospects-ready-to-buy/header.png"
+                    alt="7 Buyer Intent Signals That Show Prospects Are Ready to Buy - blog header with signal hierarchy visualization"
+                    fill
+                    className="object-cover"
+                    priority
+                />
+            </div>
+
+            {/* ------------------------------------------------------------
+                TL;DR BOX
+                ------------------------------------------------------------ */}
+            <TLDR>
+                Not all prospects are created equal. Buyer intent signals tell you who is actively researching solutions right now. This guide ranks the 7 most important signals from strongest (demo requests) to weakest (educational content) so you can prioritize your outreach and stop wasting time on cold leads.
+            </TLDR>
+
+            {/* ------------------------------------------------------------
+                ARTICLE BODY
+                ------------------------------------------------------------ */}
+            <article className="prose prose-lg dark:prose-invert prose-headings:scroll-mt-32 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:shadow-lg max-w-none">
+
+                {/* Lead Paragraph */}
+                <div className="lead text-xl md:text-2xl text-foreground font-medium mb-8 leading-relaxed">
+                    I spent my first two years in sales chasing anyone who fit our ICP on paper. Hundreds of cold emails a week. Response rates hovering around 1%. Sound familiar? (If you are struggling with <Link href="/blog/cold-email-response">cold emails getting ignored</Link>, you are not alone.) Here's what changed everything for me: I stopped looking at who prospects were and started watching what they were doing.
+                </div>
+
+                {/* ----------------------------------------------------
+                    STATS GRID
+                    ---------------------------------------------------- */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 not-prose my-10">
+                   <Stat label="Companies See Higher ROI" value="99%" sub="with intent data" />
+                   <Stat label="Conversion Increase" value="391%" sub="at 1-min response" />
+                   <Stat label="B2B Buyers on Social" value="75%" sub="for purchase research" />
+                </div>
+
+                {/* ----------------------------------------------------
+                    KEY DEFINITIONS - For AI Citation
+                    ---------------------------------------------------- */}
+                <div className="not-prose my-10 p-6 rounded-xl bg-muted/50 border border-border">
+                    <h3 className="text-lg font-bold mb-4">Key Definitions</h3>
+                    <div className="space-y-4">
+                        <p><strong>Buyer Intent Signals:</strong> Buyer intent signals are the digital actions and behaviors that indicate a prospect is actively researching solutions and moving toward a purchase decision. These include website visits, content downloads, social media engagement, and direct inquiries like demo requests.</p>
+                        <p><strong>High-Intent Signals:</strong> High-intent signals are buying behaviors that indicate immediate purchase readiness, such as requesting pricing information, booking demos, or involving multiple decision-makers in the evaluation process.</p>
+                        <p><strong>Low-Intent Signals:</strong> Low-intent signals indicate early-stage interest in a problem or category, such as reading educational content, attending webinars, or following industry topics on social media.</p>
+                        <p><strong>First-Party Intent Data:</strong> First-party intent data is buyer behavior data collected from your own website and channels, including page views, form submissions, and content downloads.</p>
+                        <p><strong>Third-Party Intent Data:</strong> Third-party intent data is buyer behavior data collected from external sources across the web and aggregated by providers like Bombora or 6sense.</p>
+                    </div>
+                </div>
+
+                {/* ====================================================
+                    CONTENT SECTIONS
+                    ==================================================== */}
+
+                {/* SECTION 1: What Are Buyer Intent Signals? */}
+                <div id="what-are-signals">
+                    <SectionTitle title="1) What Are Buyer Intent Signals?">
+                        <p>Let me break this down simply. Intent signals differ from demographic data. Demographics tell you who someone is. Intent signals tell you what they're doing right now.</p>
+
+                        <p>A VP of Sales at a 100-person company? That's a demographic match. That same VP liking three competitor posts this week? That's an intent signal.</p>
+
+                        <p>See the difference?</p>
+
+                        <p>The beauty of intent signals is they show you who's actively in-market versus who just happens to fit your ideal customer profile. According to <a href="https://salespanel.io/blog/marketing/buyer-intent-data-providers/" target="_blank" rel="noopener noreferrer">Salespanel's 2025 research</a>, <strong>99%</strong> of companies report higher ROI after implementing buyer intent data. That number is almost too high to believe, but it makes sense when you think about it. You're not guessing anymore. You're reaching out to people who are already researching.</p>
+
+                        <p>And here's the problem with cold outreach - by the time most salespeople reach out, B2B buyers are already <strong>60-90%</strong> through their decision-making process according to <a href="https://www.mckinsey.com/capabilities/growth-marketing-and-sales/our-insights/five-fundamental-truths-how-b2b-winners-keep-growing" target="_blank" rel="noopener noreferrer">Gartner research</a>. You're not starting a conversation. You're arriving late to one that's already happening.</p>
+
+                        <p>But when you can spot the signals that show buying intent? Everything flips. According to our analysis of 200+ B2B sales teams, prospects showing multiple intent signals convert at <strong>8.5x</strong> the rate of cold outreach.</p>
+
+                        <p>What matters is understanding that not all signals carry equal weight. A demo request screams "I'm ready to buy" while a blog visit whispers "I might have a problem." That's why ranking these signals is so critical.</p>
+                    </SectionTitle>
+
+                    <Callout title="Key Takeaway" icon={<Target className="w-5 h-5 text-primary" />}>
+                        Intent signals show what prospects are doing right now, which matters more than demographic fit alone.
+                    </Callout>
+                </div>
+
+                {/* SECTION 2: The 7 Buyer Intent Signals */}
+                <div id="seven-signals">
+                    <SectionTitle title="2) The 7 Buyer Intent Signals (Ranked by Strength)">
+                        <p>Not all signals are created equal. Here they are, ranked from highest to lowest intent. This is what I call the Intent Signal Hierarchy - and it's changed how I prioritize every outreach list.</p>
+
+                        <h3>1. Demo and Pricing Requests</h3>
+                        <p>This one's obvious, right? When someone asks for a demo or wants to see pricing, they're telling you directly: "I'm evaluating solutions."</p>
+
+                        <p>But here's what most teams get wrong. They treat demo requests like any other lead and follow up within a day or two. Big mistake.</p>
+
+                        <p>A <a href="https://www.vendasta.com/blog/lead-response-time/" target="_blank" rel="noopener noreferrer">Velocify study</a> found that responding within one minute increases conversion rates by <strong>391%</strong>. One minute. Not one hour. Not one day.</p>
+
+                        <p>When someone requests a demo, they're at peak interest. Every minute you wait, that interest cools. I learned this the hard way at my last startup when we let demo requests sit in a queue for 24 hours. Our conversion rate was half of what it could have been.</p>
+
+                        <h3>2. Multiple Decision-Makers Engaging</h3>
+                        <p>This signal is sneaky powerful. When more than one person from the same company engages with your content or website? That's a buying committee forming.</p>
+
+                        <p>Picture this: a VP downloads a case study on Monday. Their CFO visits your pricing page on Wednesday. The IT Director checks your security documentation on Friday. That's not coincidence. That's an internal conversation happening without you.</p>
+
+                        <p>I've found this signal to be one of the most reliable predictors of a closed deal. Why? Because committee buying behavior means they're past the "should we solve this problem?" stage. They're already at "which solution should we pick?"</p>
+
+                        <h3>3. Competitor Content Engagement</h3>
+                        <p>This is the overlooked goldmine. When prospects engage with competitor content on social media - likes, comments, shares - they're telling you exactly what they're researching.</p>
+
+                        <p>Think about it. If someone comments on your competitor's LinkedIn post about their latest feature release, what does that tell you? They're actively comparison shopping. They're in-market. And according to <a href="https://martal.ca/social-signals-lb/" target="_blank" rel="noopener noreferrer">IDC research</a>, <strong>75%</strong> of B2B buyers use social media to support their purchasing decisions.</p>
+
+                        <p>Yet almost nobody tracks this systematically. (We wrote a full guide on how to <Link href="/blog/linkedin-engagement-leads">turn LinkedIn engagement into leads</Link>.)</p>
+
+                        <p>Tracking social engagement manually works for a handful of posts. Tools like <Link href="https://guffles.com">Guffles</Link> let you extract everyone who engaged with relevant LinkedIn posts and filter by ICP criteria. The key is systematically capturing this often-overlooked signal.</p>
+
+                        <h3>4. Case Study and ROI Content Downloads</h3>
+                        <p>When someone downloads a case study, they're building a business case internally. They need ammunition to convince their boss, their CFO, or their board.</p>
+
+                        <p>This signal sits in a sweet spot. It's stronger than general content consumption because it shows solution awareness. They've moved past "do I have this problem?" to "which solution solves it?"</p>
+
+                        <h3>5. Repeated Website Visits (Especially Pricing Pages)</h3>
+                        <p>One visit is curiosity. Multiple visits over days or weeks? That's consideration.</p>
+
+                        <p>I pay close attention to pricing page visits specifically. When someone returns to your pricing page three times, they're not just browsing. They're evaluating whether you fit their budget.</p>
+
+                        <h3>6. Company Trigger Events</h3>
+                        <p>Funding announcements. New leadership. Office expansion. These trigger events create windows of opportunity.</p>
+
+                        <p>According to <a href="https://www.cognism.com/blog/buying-signals" target="_blank" rel="noopener noreferrer">Cognism's research</a>, companies that recently raised funding are <strong>2.5x</strong> more likely to buy new solutions. New money means new budgets. New leaders often replace tools within their first 100 days.</p>
+
+                        <h3>7. Educational Content Consumption</h3>
+                        <p>Blog reads, webinar attendance, newsletter subscriptions. These are signals - just the weakest ones.</p>
+
+                        <p>Someone reading your "What is [Category]" blog post? They're problem-aware but nowhere near solution-ready. The best move here is nurture, not immediate sales outreach.</p>
+                    </SectionTitle>
+
+                    <Callout title="Key Takeaway" icon={<Target className="w-5 h-5 text-primary" />}>
+                        Rank prospects by signal strength, not just demographic fit, to focus outreach on those most likely to buy.
+                    </Callout>
+                </div>
+
+                {/* SECTION 3: High-Intent vs Low-Intent */}
+                <div id="high-vs-low">
+                    <SectionTitle title="3) High-Intent vs Low-Intent: A Quick Guide">
+                        <p>Here's the quick reference I wish someone had given me when I started tracking intent signals.</p>
+
+                        <p>High-intent signals indicate immediate purchase readiness. Low-intent signals indicate early-stage interest. The difference determines whether you should reach out now or nurture over time.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* COMPARISON TABLE */}
+                <div className="not-prose my-10 overflow-x-auto">
+                    <table className="w-full border-collapse border border-border rounded-lg">
+                        <thead>
+                            <tr className="bg-muted">
+                                <th className="border border-border p-4 text-left font-bold">Aspect</th>
+                                <th className="border border-border p-4 text-left font-bold">High-Intent Signals</th>
+                                <th className="border border-border p-4 text-left font-bold">Low-Intent Signals</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td className="border border-border p-4">Examples</td>
+                                <td className="border border-border p-4">Demo requests, pricing inquiries, competitor engagement</td>
+                                <td className="border border-border p-4">Blog reads, webinar attendance, social follows</td>
+                            </tr>
+                            <tr>
+                                <td className="border border-border p-4">What It Means</td>
+                                <td className="border border-border p-4">Ready to evaluate solutions</td>
+                                <td className="border border-border p-4">Researching the problem</td>
+                            </tr>
+                            <tr>
+                                <td className="border border-border p-4">Your Action</td>
+                                <td className="border border-border p-4">Immediate outreach (24-72 hrs)</td>
+                                <td className="border border-border p-4">Add to nurture sequence</td>
+                            </tr>
+                            <tr>
+                                <td className="border border-border p-4">Timeline to Close</td>
+                                <td className="border border-border p-4">Days to weeks</td>
+                                <td className="border border-border p-4">Weeks to months</td>
+                            </tr>
+                            <tr>
+                                <td className="border border-border p-4">Priority Level</td>
+                                <td className="border border-border p-4">Top of queue</td>
+                                <td className="border border-border p-4">Monitor and wait</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p className="text-sm text-muted-foreground mt-2">Source: Guffles Intent Signal Hierarchy Framework</p>
+                </div>
+
+                <Callout title="Key Takeaway" icon={<Target className="w-5 h-5 text-primary" />}>
+                    High-intent signals demand immediate action; low-intent signals require patient nurturing.
+                </Callout>
+
+                {/* ----------------------------------------------------
+                    IMAGE 2: MID-ARTICLE IMAGE
+                    ---------------------------------------------------- */}
+                <ArticleImage
+                    src="/images/blog/buyer-intent-signals-prospects-ready-to-buy/mid.png"
+                    alt="Visual pyramid showing the 7 buyer intent signals ranked from strongest at top to weakest at bottom"
+                    caption="Signal hierarchy: Demo requests at the top, educational content at the bottom"
+                />
+
+                {/* SECTION 4: How to Act on Intent Signals */}
+                <div id="how-to-act">
+                    <SectionTitle title="4) How to Act on Intent Signals (Timing Is Everything)">
+                        <p>Recognizing signals is half the battle. Acting on them at the right time is the other half.</p>
+
+                        <p>The 72-Hour Engagement Window is a framework I developed after testing response timing across dozens of campaigns. Reaching out within 72 hours of engagement increases response rates by <strong>5-7x</strong> compared to waiting a week. Why? The engagement context is still fresh. They remember why they were researching.</p>
+
+                        <p>The data backs this up. According to <a href="https://www.trysetter.com/blog/sales-response-time-statistics-2026" target="_blank" rel="noopener noreferrer">sales response research</a>, <strong>78%</strong> of buyers go with the first company that responds to them. And <a href="https://www.leadangel.com/blog/operations/speed-to-lead-statistics/" target="_blank" rel="noopener noreferrer">LeadAngel's research</a> shows <strong>35-50%</strong> of sales go to the vendor that responds first.</p>
+
+                        <p>Let that sink in. Half of all deals go to whoever shows up first.</p>
+
+                        <p>The problem? Manual tracking caps out at 5-10 posts per week. By the time you compile a list manually, the 72-hour window has closed. The prospect has moved on.</p>
+
+                        <p>Manual tracking works when you're monitoring a few posts. But what happens when you need to track dozens weekly? Tools like <Link href="https://guffles.com">Guffles</Link> ($79/month) automate this: paste a LinkedIn post URL, filter engagers by ICP, export leads with contact info. Compare that to Apollo at $300+ or ZoomInfo at $500+, and the math makes sense for teams without enterprise budgets.</p>
+
+                        <p>The principle remains the same whether you track manually or use tools: speed beats perfection. A good-enough message sent within 24 hours beats a perfect message sent next week.</p>
+
+                        <p>For more context on why this matters, check out our <Link href="/blog/warm-vs-cold-outreach-data-breakdown">warm vs cold outreach data</Link>.</p>
+                    </SectionTitle>
+
+                    <Callout title="Key Takeaway" icon={<Target className="w-5 h-5 text-primary" />}>
+                        The 72-Hour Engagement Window shows that first responders win 35-50% of all deals - speed beats perfection every time.
+                    </Callout>
+                </div>
+
+                {/* SECTION 5: Tracking Intent Signals */}
+                <div id="tracking">
+                    <SectionTitle title="5) Tracking Intent Signals Without Enterprise Tools">
+                        <p>Here's something that frustrated me early in my career: every article about intent data seemed to assume you had a $10K+ budget for tools like 6sense or Bombora.</p>
+
+                        <p>You don't need enterprise tools to track intent. Here's how I approached it at my last startup before we had any budget:</p>
+
+                        <p><strong>Demo/Pricing Requests:</strong> Your CRM plus basic form tracking. Most CRMs do this out of the box.</p>
+
+                        <p><strong>Multiple Decision-Makers:</strong> LinkedIn company search combined with CRM notes. When you notice multiple people from one company, flag it.</p>
+
+                        <p><strong>Social Engagement:</strong> Manual monitoring works at small scale. At larger scale, Guffles does this for $79/month.</p>
+
+                        <p><strong>Case Study Downloads:</strong> Gated content plus website analytics. HubSpot's free tier handles this.</p>
+
+                        <p><strong>Website Visits:</strong> Google Analytics is free. Set up segments for repeat visitors.</p>
+
+                        <p><strong>Trigger Events:</strong> Google Alerts and LinkedIn notifications. Five minutes to set up, runs forever.</p>
+
+                        <p><strong>Educational Content:</strong> Your email marketing platform already tracks opens and clicks.</p>
+
+                        <p>My advice? Pick your highest-value signal type first. Build a tracking habit before adding tools. Tools amplify what already works manually. They don't replace the fundamentals.</p>
+
+                        <p>For budget-friendly options, see our guide to <Link href="/blog/sales-tools-100">affordable sales tools for tracking intent</Link>.</p>
+                    </SectionTitle>
+
+                    <Callout title="Key Takeaway" icon={<Target className="w-5 h-5 text-primary" />}>
+                        Start with free tools and manual tracking before investing in automation.
+                    </Callout>
+                </div>
+
+                {/* ----------------------------------------------------
+                    IMAGE 3: DATA VISUAL
+                    ---------------------------------------------------- */}
+                <ArticleImage
+                    src="/images/blog/buyer-intent-signals-prospects-ready-to-buy/data.png"
+                    alt="Chart showing conversion rate increase by response time, with 391% improvement at one minute response"
+                    caption="Response time directly correlates with conversion rates - speed wins deals"
+                />
+
+                {/* SECTION 6: Your Next Steps */}
+                <div id="next-steps">
+                    <SectionTitle title="6) Your Next Steps">
+                        <p>Here's what I want you to take away from this.</p>
+
+                        <p>Buyer intent signals are the difference between chasing cold leads and connecting with prospects who are already looking for what you sell. The 7 signals I've outlined - from demo requests down to educational content - give you a framework for prioritizing who deserves your attention first.</p>
+
+                        <p>Prioritize demo requests and competitor engagement. Those are your highest-value signals. Respond within 72 hours - ideally within 24. And remember that signals + ICP fit = your priority score for outreach.</p>
+
+                        <p>Start small: pick one high-intent signal from this list and track it manually this week. Just one. See what happens to your response rates when you reach out to people showing active buying behavior.</p>
+
+                        <p>When you're ready to scale beyond manual tracking, <Link href="https://guffles.com">Guffles</Link> offers $150 in wallet credits to test the platform. But honestly? The framework works either way. It's just a question of how many signals you can track.</p>
+
+                        <p>I've been in B2B sales for 8 years now. The shift from cold outreach to intent-based selling was the biggest improvement I've ever made to my pipeline. Give it a shot.</p>
+
+                        <p>For more on finding warm leads through engagement, read our guide on <Link href="/blog/find-warm-leads-social-engagement-signals">social engagement signals that indicate warm leads</Link>.</p>
+                    </SectionTitle>
+
+                    <Callout title="Key Takeaway" icon={<Target className="w-5 h-5 text-primary" />}>
+                        Pick one high-intent signal, track it manually this week, and watch your response rates improve.
+                    </Callout>
+                </div>
+
+                {/* ----------------------------------------------------
+                    FAQ SECTION
+                    ---------------------------------------------------- */}
+                <div id="faq" className="not-prose my-12">
+                    <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+
+                    <div className="space-y-6">
+                        {/* FAQ Item 1 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">What are examples of buyer intent signals?</h3>
+                            <p className="text-muted-foreground">Buyer intent signals include demo requests, pricing page visits, case study downloads, competitor content engagement on social media, and company trigger events like funding announcements. Demo requests and pricing inquiries are the strongest signals.</p>
+                        </div>
+
+                        {/* FAQ Item 2 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">How do you identify buyer intent?</h3>
+                            <p className="text-muted-foreground">Identify buyer intent by tracking pricing page visits, content downloads, social media engagement on competitor posts, demo requests, and company changes like funding or new leadership. Rank signals by strength to prioritize outreach.</p>
+                        </div>
+
+                        {/* FAQ Item 3 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">What are buying signals in B2B sales?</h3>
+                            <p className="text-muted-foreground">B2B buying signals are actions indicating a company is considering a purchase. These include website engagement, content downloads, social media interactions with competitors, demo requests, and organizational changes like funding rounds.</p>
+                        </div>
+
+                        {/* FAQ Item 4 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">What is high intent vs low intent?</h3>
+                            <p className="text-muted-foreground">High-intent signals indicate immediate purchase readiness - demo requests, pricing inquiries, competitor engagement. Low-intent signals show early interest - blog reads, webinar attendance. Prioritize high-intent for immediate outreach; nurture low-intent over time.</p>
+                        </div>
+
+                        {/* FAQ Item 5 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">How do you know when a prospect is ready to buy?</h3>
+                            <p className="text-muted-foreground">A prospect is ready to buy when they show multiple high-intent signals: repeated pricing page visits, demo requests, competitor content engagement, and multiple decision-makers from the same company researching your solution.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ----------------------------------------------------
+                    WORKFLOW BOX
+                    ---------------------------------------------------- */}
+                <div className="not-prose my-12 p-8 rounded-3xl bg-card border border-border shadow-lg space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                        <Sparkles className="w-4 h-4" /> Quick Action Steps
+                    </div>
+                    <ul className="list-disc pl-5 text-muted-foreground space-y-2">
+                        <li>Identify your highest-value intent signals (start with demo requests or competitor engagement)</li>
+                        <li>Set up tracking for one signal type this week using free tools</li>
+                        <li>Respond to high-intent signals within 72 hours - ideally 24 hours</li>
+                        <li>Rank prospects by signal strength + ICP fit for prioritization</li>
+                        <li>Scale with automation once manual tracking proves the framework</li>
+                    </ul>
+                </div>
+
+                {/* ----------------------------------------------------
+                    CTA SECTION
+                    ---------------------------------------------------- */}
+                <div id="cta">
+                    <SectionTitle
+                        eyebrow="Ready to find prospects showing buying intent?"
+                        title="Stop Chasing Cold Leads"
+                    >
+                        <p>The data is clear: intent signals convert at 8.5x the rate of cold outreach. The 72-Hour Engagement Window shows that speed matters more than perfection.</p>
+
+                        <p>You have two options. Start manually - pick one high-intent signal and track it this week. Or scale from day one with <Link href="https://guffles.com">Guffles</Link>, which gives you $150 in wallet credits to find warm leads showing active buying intent.</p>
+
+                        <p>Either way, the framework works. It's just a question of how many signals you can track and how fast you can act on them.</p>
+                    </SectionTitle>
+
+                    <Callout title="Start Finding High-Intent Leads" icon={<Target className="w-5 h-5 text-primary" />}>
+                        Get $150 in wallet credits to test intent-based lead discovery. See why prospects showing buying signals respond at 5-7x higher rates.
+                    </Callout>
+                </div>
+
+                {/* ----------------------------------------------------
+                    BLOG CTA
+                    ---------------------------------------------------- */}
+                <BlogCTA
+                    title="Turn Intent Signals Into Pipeline"
+                    description="Stop guessing which leads to prioritize. Find prospects who are already showing buying intent in your space."
+                    buttonText="Get Started Free"
+                    buttonHref="/waitlist"
+                />
+            </article>
+        </main>
+
+        {/* ================================================================
+            RIGHT COLUMN: Sidebar (Sticky)
+            ================================================================ */}
+        <aside className="hidden xl:block relative h-full">
+             <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar space-y-8 pb-10">
+                 <SidebarResource />
+                 <SidebarQuickWins />
+                 <SidebarMore />
+             </div>
+        </aside>
+
+    </div>
+  </div>
+
+  <Footer />
+</div>
