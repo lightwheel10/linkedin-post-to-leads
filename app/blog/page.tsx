@@ -147,6 +147,17 @@ const POSTS = [
     date: "Dec 17, 2025",
     readTime: "8 min read",
     image: "/images/blog/connection-requests/header.png"
+  },
+  {
+    id: 12,
+    slug: "cold-email-opening-lines-examples",
+    title: "Cold Email Opening Lines That Get Replies (12 Examples)",
+    excerpt: "Discover 12 data-backed cold email opening lines that boost response rates by 142%. Learn which openers work and how to personalize at scale.",
+    category: "Sales Outreach",
+    author: "Sarah Chen",
+    date: "Dec 17, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/cold-email-opening-lines-examples/header.png"
   }
 ];
 
