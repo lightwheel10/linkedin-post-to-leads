@@ -13,7 +13,7 @@ import { Search, ArrowRight, Clock, Calendar, TrendingUp, Sparkles, Filter } fro
 import { cn } from "@/lib/utils";
 
 // Blog Data
-const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach", "Tool Comparisons", "Case Studies", "Intent Signals"];
+const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach", "LinkedIn Strategies", "Tool Comparisons", "Case Studies", "Intent Signals"];
 
 const FEATURED_POST = {
   slug: "15-linkedin-lead-generation-tips",
@@ -136,6 +136,17 @@ const POSTS = [
     date: "Dec 17, 2025",
     readTime: "7 min read",
     image: "/images/blog/buyer-intent-signals-prospects-ready-to-buy/header.png"
+  },
+  {
+    id: 11,
+    slug: "connection-requests",
+    title: "LinkedIn Connection Request Message: 5 Templates + 2025 Data",
+    excerpt: "Master your LinkedIn connection request message with 5 proven templates. 2025 data shows 45% acceptance for personalized vs 15% generic.",
+    category: "LinkedIn Strategies",
+    author: "Sarah Chen",
+    date: "Dec 17, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/connection-requests/header.png"
   }
 ];
 
