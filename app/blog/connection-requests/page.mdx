@@ -220,16 +220,15 @@ export const howToSchema = {
             LEFT COLUMN: Table of Contents (Sticky)
             ================================================================ */}
         <aside className="hidden xl:block relative h-full">
-            <StickyTableOfContents
-                sections={[
-                    { id: "section-1", title: "Good Acceptance Rates" },
-                    { id: "section-2", title: "Why Requests Fail" },
-                    { id: "section-3", title: "72-Hour Window" },
-                    { id: "section-4", title: "Message vs No Message" },
-                    { id: "section-5", title: "5 Templates" },
-                    { id: "section-6", title: "Common Mistakes" },
-                    { id: "faq", title: "FAQ" },
-                    { id: "cta", title: "Get Started" },
+            <StickyTableOfContents items={[
+                    { id: "section-1", label: "Good Acceptance Rates" },
+                    { id: "section-2", label: "Why Requests Fail" },
+                    { id: "section-3", label: "72-Hour Window" },
+                    { id: "section-4", label: "Message vs No Message" },
+                    { id: "section-5", label: "5 Templates" },
+                    { id: "section-6", label: "Common Mistakes" },
+                    { id: "faq", label: "FAQ" },
+                    { id: "cta", label: "Get Started" },
                 ]}
             />
         </aside>
