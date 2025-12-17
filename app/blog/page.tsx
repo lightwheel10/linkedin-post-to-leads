@@ -13,7 +13,7 @@ import { Search, ArrowRight, Clock, Calendar, TrendingUp, Sparkles, Filter } fro
 import { cn } from "@/lib/utils";
 
 // Blog Data
-const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach", "Tool Comparisons", "Case Studies"];
+const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach", "Tool Comparisons", "Case Studies", "Intent Signals"];
 
 const FEATURED_POST = {
   slug: "15-linkedin-lead-generation-tips",
@@ -125,6 +125,17 @@ const POSTS = [
     date: "Dec 16, 2025",
     readTime: "8 min read",
     image: "/images/blog/how-many-follow-up-emails/header.png"
+  },
+  {
+    id: 10,
+    slug: "buyer-intent-signals-prospects-ready-to-buy",
+    title: "7 Buyer Intent Signals That Show Prospects Are Ready to Buy",
+    excerpt: "Discover 7 buyer intent signals ranked by strength. Learn which prospects to prioritize and when to reach out for 5-7x better response rates.",
+    category: "Intent Signals",
+    author: "Sarah Chen",
+    date: "Dec 17, 2025",
+    readTime: "7 min read",
+    image: "/images/blog/buyer-intent-signals-prospects-ready-to-buy/header.png"
   }
 ];
 
