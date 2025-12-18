@@ -169,6 +169,17 @@ const POSTS = [
     date: "Dec 18, 2025",
     readTime: "9 min read",
     image: "/images/blog/intent-data-providers/header.png"
+  },
+  {
+    id: 14,
+    slug: "apollo-alternatives",
+    title: "Apollo Alternatives: 10 Best Options for 2025 (Cheaper Tools)",
+    excerpt: "Compare the best Apollo alternatives for 2025. Find cheaper options like Lusha ($29/mo) and intent-based tools for higher response rates.",
+    category: "Tool Comparisons",
+    author: "Sarah Chen",
+    date: "Dec 18, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/apollo-alternatives/header.png"
   }
 ];
 
