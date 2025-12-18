@@ -158,6 +158,17 @@ const POSTS = [
     date: "Dec 17, 2025",
     readTime: "8 min read",
     image: "/images/blog/cold-email-opening-lines-examples/header.png"
+  },
+  {
+    id: 13,
+    slug: "intent-data-providers",
+    title: "Best Intent Data Providers for Small Teams (2025 Comparison)",
+    excerpt: "Compare 10 intent data providers with transparent pricing from $79/mo to $300K/yr. Find the right tool for your small team budget.",
+    category: "Tool Comparisons",
+    author: "Guffles Growth Team",
+    date: "Dec 18, 2025",
+    readTime: "9 min read",
+    image: "/images/blog/intent-data-providers/header.png"
   }
 ];
 
