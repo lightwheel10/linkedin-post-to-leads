@@ -180,6 +180,17 @@ const POSTS = [
     date: "Dec 18, 2025",
     readTime: "8 min read",
     image: "/images/blog/apollo-alternatives/header.png"
+  },
+  {
+    id: 15,
+    slug: "sales-navigator-alternatives",
+    title: "Sales Navigator Alternatives: 10 Cheaper Tools for 2025",
+    excerpt: "Sales Navigator costs $99/month with no contact export. Compare 10 cheaper alternatives by budget and prospecting style. Find your best fit now.",
+    category: "Tool Comparisons",
+    author: "Sarah Chen",
+    date: "Dec 21, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/sales-navigator-alternatives/header.png"
   }
 ];
 
