@@ -13,7 +13,7 @@ import { Search, ArrowRight, Clock, Calendar, TrendingUp, Sparkles, Filter } fro
 import { cn } from "@/lib/utils";
 
 // Blog Data
-const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach", "LinkedIn Strategies", "Tool Comparisons", "Case Studies", "Intent Signals"];
+const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach", "LinkedIn Strategies", "LinkedIn Lead Generation", "Tool Comparisons", "Case Studies", "Intent Signals"];
 
 const FEATURED_POST = {
   slug: "15-linkedin-lead-generation-tips",
@@ -191,6 +191,17 @@ const POSTS = [
     date: "Dec 21, 2025",
     readTime: "8 min read",
     image: "/images/blog/sales-navigator-alternatives/header.png"
+  },
+  {
+    id: 16,
+    slug: "poll-voters-leads",
+    title: "LinkedIn Poll Lead Generation: Turn Voters Into Warm Leads",
+    excerpt: "Your LinkedIn poll got 73 votes. Great. Now what? Most people treat polls as engagement content and move on. That's a mistake. Every vote is a prospect telling you exactly what they care about.",
+    category: "LinkedIn Lead Generation",
+    author: "Sarah Chen",
+    date: "Dec 22, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/poll-voters-leads/header.png"
   }
 ];
 
