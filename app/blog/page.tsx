@@ -213,6 +213,17 @@ const POSTS = [
     date: "Dec 22, 2025",
     readTime: "7 min read",
     image: "/images/blog/convert-warm-leads-customers/header.png"
+  },
+  {
+    id: 18,
+    slug: "personalize-cold-emails-scale",
+    title: "Personalize Cold Emails at Scale: 4 Tactics (2025)",
+    excerpt: "Learn to personalize cold emails at scale using triggers and AI. Plus: why warm leads often beat even perfect personalization. 142% higher reply rates.",
+    category: "Sales Outreach",
+    author: "Sarah Chen",
+    date: "Dec 22, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/personalize-cold-emails-scale/header.png"
   }
 ];
 
