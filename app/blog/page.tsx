@@ -13,7 +13,7 @@ import { Search, ArrowRight, Clock, Calendar, TrendingUp, Sparkles, Filter } fro
 import { cn } from "@/lib/utils";
 
 // Blog Data
-const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach", "LinkedIn Strategies", "LinkedIn Lead Generation", "Tool Comparisons", "Case Studies", "Intent Signals"];
+const CATEGORIES = ["All", "Strategy", "Growth", "Lead Generation", "Sales Outreach", "LinkedIn Strategies", "LinkedIn Lead Generation", "Tool Comparisons", "Case Studies", "Intent Signals", "Warm Lead Strategies"];
 
 const FEATURED_POST = {
   slug: "15-linkedin-lead-generation-tips",
@@ -202,6 +202,17 @@ const POSTS = [
     date: "Dec 22, 2025",
     readTime: "8 min read",
     image: "/images/blog/poll-voters-leads/header.png"
+  },
+  {
+    id: 17,
+    slug: "convert-warm-leads-customers",
+    title: "How to Convert Warm Leads to Customers (10 Proven Tips)",
+    excerpt: "Learn how to convert warm leads to customers with 10 proven tips. Discover the speed, persistence, and personalization tactics that turn 10-25% of warm leads into sales.",
+    category: "Warm Lead Strategies",
+    author: "Sarah Chen",
+    date: "Dec 22, 2025",
+    readTime: "7 min read",
+    image: "/images/blog/convert-warm-leads-customers/header.png"
   }
 ];
 
