@@ -224,6 +224,17 @@ const POSTS = [
     date: "Dec 22, 2025",
     readTime: "8 min read",
     image: "/images/blog/personalize-cold-emails-scale/header.png"
+  },
+  {
+    id: 19,
+    slug: "lusha-alternatives",
+    title: "Lusha Alternatives: 10 Cheaper B2B Contact Tools for 2025",
+    excerpt: "Compare 10 Lusha alternatives with better pricing, accuracy, or intent-based leads. Find the right B2B contact tool for your team and budget in 2025.",
+    category: "Tool Comparisons",
+    author: "Sarah Chen",
+    date: "Dec 24, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/lusha-alternatives/header.png"
   }
 ];
 
