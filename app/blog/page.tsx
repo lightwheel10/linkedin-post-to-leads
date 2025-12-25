@@ -246,6 +246,17 @@ const POSTS = [
     date: "Dec 24, 2025",
     readTime: "8 min read",
     image: "/images/blog/linkedin-first-message/header.png"
+  },
+  {
+    id: 21,
+    slug: "prioritize-leads",
+    title: "How to Prioritize Sales Leads: 5-Step Framework (2025)",
+    excerpt: "Learn how to prioritize sales leads with a 5-step framework that combines ICP fit with engagement signals. Boost response rates 8.5x.",
+    category: "Strategy",
+    author: "Sarah Chen",
+    date: "Dec 25, 2025",
+    readTime: "7 min read",
+    image: "/images/blog/prioritize-leads/header.png"
   }
 ];
 
