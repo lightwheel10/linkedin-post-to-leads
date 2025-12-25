@@ -235,6 +235,17 @@ const POSTS = [
     date: "Dec 24, 2025",
     readTime: "8 min read",
     image: "/images/blog/lusha-alternatives/header.png"
+  },
+  {
+    id: 20,
+    slug: "linkedin-first-message",
+    title: "LinkedIn First Message After Connecting: 7 Proven Templates",
+    excerpt: "Get 16.86% response rates with proven LinkedIn first message templates. Includes timing data, personalization tips, and the 72-Hour Window framework.",
+    category: "LinkedIn Strategies",
+    author: "Sarah Chen",
+    date: "Dec 24, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/linkedin-first-message/header.png"
   }
 ];
 
