@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Use service role client to bypass RLS for inserts
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy initialization to avoid build-time errors when env vars aren't available
+function getSupabaseClient() {
+    return createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+}
 
 export async function POST(request: Request) {
     try {
@@ -18,6 +20,8 @@ export async function POST(request: Request) {
                 { status: 400 }
             );
         }
+
+        const supabase = getSupabaseClient();
 
         // Check if email already exists
         const { data: existing } = await supabase
@@ -60,6 +64,7 @@ export async function POST(request: Request) {
 // GET endpoint to fetch waitlist count (for social proof)
 export async function GET() {
     try {
+        const supabase = getSupabaseClient();
         const { count, error } = await supabase
             .from('waitlist')
             .select('*', { count: 'exact', head: true });
