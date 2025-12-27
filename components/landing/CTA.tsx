@@ -28,7 +28,7 @@ export function CTA() {
                     </h2>
 
                     <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
-                        Find people actively searching for solutions like yours. Reach out while intent is fresh and watch your response rates climb from 1% to 10%+.
+                        Find people actively searching for solutions like yours. Reach out while intent is fresh—before they forget what they were looking for.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -36,13 +36,13 @@ export function CTA() {
                             asChild
                             size="lg"
                             className="h-14 px-8 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 w-full sm:w-auto transition-all hover:scale-105"
-                            onClick={() => trackSignupCTAClick('cta', 'Start Your Free Trial')}
+                            onClick={() => trackSignupCTAClick('cta', 'Join Waitlist')}
                         >
-                            <Link href="/signup">Start Your Free Trial</Link>
+                            <Link href="/waitlist">Join the Waitlist</Link>
                         </Button>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card/80 px-4 py-2 rounded-full border border-primary/20 shiny-border">
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            <span>7-day free trial</span>
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            <span>Launching soon</span>
                         </div>
                     </div>
                 </div>

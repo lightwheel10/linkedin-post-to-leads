@@ -49,3 +49,19 @@ SUPABASE_AUTH_MIGRATION.md
 
 /templates
 
+# MCP config
+.mcp.json
+
+# Product docs
+Guffles_Product_Overview.docx
+docs/POSTHOG_SETUP.md
+
+# Claude config
+.claude/
+settings.local.json
+
+# Test files
+test-linkedin-post-search.ts
+test-output-linkedin-posts.json
+generation-results.json
+
