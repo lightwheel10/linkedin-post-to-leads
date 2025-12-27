@@ -28,6 +28,17 @@ const FEATURED_POST = {
 
 const POSTS = [
   {
+    id: 22,
+    slug: "linkedin-event-leads-attendees",
+    title: "LinkedIn Event Leads: How to Find Warm Prospects from Event Attendees",
+    excerpt: "Learn how to turn LinkedIn event attendees into warm leads with 66-75% acceptance rates. Step-by-step process for finding, extracting, and reaching out to event prospects.",
+    category: "LinkedIn Lead Generation",
+    author: "Sarah Chen",
+    date: "Dec 27, 2025",
+    readTime: "8 min read",
+    image: "/images/blog/linkedin-event-leads-attendees/header.png"
+  },
+  {
     id: 1,
     slug: "15-linkedin-lead-generation-tips",
     title: "15 LinkedIn Lead Generation Tips You Can Use Today",
