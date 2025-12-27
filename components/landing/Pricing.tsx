@@ -46,7 +46,7 @@ const PRICING_PLANS: PricingPlan[] = [
             "Up to 200 comments per post",
             "Profile monitoring",
             "Lead scoring & enrichment",
-            "Email discovery (Apollo)",
+            "Verified email discovery",
             "Export to CSV/JSON",
             "Email support"
         ],

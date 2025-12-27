@@ -107,7 +107,7 @@ function FAQSection() {
             iconColor: "text-blue-500",
             iconBg: "bg-blue-500/10",
             question: "What's included in the email enrichment feature?",
-            answer: "Our enrichment service finds verified professional email addresses using Apollo integration. AI also scores each lead based on how well they match your target buyer profile. You get full profile data and verified business emails so you can reach out while the intent is fresh."
+            answer: "Our enrichment service finds verified professional email addresses. AI also scores each lead based on how well they match your target buyer profile. You get full profile data and verified business emails so you can reach out while the intent is fresh."
         },
         {
             icon: Link2,

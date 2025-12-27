@@ -305,7 +305,7 @@ export default function DemoPage() {
     const [activeTab, setActiveTab] = useState(0); // Tracks the currently viewed tab
     const [logs, setLogs] = useState<string[]>([]);
 
-    // Real data from Apify
+    // Real data from backend
     const [postInfo, setPostInfo] = useState<PostInfo | null>(null);
     const [allReactors, setAllReactors] = useState<Lead[]>([]);
     const [qualifiedLeads, setQualifiedLeads] = useState<Lead[]>([]);
@@ -333,7 +333,7 @@ export default function DemoPage() {
             setError(null);
             setLogs(["🔄 Connecting to LinkedIn...", "🔍 Analyzing post URL..."]);
 
-            // Fetch real data from Apify
+            // Fetch real data from backend
             const result = await analyzePost(url);
 
             if (!result.success || !result.data) {
