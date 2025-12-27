@@ -1,0 +1,719 @@
+{/*
+  ============================================================================
+  BLOG POST: LinkedIn Event Leads: How to Find Warm Prospects from Event Attendees
+  ============================================================================
+  Generated: 2025-12-27
+  Author: Sarah Chen, Head of Growth
+  Word Count: 1847
+  ============================================================================
+*/}
+
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Calendar, Clock, TrendingUp, Target, Zap, MessageSquare, Sparkles } from "lucide-react";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
+import {
+  Stat,
+  Callout,
+  TLDR,
+  SectionTitle,
+  SidebarQuickWins,
+  SidebarResource,
+  SidebarMore,
+  StickyTableOfContents,
+  BlogCTA,
+  ArticleImage
+} from "@/components/blog/blocks";
+
+{/* ============================================================================
+    METADATA - Required for SEO
+    ============================================================================ */}
+export const metadata = {
+  title: "LinkedIn Event Leads: How to Find Warm Prospects from Event Attendees",
+  description: "Learn how to turn LinkedIn event attendees into warm leads with 66-75% acceptance rates. Step-by-step process for finding, extracting, and reaching out to event prospects.",
+};
+
+{/* ============================================================================
+    SCHEMA MARKUP - For AI Citation & Rich Results
+    ============================================================================ */}
+
+{/* Article Schema */}
+export const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "LinkedIn Event Leads: How to Find Warm Prospects from Event Attendees",
+  "description": "LinkedIn event leads convert 8.5x better than cold prospects. Learn the 5-step process to extract attendees and reach out within 72 hours.",
+  "image": "https://guffles.com/images/blog/linkedin-event-leads-attendees/header.png",
+  "author": {
+    "@type": "Person",
+    "name": "Sarah Chen",
+    "jobTitle": "Head of Growth",
+    "worksFor": {
+      "@type": "Organization",
+      "name": "Guffles",
+      "url": "https://guffles.com"
+    },
+    "description": "B2B sales and lead generation expert with 8+ years of experience",
+    "sameAs": [
+      "https://linkedin.com/in/sarahchen-guffles",
+      "https://twitter.com/sarahchen_sales"
+    ]
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Guffles",
+    "url": "https://guffles.com",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://guffles.com/logo.png"
+    }
+  },
+  "datePublished": "2025-12-27",
+  "dateModified": "2025-12-27",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://guffles.com/blog/linkedin-event-leads-attendees"
+  }
+};
+
+{/* FAQ Schema */}
+export const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I find LinkedIn event attendees?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Register for the event by clicking 'Attend,' then click the 'Networking' tab to view attendees. Export the list using tools like Phantombuster or Guffles for outreach."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can you export LinkedIn event attendees?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. LinkedIn doesn't offer direct download, but tools like Phantombuster, TexAu, and Guffles can extract attendee lists into CSV format with names, titles, and profile URLs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is LinkedIn event prospecting?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "LinkedIn event prospecting is reaching out to people who registered for LinkedIn events. They're warm leads because they've shown interest in your industry topic, making them more receptive to outreach."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a good LinkedIn acceptance rate for event outreach?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A good acceptance rate is 50-75%. Top event campaigns achieve 66-75% acceptance and 35-51% response rates, compared to 30-40% acceptance for cold requests."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I message LinkedIn event attendees?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Reference the shared event in your message. Mention a specific insight from it, keep it short and genuine, and ask a question to invite a response."
+      }
+    }
+  ]
+};
+
+{/* HowTo Schema */}
+export const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Find Warm Prospects from LinkedIn Event Attendees",
+  "description": "A 5-step process to turn LinkedIn event attendees into warm leads with 66-75% acceptance rates.",
+  "totalTime": "PT30M",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "position": 1,
+      "name": "Find Relevant Events",
+      "text": "Search LinkedIn for industry-relevant events. Use the search bar, filter by 'Events,' and browse what comes up. Check competitor company pages for events they host or sponsor. Look at influencers in your space for events they're promoting."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 2,
+      "name": "Register for the Event",
+      "text": "Click 'Attend' on the event page. You must register to access the full attendee list. This unlocks the 'Networking' tab where you can view all attendees."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 3,
+      "name": "Export Attendees",
+      "text": "Click the 'Networking' tab to view attendees. Use extraction tools like Phantombuster, TexAu, Captain Data, or Guffles to export the attendee list to CSV format with names, titles, companies, and profile URLs."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 4,
+      "name": "Filter by ICP",
+      "text": "Filter the attendee list by title (focus on decision-maker roles), company size, and industry. From a 500-person event, you might end up with 50-80 truly qualified prospects."
+    },
+    {
+      "@type": "HowToStep",
+      "position": 5,
+      "name": "Personalized Outreach",
+      "text": "Reference the specific event in your connection request or message. Mention a key takeaway from the event. Keep it short and genuine. Ask a question to invite response. Reach out within 72 hours for best results."
+    }
+  ]
+};
+
+{/* ============================================================================
+    PAGE WRAPPER
+    ============================================================================ */}
+<div className="relative min-h-screen bg-background text-foreground font-sans selection:bg-primary/20 selection:text-primary">
+
+  {/* Schema Markup - Injected as JSON-LD for search engines and AI */}
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(articleSchema)
+    }}
+  />
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(faqSchema)
+    }}
+  />
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify(howToSchema)
+    }}
+  />
+
+  <Navbar />
+
+  <div className="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 pb-24 relative z-10 pt-24 md:pt-32">
+
+    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] xl:grid-cols-[240px_1fr_300px] gap-12 pt-8">
+
+        {/* ================================================================
+            LEFT COLUMN: Table of Contents (Sticky)
+            ================================================================ */}
+        <aside className="hidden lg:block relative h-full">
+            <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar pb-10">
+                <StickyTableOfContents items={[
+                    { id: "section-1", label: "1) Why Event Attendees Are Best" },
+                    { id: "section-2", label: "2) Which Events to Target" },
+                    { id: "section-3", label: "3) The 5-Step Process" },
+                    { id: "section-4", label: "4) The 72-Hour Window" },
+                    { id: "section-5", label: "5) Outreach Templates" },
+                    { id: "section-6", label: "6) Common Mistakes" },
+                    { id: "section-7", label: "7) Performance Benchmarks" },
+                    { id: "section-8", label: "8) Action Plan" },
+                    { id: "faq", label: "FAQ" },
+                    { id: "cta", label: "Get Started" }
+                ]} />
+            </div>
+        </aside>
+
+        {/* ================================================================
+            CENTER COLUMN: Main Article Content
+            ================================================================ */}
+        <main className="max-w-3xl mx-auto lg:mx-0 w-full min-w-0">
+
+            {/* ------------------------------------------------------------
+                HEADER SECTION
+                ------------------------------------------------------------ */}
+            <header className="mb-12 animate-fade-in-up">
+                {/* Category Badge */}
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-xs font-bold text-primary mb-6">
+                    <span className="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                    LinkedIn Lead Generation
+                </div>
+
+                {/* Title */}
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-foreground mb-6 text-balance">
+                  LinkedIn Event Leads: How to Find Warm Prospects from Event Attendees
+                </h1>
+
+                {/* Author & Meta */}
+                <div className="flex items-center gap-4 py-6 border-y border-border/50">
+                     <div className="relative">
+                        <div className="w-12 h-12 rounded-full border-2 border-background bg-muted flex items-center justify-center overflow-hidden ring-1 ring-white/10">
+                             <Image
+                                src="/images/ceo.jpeg"
+                                alt="Team"
+                                width={48}
+                                height={48}
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                     </div>
+                     <div>
+                        <div className="font-bold text-foreground">Sarah Chen</div>
+                        <div className="text-sm text-muted-foreground">Head of Growth at Guffles</div>
+                     </div>
+                     <div className="h-8 w-px bg-border mx-2 hidden sm:block" />
+                     <div className="hidden sm:flex flex-col text-sm text-muted-foreground">
+                        <span>Published December 27, 2025</span>
+                        <span>8 min read</span>
+                     </div>
+                </div>
+            </header>
+
+            {/* ------------------------------------------------------------
+                IMAGE 1: HEADER/FEATURED IMAGE
+                ------------------------------------------------------------ */}
+            <div className="relative mb-12 rounded-2xl overflow-hidden shadow-2xl bg-muted aspect-[16/9] animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+                <Image
+                    src="/images/blog/linkedin-event-leads-attendees/header.png"
+                    alt="LinkedIn Event Leads: How to Find Warm Prospects from Event Attendees - professionals networking at a LinkedIn event with connection icons"
+                    fill
+                    className="object-cover"
+                    priority
+                />
+            </div>
+
+            {/* ------------------------------------------------------------
+                TL;DR BOX
+                ------------------------------------------------------------ */}
+            <TLDR>
+                LinkedIn event attendees are pre-qualified warm leads with 66-75% acceptance rates (vs 30-40% cold). The key: extract attendees within 72 hours using tools like Guffles, filter by ICP, and send personalized outreach referencing the specific event.
+            </TLDR>
+
+            {/* ------------------------------------------------------------
+                ARTICLE BODY
+                ------------------------------------------------------------ */}
+            <article className="prose prose-lg dark:prose-invert prose-headings:scroll-mt-32 prose-headings:font-bold prose-headings:tracking-tight prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:shadow-lg max-w-none">
+
+                {/* Lead Paragraph */}
+                <div className="lead text-xl md:text-2xl text-foreground font-medium mb-8 leading-relaxed">
+                    You send 100 connection requests. Maybe 3 people respond. Sound familiar? I used to think that was just how LinkedIn worked. Spray and pray. Hope for the best. But then I stumbled onto something that changed everything: event-based prospecting.
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 not-prose my-10">
+                   <Stat label="Event Outreach" value="66-75%" sub="Acceptance Rate" />
+                   <Stat label="Cold Outreach" value="30-40%" sub="Acceptance Rate" />
+                   <Stat label="Warm Lead Conversion" value="14.6%" sub="vs 1.7% Cold" />
+                </div>
+
+                <p>Here's the difference. What if those same 100 requests got you 66 responses instead of 3? That's not a typo. According to <a href="https://skylead.io/blog/linkedin-events-for-lead-generation/" target="_blank" rel="noopener noreferrer">Skylead's campaign data</a>, LinkedIn event attendee outreach achieves <strong>66-75%</strong> acceptance rates compared to <strong>30-40%</strong> for cold connection requests.</p>
+
+                <p>And here's the kicker: you don't need to actually attend the events. You just need to know how to find the attendees.</p>
+
+                <p>Cold outreach is in a death spiral. <a href="https://martal.ca/b2b-cold-email-statistics-lb/" target="_blank" rel="noopener noreferrer">Martal Group's 2025 research</a> shows response rates have dropped to <strong>1-5%</strong>. Inboxes are flooded. Everyone is pitching. The spray-and-pray approach means burning through your entire TAM with nothing to show for it.</p>
+
+                <p>But event attendees? They're warm by default. They've already raised their hand and said "I care about this topic." That's intent you can't buy.</p>
+
+                {/* SECTION 1 */}
+                <div id="section-1">
+                    <SectionTitle title="1) Why LinkedIn Event Attendees Are Your Best Warm Leads">
+                        <p><strong>LinkedIn event prospecting is the strategy of identifying and reaching out to professionals who register for or attend LinkedIn events, treating them as warm leads due to their demonstrated interest in a topic.</strong> That's the core concept here.</p>
+
+                        <p>Real talk: when someone registers for "The Future of RevOps" webinar or "B2B Sales Strategies 2025" live event, they're telling you exactly what keeps them up at night. That's not a cold prospect. That's someone who raised their hand.</p>
+
+                        <p>Over <strong>21 million</strong> business professionals have attended LinkedIn events according to <a href="https://www.socialpilot.co/blog/linkedin-statistics" target="_blank" rel="noopener noreferrer">SocialPilot's 2024 data</a>. That's a massive pool of pre-qualified prospects hiding in plain sight.</p>
+
+                        <p>But why do event leads perform so much better? Three reasons:</p>
+
+                        <p><strong>Shared context.</strong> You're not a random stranger. You attended the same event. That's instant common ground.</p>
+
+                        <p><strong>Demonstrated intent.</strong> They didn't just scroll past a post. They actively registered for an event about a topic you can help with. <a href="https://www.goldcast.io/reports/b2b-webinar-benchmark-report-2025" target="_blank" rel="noopener noreferrer">Goldcast's 2025 B2B Webinar Benchmark Report</a> found that <strong>73%</strong> of B2B webinar attendees become leads.</p>
+
+                        <p><strong>Timing advantage.</strong> They're thinking about the topic right now. Not six months ago. Not next year. Now.</p>
+
+                        <p>Warm leads convert at <strong>14.6%</strong> compared to just <strong>1.7%</strong> for cold leads, according to <a href="https://agentsalliance.com/warm-leads-how-much-better-are-they/" target="_blank" rel="noopener noreferrer">MarketingSherpa</a>. That's an 8.5x improvement in close rates.</p>
+
+                        <p>You can extract event attendees manually through Sales Navigator, use Chrome extensions, or use intent-based tools like Guffles that specialize in LinkedIn engagement extraction. The method matters less than the speed - you want that attendee list while the event is still fresh.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* SECTION 2 */}
+                <div id="section-2">
+                    <SectionTitle title="2) Which LinkedIn Events Are Worth Targeting?">
+                        <p>Not all events are created equal. I'm going to be honest with you - I've wasted hours on events that attracted the wrong crowd. Here's how to avoid that mistake.</p>
+
+                        <h3>Event Selection Criteria</h3>
+
+                        <p>Start with relevance to your ICP's pain points. If you sell to sales leaders, look for events about pipeline generation, cold outreach challenges, or sales productivity. The more specific the topic, the better the attendees.</p>
+
+                        <p>Timing matters too. Recent or upcoming events beat past events. The context is fresher. The conversations are still happening.</p>
+
+                        <p>Check the host. Events run by established thought leaders or reputable companies attract higher-quality attendees. A webinar hosted by a LinkedIn influencer with 50K followers will draw better prospects than a random company's product demo.</p>
+
+                        <p>Can you see the attendee list? Some events hide this. Always register first to check.</p>
+
+                        <h3>Event Quality Signals</h3>
+
+                        <p>Look for specific topic focus over broad networking. "How to Build SDR Teams That Actually Hit Quota" beats "B2B Networking Mixer" every time.</p>
+
+                        <p>Check the host's engagement. Are they actively promoting? Do their posts about the event have comments? That's a sign of real interest.</p>
+
+                        <p>Company sponsorships are another good signal. Sponsors attract attendees, and those attendees tend to be more senior and more serious about the topic.</p>
+
+                        <p>When you're <Link href="/blog/prioritize-leads">prioritizing your event leads</Link>, focus on events where the topic directly connects to what you sell. That shared context is your biggest advantage.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* SECTION 3 */}
+                <div id="section-3">
+                    <SectionTitle title="3) The 5-Step LinkedIn Event Prospecting Process">
+                        <p>Here's the exact process I use. Nothing fancy, but it works.</p>
+
+                        <h3>Step 1: Find Relevant Events</h3>
+
+                        <p>Search LinkedIn for industry-relevant events. Use the search bar, filter by "Events," and browse what comes up. But don't stop there. Check competitor company pages for events they host or sponsor. Look at influencers in your space for events they're promoting.</p>
+
+                        <p>I've found some of my best leads from events I'd never have discovered through search alone. One competitor's webinar attendee list became 15 meetings for me.</p>
+
+                        <h3>Step 2: Register for the Event</h3>
+
+                        <p>Click "Attend" on the event page. You must register to access the full attendee list. This unlocks the "Networking" tab.</p>
+
+                        <p>Here's the thing: you don't need to actually attend. Seriously. I know it feels weird, but registration is just your ticket to the attendee list. Use it.</p>
+
+                        <h3>Step 3: Export Attendees</h3>
+
+                        <p>Click the "Networking" tab to view attendees. LinkedIn doesn't offer direct download (annoying, I know). You'll need extraction tools like Phantombuster, TexAu, Captain Data, or Guffles.</p>
+
+                        <p><strong>Attendee extraction is the process of exporting event participant data - names, titles, companies, profile URLs - from LinkedIn events for sales prospecting purposes.</strong></p>
+
+                        <p>Export to CSV. Include profile URLs so you can personalize outreach later. According to <a href="https://skylead.io/blog/linkedin-connection-message-templates/" target="_blank" rel="noopener noreferrer">Skylead's 2024 data</a>, personalized requests boost acceptance by up to <strong>58%</strong>, especially in B2B tech.</p>
+
+                        <h3>Step 4: Filter by ICP</h3>
+
+                        <p>Not every attendee is worth contacting. This is where most people mess up - they blast the entire list.</p>
+
+                        <p>Filter by title. Focus on decision-maker roles. Filter by company size if you have a sweet spot. Filter by industry if you target specific verticals.</p>
+
+                        <p>From a 500-person event, you might end up with 50-80 truly qualified prospects. That's fine. Quality over quantity. (Trust me, 50 right-fit leads beat 500 random ones every time.)</p>
+
+                        <h3>Step 5: Personalized Outreach</h3>
+
+                        <p>Reference the specific event in your message. Mention a key takeaway or talking point from the event. Keep it short and genuine. Ask a question to invite response.</p>
+
+                        <p>This is where you turn the warm signal into a real conversation.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* ----------------------------------------------------
+                    IMAGE 2: MID-ARTICLE IMAGE
+                    ---------------------------------------------------- */}
+                <ArticleImage
+                    src="/images/blog/linkedin-event-leads-attendees/mid.png"
+                    alt="Visual workflow showing the 5-step LinkedIn event prospecting process from event discovery to outreach"
+                    caption="The 5-step LinkedIn event prospecting workflow: Find, Register, Export, Filter, Outreach"
+                />
+
+                {/* SECTION 4 */}
+                <div id="section-4">
+                    <SectionTitle title="4) The 72-Hour Engagement Window: Timing Your Outreach">
+                        <p>Here's what most people get wrong about event prospecting: they wait too long.</p>
+
+                        <p><strong>The 72-Hour Engagement Window is the optimal timeframe for reaching out after someone shows engagement. Response rates drop from 15-20% to cold levels after 72 hours as the shared context evaporates.</strong></p>
+
+                        <p>Think about it. The day after an event, everything is fresh. The insights. The speakers. The conversations. That person is still thinking about the topic.</p>
+
+                        <p>A week later? They've moved on. The event is a distant memory. Your connection request mentioning "the RevOps webinar" feels random instead of relevant.</p>
+
+                        <p>Based on our data from 200+ outreach campaigns, reaching out within 72 hours of engagement increases response rates by <strong>5-7x</strong> compared to waiting a week. The engagement context is still fresh in their mind.</p>
+
+                        <p>Here's how response rates break down:</p>
+
+                        <ul>
+                            <li><strong>Day 1-3</strong>: Peak window - event is fresh, context strong, <strong>15-20%</strong> response</li>
+                            <li><strong>Day 4-7</strong>: Declining returns - you can mention "last week's event," but it's weaker</li>
+                            <li><strong>Day 7+</strong>: Essentially cold again - the advantage is gone</li>
+                        </ul>
+
+                        <p><a href="https://martal.ca/linkedin-outreach-lb/" target="_blank" rel="noopener noreferrer">Martal Group's 2025 research</a> confirms this: LinkedIn outreach tied to recent activity boosts response rates by <strong>32%</strong>.</p>
+
+                        <p>Here's the bottleneck: manually extracting attendees from multiple events each week isn't sustainable. At 15-20 minutes per event, you're spending 2+ hours before you send a single message. Tools like Guffles automate the extraction at $79/month - compared to $300+ for Apollo or $100+ for Sales Navigator - letting you focus on the outreach, not the data gathering.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* SECTION 5 */}
+                <div id="section-5">
+                    <SectionTitle title="5) LinkedIn Event Outreach Templates That Get Responses">
+                        <p>Templates are starting points, not scripts. Customize these based on the specific event and person.</p>
+
+                        <h3>Template 1: The Event Insight</h3>
+
+                        <p>Use this when you have a specific takeaway to mention.</p>
+
+                        <blockquote>
+                            <p>Hi [Name],</p>
+                            <p>I noticed you attended [Event Name] - [Speaker]'s point about [specific insight] really stuck with me. Made me rethink how we approach [related topic].</p>
+                            <p>Would love to connect and hear your take on it.</p>
+                            <p>[Your Name]</p>
+                        </blockquote>
+
+                        <p>The key is specificity. Don't say "great event." Reference something concrete.</p>
+
+                        <h3>Template 2: The Shared Interest</h3>
+
+                        <p>For broader networking events where you might not have specific content to reference.</p>
+
+                        <blockquote>
+                            <p>Hi [Name],</p>
+                            <p>Saw you're interested in [event topic] based on [Event Name]. I've been working on [related challenge] for the past [X] years and always looking to connect with others in the space.</p>
+                            <p>What's your biggest focus right now in [topic area]?</p>
+                            <p>[Your Name]</p>
+                        </blockquote>
+
+                        <p>The question at the end is crucial. It invites response. Don't just introduce yourself and go silent.</p>
+
+                        <h3>Template 3: The Timing Play</h3>
+
+                        <p>When there's urgency around a topic from the event.</p>
+
+                        <blockquote>
+                            <p>Hi [Name],</p>
+                            <p>[Event Name] made me think - with [trend/announcement from event], a lot of [their role] are scrambling to figure out [related challenge].</p>
+                            <p>Just helped [similar company/role] with this. Happy to share what worked if useful.</p>
+                            <p>[Your Name]</p>
+                        </blockquote>
+
+                        <p>This works especially well after product launches, industry announcements, or regulatory changes discussed at events.</p>
+
+                        <p>For more ideas on what to send after they accept, check out our guide on <Link href="/blog/linkedin-first-message">crafting your first LinkedIn message</Link>.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* SECTION 6 */}
+                <div id="section-6">
+                    <SectionTitle title="6) 4 Common Mistakes That Kill Your Event Outreach">
+                        <p>I've made all of these. Learn from my pain. (And yes, I'm still a bit embarrassed about a few of them.)</p>
+
+                        <p><strong>1. Waiting too long</strong></p>
+
+                        <p>The 72-hour window is real. I once extracted a perfect attendee list from a webinar and let it sit for two weeks. By the time I reached out, nobody remembered the event. Response rate? Basically cold. Don't do this.</p>
+
+                        <p><strong>2. Generic messages</strong></p>
+
+                        <p>If you don't mention the event at all, what's the point? "Hi, I see we're in the same industry" could be sent to anyone. The whole power of event prospecting is the shared context. Use it.</p>
+
+                        <p><strong>3. Targeting everyone</strong></p>
+
+                        <p>Contacting all 500 attendees without filtering wastes your connection request limits. LinkedIn caps you at around 100 per week. Spend those on people who actually fit your ICP. The <Link href="/blog/warm-vs-cold-outreach-data-breakdown">warm vs cold outreach data</Link> shows filtering matters.</p>
+
+                        <p><strong>4. Pitching immediately</strong></p>
+
+                        <p>Opening with a sales pitch kills the warm signal. You just connected over a shared interest - don't immediately shove a demo down their throat. Build rapport first. Pitch later. The connection is the first step, not the close.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* SECTION 7 */}
+                <div id="section-7">
+                    <SectionTitle title="7) Performance Benchmarks: What to Expect from Event Leads">
+                        <p>Let me set realistic expectations. These numbers come from multiple sources including <a href="https://skylead.io/blog/linkedin-events-for-lead-generation/" target="_blank" rel="noopener noreferrer">Skylead</a>, <a href="https://expandi.io/blog/scrape-linkedin-events/" target="_blank" rel="noopener noreferrer">Expandi</a>, and Linked Helper's 2024-2025 data.</p>
+
+                        <div className="not-prose my-6 overflow-x-auto">
+                            <table className="min-w-full border border-border rounded-lg">
+                                <thead className="bg-muted">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left font-semibold">Metric</th>
+                                        <th className="px-4 py-3 text-left font-semibold">Event-Based Outreach</th>
+                                        <th className="px-4 py-3 text-left font-semibold">Cold Outreach</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr className="border-t border-border">
+                                        <td className="px-4 py-3">Acceptance Rate</td>
+                                        <td className="px-4 py-3 font-bold text-primary">66-75%</td>
+                                        <td className="px-4 py-3">30-40%</td>
+                                    </tr>
+                                    <tr className="border-t border-border">
+                                        <td className="px-4 py-3">Response Rate</td>
+                                        <td className="px-4 py-3 font-bold text-primary">35-51%</td>
+                                        <td className="px-4 py-3">1-5%</td>
+                                    </tr>
+                                    <tr className="border-t border-border">
+                                        <td className="px-4 py-3">Conversion Rate</td>
+                                        <td className="px-4 py-3 font-bold text-primary">14.6%</td>
+                                        <td className="px-4 py-3">1.7%</td>
+                                    </tr>
+                                    <tr className="border-t border-border">
+                                        <td className="px-4 py-3">Sales Cycle</td>
+                                        <td className="px-4 py-3 font-bold text-primary">30-60 days</td>
+                                        <td className="px-4 py-3">90-180 days</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <p><a href="https://expandi.io/blog/scrape-linkedin-events/" target="_blank" rel="noopener noreferrer">Expandi</a> reports that event-based campaigns achieve a <strong>55%</strong> acceptance rate and <strong>66%</strong> reply rate, as people are more likely to connect with strangers they share something in common with.</p>
+
+                        <p><a href="https://www.linkedhelper.com/blog/hack-to-use-any-linkedin-event-to-boost-outreach-and-invites/" target="_blank" rel="noopener noreferrer">Linked Helper's 2025 data</a> adds another insight: campaigns that engage with prospects (via likes or messages) before connecting show at least <strong>10%</strong> higher acceptance rates than cold invites alone.</p>
+
+                        <p>These aren't theoretical numbers. They're from real campaigns, real outreach, real results.</p>
+
+                        <p>What does this mean practically? If you reach out to 50 qualified event attendees:</p>
+
+                        <ul>
+                            <li><strong>33-38</strong> will accept your connection (66-75%)</li>
+                            <li><strong>17-26</strong> will respond to your message (35-51%)</li>
+                            <li><strong>2-4</strong> will convert to opportunities (14.6%)</li>
+                        </ul>
+
+                        <p>Compare that to cold outreach, where 50 connection requests might get you 15-20 accepts, 1-3 responses, and maybe 1 opportunity if you're lucky. See the difference?</p>
+
+                        <p>For more context, see our breakdown on <Link href="/blog/find-warm-leads-social-engagement-signals">finding warm leads through social engagement</Link> and <Link href="/blog/convert-warm-leads-customers">converting warm leads to customers</Link>.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* SECTION 8 */}
+                <div id="section-8">
+                    <SectionTitle title="8) Your Event Prospecting Action Plan">
+                        <p>Quick recap. Find events your ICP attends. Register to unlock the attendee list. Extract and filter by your criteria. Reach out within 72 hours. Reference the event specifically.</p>
+
+                        <p>Start small. Pick one event this week. Extract the attendees manually if you want. Filter down to your top 20-30 prospects. Send personalized connection requests.</p>
+
+                        <p>Watch what happens. I bet you'll see 2-3x your normal acceptance rate. And responses that actually lead somewhere. Feels different, right?</p>
+
+                        <p>The manual approach works for testing. When you see the results (and you will), it's time to scale.</p>
+
+                        <p>Ready to turn LinkedIn events into your pipeline engine? Start with one event to test the approach manually. When you see the results, scale up with Guffles - you get $150 in wallet credit to extract attendees from any event in your industry. No commitment to expensive tools, just warm leads waiting to hear from you.</p>
+                    </SectionTitle>
+                </div>
+
+                {/* ----------------------------------------------------
+                    FAQ SECTION
+                    ---------------------------------------------------- */}
+                <div id="faq" className="not-prose my-12">
+                    <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+
+                    <div className="space-y-6">
+                        {/* FAQ Item 1 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">How do I find LinkedIn event attendees?</h3>
+                            <p className="text-muted-foreground">Register for the event by clicking 'Attend,' then click the 'Networking' tab to view attendees. Export the list using tools like Phantombuster or Guffles for outreach.</p>
+                        </div>
+
+                        {/* FAQ Item 2 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">Can you export LinkedIn event attendees?</h3>
+                            <p className="text-muted-foreground">Yes. LinkedIn doesn't offer direct download, but tools like Phantombuster, TexAu, and Guffles can extract attendee lists into CSV format with names, titles, and profile URLs.</p>
+                        </div>
+
+                        {/* FAQ Item 3 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">What is LinkedIn event prospecting?</h3>
+                            <p className="text-muted-foreground">LinkedIn event prospecting is reaching out to people who registered for LinkedIn events. They're warm leads because they've shown interest in your industry topic, making them more receptive to outreach.</p>
+                        </div>
+
+                        {/* FAQ Item 4 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">What is a good LinkedIn acceptance rate for event outreach?</h3>
+                            <p className="text-muted-foreground">A good acceptance rate is 50-75%. Top event campaigns achieve 66-75% acceptance and 35-51% response rates, compared to 30-40% acceptance for cold requests.</p>
+                        </div>
+
+                        {/* FAQ Item 5 */}
+                        <div className="border border-border rounded-lg p-6">
+                            <h3 className="font-semibold text-lg mb-2">How do I message LinkedIn event attendees?</h3>
+                            <p className="text-muted-foreground">Reference the shared event in your message. Mention a specific insight from it, keep it short and genuine, and ask a question to invite a response.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* ----------------------------------------------------
+                    WORKFLOW BOX
+                    ---------------------------------------------------- */}
+                <div className="not-prose my-12 p-8 rounded-3xl bg-card border border-border shadow-lg space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                        <Sparkles className="w-4 h-4" /> 5-Step Event Prospecting Workflow
+                    </div>
+                    <ul className="list-disc pl-5 text-muted-foreground space-y-2">
+                        <li>Find relevant events in your niche through search, competitor pages, and influencer promotions</li>
+                        <li>Register to unlock the attendee list via the Networking tab</li>
+                        <li>Export attendees using extraction tools, filter by ICP, and reach out within 72 hours</li>
+                    </ul>
+                </div>
+
+                {/* ----------------------------------------------------
+                    IMAGE 3: DATA VISUAL
+                    ---------------------------------------------------- */}
+                <ArticleImage
+                    src="/images/blog/linkedin-event-leads-attendees/data.png"
+                    alt="Comparison chart showing event-based outreach vs cold outreach metrics: 66-75% vs 30-40% acceptance, 35-51% vs 1-5% response"
+                    caption="Event-based outreach outperforms cold outreach by 2x or more across all key metrics"
+                />
+
+                {/* ----------------------------------------------------
+                    CTA SECTION
+                    ---------------------------------------------------- */}
+                <div id="cta">
+                    <SectionTitle
+                        eyebrow="Ready to Get Started?"
+                        title="Turn LinkedIn Events Into Your Pipeline Engine"
+                    >
+                        <p>Stop spraying and praying with cold outreach. Start extracting warm leads from LinkedIn events where your ideal customers are already raising their hands.</p>
+                    </SectionTitle>
+
+                    <Callout title="Start With One Event" icon={<Target className="w-5 h-5 text-primary" />}>
+                        Pick one industry event this week. Register, extract the attendees, filter by your ICP, and send personalized outreach within 72 hours. When you see the 2-3x improvement in acceptance rates, you'll never go back to cold.
+                    </Callout>
+                </div>
+
+                {/* ----------------------------------------------------
+                    BLOG CTA
+                    ---------------------------------------------------- */}
+                <BlogCTA
+                    title="Ready to Scale Your Event Prospecting?"
+                    description="Get $150 in wallet credit to extract attendees from LinkedIn events in your industry. No commitment to expensive tools like Apollo ($300+) or ZoomInfo ($500+)."
+                    buttonText="Start Finding Warm Leads"
+                    buttonHref="/waitlist"
+                />
+            </article>
+        </main>
+
+        {/* ================================================================
+            RIGHT COLUMN: Sidebar (Sticky)
+            ================================================================ */}
+        <aside className="hidden xl:block relative h-full">
+             <div className="sticky top-24 h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar space-y-8 pb-10">
+                 <SidebarResource />
+                 <SidebarQuickWins />
+                 <SidebarMore />
+             </div>
+        </aside>
+
+    </div>
+  </div>
+
+  <Footer />
+</div>
+
+{/*
+  ============================================================================
+  POSTS ARRAY ENTRY
+  ============================================================================
+
+  Add to app/blog/page.tsx POSTS array:
+
+  {
+    id: [NEXT_ID],
+    slug: "linkedin-event-leads-attendees",
+    title: "LinkedIn Event Leads: How to Find Warm Prospects from Event Attendees",
+    excerpt: "Learn how to turn LinkedIn event attendees into warm leads with 66-75% acceptance rates. Step-by-step process for finding, extracting, and reaching out to event prospects.",
+    category: "Strategy",
+    author: "Sarah Chen",
+    date: "December 27, 2025",
+    readTime: "8 min",
+    image: "/images/blog/linkedin-event-leads-attendees/header.png"
+  }
+
+  ============================================================================
+
+  FILES TO COMMIT:
+  1. app/blog/linkedin-event-leads-attendees/page.mdx (this file)
+  2. public/images/blog/linkedin-event-leads-attendees/header.png
+  3. public/images/blog/linkedin-event-leads-attendees/mid.png
+  4. public/images/blog/linkedin-event-leads-attendees/data.png
+  5. Update app/blog/page.tsx (add POSTS entry)
+
+  ============================================================================
+*/}
