@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Loader2, 
-  ArrowRight, 
+import {
+  Loader2,
+  ArrowRight,
   ArrowLeft,
   User,
   Building2,
@@ -25,7 +25,10 @@ import {
   CreditCard,
   Shield,
   Zap,
-  Crown
+  Crown,
+  Calendar,
+  Clock,
+  XCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { 
@@ -1216,93 +1219,171 @@ function OnboardingPageContent() {
                 })()}
 
                 {/* Checkout Card - Redirects to Dodo hosted checkout */}
-                <Card className="border-2 border-border shadow-xl">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <CreditCard className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">Start Your Free Trial</CardTitle>
-                        <CardDescription>You won't be charged until your trial ends</CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Security Note */}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg">
-                      <Shield className="w-4 h-4 text-primary" />
-                      <span>You'll enter your payment details on our secure checkout page</span>
-                    </div>
+                {(() => {
+                  const selectedPlan = PLANS.find(p => p.id === data.selected_plan);
+                  const isAnnual = data.billing_period === 'annual';
+                  const displayPrice = isAnnual ? selectedPlan?.annualMonthly : selectedPlan?.monthlyPrice;
+                  const totalPrice = isAnnual ? selectedPlan?.annualPrice : selectedPlan?.monthlyPrice;
 
-                    {error && (
-                      <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
-                        {error}
-                      </div>
-                    )}
+                  // Calculate trial dates
+                  const trialStartDate = new Date();
+                  const trialEndDate = new Date();
+                  trialEndDate.setDate(trialEndDate.getDate() + 7);
 
-                    {/* Trial Info */}
-                    {(() => {
-                      const selectedPlan = PLANS.find(p => p.id === data.selected_plan);
-                      const isAnnual = data.billing_period === 'annual';
-                      const displayPrice = isAnnual ? selectedPlan?.annualMonthly : selectedPlan?.monthlyPrice;
-                      const totalPrice = isAnnual ? selectedPlan?.annualPrice : selectedPlan?.monthlyPrice;
+                  const formatDate = (date: Date) => {
+                    return date.toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    });
+                  };
 
-                      return (
-                        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Sparkles className="w-4 h-4 text-primary" />
-                            <span className="font-semibold text-sm">7-Day Free Trial</span>
+                  return (
+                    <Card className="border-2 border-border shadow-xl">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Sparkles className="w-6 h-6 text-primary" />
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            Try all features free for 7 days. You'll only be charged
-                            <span className="text-foreground font-medium">
-                              {isAnnual
-                                ? ` $${totalPrice}/year ($${displayPrice?.toFixed(0)}/mo) `
-                                : ` $${displayPrice}/month `
-                              }
-                            </span>
-                            after your trial ends. Cancel anytime.
-                            {isAnnual && selectedPlan && (
-                              <span className="block mt-1 text-primary">
-                                You're saving ${selectedPlan.savings}/year!
-                              </span>
-                            )}
-                          </p>
+                          <div>
+                            <CardTitle className="text-xl">Confirm Your Free Trial</CardTitle>
+                            <CardDescription className="text-base">Review your plan details before continuing</CardDescription>
+                          </div>
                         </div>
-                      );
-                    })()}
+                      </CardHeader>
+                      <CardContent className="space-y-5">
+                        {/* Trial Timeline */}
+                        <div className="bg-primary/5 border border-primary/20 rounded-xl p-5">
+                          <h4 className="font-semibold text-sm mb-4 flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-primary" />
+                            Your Trial Timeline
+                          </h4>
 
-                    <div className="flex gap-3 pt-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => setStep(2)}
-                        className="h-11"
-                        disabled={isRedirecting}
-                      >
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back
-                      </Button>
-                      <Button
-                        onClick={handleStep3Next}
-                        className="flex-1 h-11 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
-                        disabled={isRedirecting}
-                      >
-                        {isRedirecting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Redirecting to checkout...
-                          </>
-                        ) : (
-                          <>
-                            <Zap className="mr-2 h-4 w-4" />
-                            Start Free Trial
-                          </>
+                          <div className="space-y-3">
+                            {/* Start Date */}
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <Check className="w-4 h-4 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">Trial Starts Today</p>
+                                <p className="text-xs text-muted-foreground">{formatDate(trialStartDate)}</p>
+                              </div>
+                            </div>
+
+                            {/* Dotted line connector */}
+                            <div className="ml-4 border-l-2 border-dashed border-primary/30 h-6" />
+
+                            {/* End Date */}
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <Clock className="w-4 h-4 text-muted-foreground" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">Trial Ends</p>
+                                <p className="text-xs text-muted-foreground">{formatDate(trialEndDate)}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  First charge of
+                                  <span className="font-medium text-foreground">
+                                    {isAnnual
+                                      ? ` $${totalPrice}/year `
+                                      : ` $${displayPrice}/month `
+                                    }
+                                  </span>
+                                  after this date
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Key Points */}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                            <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                              You won't be charged for 7 days
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                            <XCircle className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                            <p className="text-sm text-muted-foreground">
+                              Cancel anytime before trial ends - no questions asked
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                            <Zap className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                            <p className="text-sm text-muted-foreground">
+                              Upgrade or downgrade your plan anytime
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Next Step Info */}
+                        <div className="flex items-start gap-3 p-4 rounded-lg border border-border bg-muted/30">
+                          <CreditCard className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium">Next Step: Enter Payment Details</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              You'll be redirected to our secure checkout page to enter your card information.
+                              Your card will only be charged after the 7-day trial ends.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Security Note */}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Shield className="w-4 h-4 text-primary" />
+                          <span>Your payment info is secured with 256-bit SSL encryption</span>
+                        </div>
+
+                        {error && (
+                          <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                            {error}
+                          </div>
                         )}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+
+                        {isAnnual && selectedPlan && (
+                          <div className="text-center text-sm text-primary font-medium">
+                            You're saving ${selectedPlan.savings}/year with annual billing!
+                          </div>
+                        )}
+
+                        <div className="flex gap-3 pt-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => setStep(2)}
+                            className="h-12"
+                            disabled={isRedirecting}
+                          >
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back
+                          </Button>
+                          <Button
+                            onClick={handleStep3Next}
+                            className="flex-1 h-12 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 text-base"
+                            disabled={isRedirecting}
+                          >
+                            {isRedirecting ? (
+                              <>
+                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                Redirecting to checkout...
+                              </>
+                            ) : (
+                              <>
+                                <Zap className="mr-2 h-5 w-5" />
+                                Start Free Trial
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
               </div>
             )}
 
