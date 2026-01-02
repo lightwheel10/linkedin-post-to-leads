@@ -37,11 +37,11 @@ export interface User {
   linkedin_url: string | null;
   profile_picture: string | null;
   // Subscription/Trial (from onboarding)
-  selected_plan: string | null; // 'starter' | 'pro' | 'business'
+  selected_plan: string | null; // 'pro' | 'growth' | 'scale'
   billing_period: string | null; // 'monthly' | 'annual'
   trial_ends_at: string | null;
   // Active plan & usage tracking
-  plan: string; // 'free' | 'starter' | 'pro' | 'business'
+  plan: string; // 'free' | 'pro' | 'growth' | 'scale'
   plan_started_at: string | null;
   plan_expires_at: string | null;
   analyses_used: number;
@@ -51,6 +51,25 @@ export interface User {
   card_last_four: string | null;
   card_brand: string | null; // 'visa' | 'mastercard' | 'amex' | 'discover'
   card_expiry: string | null; // 'MM/YY'
+  // =============================================================================
+  // DODO PAYMENTS INTEGRATION (Added: 2nd January 2026)
+  // =============================================================================
+  dodo_customer_id: string | null; // Dodo Payments customer ID
+  // =============================================================================
+  // WALLET CREDIT SYSTEM (Added: 2nd January 2026)
+  // =============================================================================
+  // Wallet-based billing: Users subscribe to plans that give wallet credits.
+  // Credits are stored in CENTS (100 cents = $1.00) to avoid float precision.
+  // Credits are RESET (not accumulated) at each billing cycle.
+  // Unused credits are FORFEITED at end of billing cycle (no rollover).
+  //
+  // Credit allocation per plan:
+  // - Pro ($79/mo): $150 credits = 15000 cents
+  // - Growth ($179/mo): $300 credits = 30000 cents
+  // - Scale ($279/mo): $500 credits = 50000 cents
+  // =============================================================================
+  wallet_balance: number; // Current wallet balance in cents
+  wallet_reset_at: string | null; // When wallet was last reset (billing cycle)
 }
 
 export interface UserSettings {
@@ -150,7 +169,13 @@ export async function createUser(email: string): Promise<User> {
     // Payment method (masked - NEVER store full card numbers)
     card_last_four: null,
     card_brand: null,
-    card_expiry: null
+    card_expiry: null,
+    // Dodo Payments
+    dodo_customer_id: null,
+    // Wallet Credit System
+    // New users start with 0 balance until they subscribe to a paid plan
+    wallet_balance: 0,
+    wallet_reset_at: null
   };
 
   const { error } = await supabase.from('users').insert(user);
@@ -313,11 +338,11 @@ export interface Subscription {
   created_at: string;
   updated_at: string;
   // =============================================================================
-  // TODO: DODO PAYMENT GATEWAY FIELDS
-  // dodo_subscription_id?: string;
-  // dodo_customer_id?: string;
-  // dodo_payment_method_id?: string;
+  // DODO PAYMENTS INTEGRATION (Added: 2nd January 2026)
   // =============================================================================
+  dodo_subscription_id: string | null; // Dodo subscription ID for API operations
+  cancellation_reason?: string | null; // Reason provided when user cancels
+  cancelled_at?: string | null;        // Timestamp when cancellation was requested
 }
 
 /**
@@ -403,14 +428,14 @@ export async function createSubscription(
     current_period_end: periodEnd.toISOString(),
     created_at: now.toISOString(),
     updated_at: now.toISOString(),
+    // Dodo Payments - set by checkout/webhook flow
+    dodo_subscription_id: null,
   };
 
-  // =============================================================================
-  // TODO: DODO PAYMENT GATEWAY INTEGRATION
-  // - Create customer in Dodo if not exists
-  // - Create subscription with trial period
-  // - Store dodo_subscription_id, dodo_customer_id
-  // =============================================================================
+  // Note: Dodo integration is handled via:
+  // - POST /api/billing/checkout (creates checkout session)
+  // - POST /api/webhooks/dodo (processes subscription events)
+  // The dodo_subscription_id is populated by webhooks after successful payment
 
   const { data, error } = await supabase
     .from('subscriptions')
@@ -471,15 +496,16 @@ export async function updateSubscriptionStatus(
 }
 
 /**
- * Cancel a subscription
+ * Cancel a subscription (internal use)
+ *
+ * NOTE: For user-initiated cancellations, use the /api/billing/cancel endpoint
+ * which handles Dodo API communication and proper cleanup.
+ *
+ * This function is primarily used by:
+ * - Webhook handlers when processing subscription.cancelled events
+ * - Internal admin operations
  */
 export async function cancelSubscription(subscriptionId: string): Promise<Subscription | null> {
-  // =============================================================================
-  // TODO: DODO PAYMENT GATEWAY INTEGRATION
-  // - Cancel subscription in Dodo
-  // - Handle proration if needed
-  // =============================================================================
-
   return updateSubscriptionStatus(subscriptionId, 'cancelled');
 }
 
@@ -532,9 +558,9 @@ export async function getUserBillingInfo(userId: string): Promise<{
     trialDaysRemaining,
     currentPeriodEnd: user.plan_expires_at,
     analysesUsed: user.analyses_used || 0,
-    analysesLimit: limits.analyses,
+    analysesLimit: user.plan === 'free' ? 5 : 999, // Free: 5, Paid: wallet-based (unlimited)
     enrichmentsUsed: user.enrichments_used || 0,
-    enrichmentsLimit: limits.enrichments,
+    enrichmentsLimit: user.plan === 'free' ? 10 : 999, // Free: 10, Paid: wallet-based (unlimited)
     // Card info (masked - never store full card numbers)
     cardLastFour: user.card_last_four || null,
     cardBrand: user.card_brand || null,

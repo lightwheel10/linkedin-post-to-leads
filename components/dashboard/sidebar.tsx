@@ -104,9 +104,9 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
 
   const getPlanColor = (plan: string) => {
     switch (plan) {
-      case 'business': return 'text-amber-500';
-      case 'pro': return 'text-primary';
-      case 'starter': return 'text-blue-500';
+      case 'scale': return 'text-amber-500';
+      case 'growth': return 'text-primary';
+      case 'pro': return 'text-blue-500';
       default: return 'text-muted-foreground';
     }
   };
@@ -227,7 +227,7 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
           {/* Plan Badge */}
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              {usage?.plan === 'business' ? (
+              {usage?.plan === 'scale' ? (
                 <Crown className={cn("h-3 w-3", getPlanColor(usage?.plan || 'free'))} />
               ) : (
                 <Zap className={cn("h-3 w-3", getPlanColor(usage?.plan || 'free'))} />

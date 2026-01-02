@@ -96,7 +96,7 @@ const PRICING_PLANS: PricingPlan[] = [
             "Everything in Growth, plus:",
             "Up to 1,000 reactions per post",
             "Up to 600 comments per post",
-            "3.5x wallet credits ($600)",
+            "3.3x wallet credits ($500)",
             "Unlimited profile monitoring",
             "Team collaboration tools",
             "API access & webhooks",

@@ -51,56 +51,59 @@ interface OnboardingData {
   billing_period: 'monthly' | 'annual';
 }
 
-// Pricing plans configuration
+// Pricing plans configuration (wallet-based)
 const PLANS = [
   {
-    id: 'starter',
-    name: 'Starter',
+    id: 'pro',
+    name: 'Pro',
     monthlyPrice: 79,
     annualPrice: 790, // $65.83/mo effective
     annualMonthly: 65.83,
     savings: 158,
-    description: 'Perfect for getting started',
+    walletCredits: 150,
+    description: 'For solo founders and SDRs',
     features: [
-      '15 post analyses/month',
-      '50 profile enrichments',
-      'Up to 200 reactions/post',
-      'CSV & JSON export',
+      '$150 wallet credits/month',
+      'Up to 300 reactions/post',
+      'Up to 200 comments/post',
+      'Lead scoring & enrichment',
       'Email support'
     ],
     popular: false
   },
   {
-    id: 'pro',
-    name: 'Pro',
-    monthlyPrice: 149,
-    annualPrice: 1490, // $124.17/mo effective
-    annualMonthly: 124.17,
-    savings: 298,
-    description: 'Most popular for growing teams',
+    id: 'growth',
+    name: 'Growth',
+    monthlyPrice: 179,
+    annualPrice: 1790, // $149.17/mo effective
+    annualMonthly: 149.17,
+    savings: 358,
+    walletCredits: 300,
+    description: 'For sales teams at scale',
     features: [
-      '25 post analyses/month',
-      '120 profile enrichments',
-      'Up to 300 reactions/post',
-      'Priority support',
-      'Advanced ICP filters'
+      '$300 wallet credits/month',
+      'Up to 600 reactions/post',
+      'Up to 400 comments/post',
+      'CRM integrations',
+      'Priority support'
     ],
     popular: true
   },
   {
-    id: 'business',
-    name: 'Business',
-    monthlyPrice: 299,
-    annualPrice: 2990, // $249.17/mo effective
-    annualMonthly: 249.17,
-    savings: 598,
-    description: 'For high-volume lead generation',
+    id: 'scale',
+    name: 'Scale',
+    monthlyPrice: 279,
+    annualPrice: 2790, // $232.50/mo effective
+    annualMonthly: 232.50,
+    savings: 558,
+    walletCredits: 500,
+    description: 'For agencies and high-volume',
     features: [
-      '45 post analyses/month',
-      '300 profile enrichments',
-      'Up to 400 reactions/post',
-      'Dedicated support',
-      'Custom integrations'
+      '$500 wallet credits/month',
+      'Up to 1,000 reactions/post',
+      'Up to 600 comments/post',
+      'API access & webhooks',
+      'Dedicated account manager'
     ],
     popular: false
   }

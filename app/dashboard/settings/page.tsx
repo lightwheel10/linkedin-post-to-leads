@@ -72,26 +72,26 @@ const TABS: { id: SettingsTab; label: string; icon: typeof User }[] = [
 
 // Plan configuration for display
 const PLAN_DISPLAY = {
-  free: { 
-    name: "Free Trial", 
+  free: {
+    name: "Free",
     color: "text-muted-foreground",
     bgColor: "bg-muted/30",
     borderColor: "border-border",
   },
-  starter: { 
-    name: "Starter", 
+  pro: {
+    name: "Pro",
     color: "text-blue-500",
     bgColor: "bg-blue-500/10",
     borderColor: "border-blue-500/30",
   },
-  pro: { 
-    name: "Pro", 
+  growth: {
+    name: "Growth",
     color: "text-primary",
     bgColor: "bg-primary/10",
     borderColor: "border-primary/30",
   },
-  business: { 
-    name: "Business", 
+  scale: {
+    name: "Scale",
     color: "text-amber-500",
     bgColor: "bg-amber-500/10",
     borderColor: "border-amber-500/30",
@@ -119,44 +119,44 @@ function CardBrandIcon({ brand }: { brand: string | null }) {
   );
 }
 
-// Plans data for modal
+// Plans data for modal (wallet-based)
 const PLANS = [
-  { 
-    id: "starter", 
-    name: "Starter", 
-    analyses: 15, 
-    enrichments: 50, 
-    peopleCap: 350, 
-    monthlyPrice: 79, 
+  {
+    id: "pro",
+    name: "Pro",
+    walletCredits: 150,
+    reactionCap: 300,
+    commentCap: 200,
+    monthlyPrice: 79,
     annualPrice: 790,
     annualMonthly: 65.83,
     savings: 158,
-    features: ["15 analyses/month", "50 enrichments", "Up to 350 people/post", "Email support"]
+    features: ["$150 wallet credits/month", "Up to 300 reactions/post", "Up to 200 comments/post", "Email support"]
   },
-  { 
-    id: "pro", 
-    name: "Pro", 
-    analyses: 25, 
-    enrichments: 120, 
-    peopleCap: 500, 
-    monthlyPrice: 149, 
-    annualPrice: 1490,
-    annualMonthly: 124.17,
-    savings: 298,
+  {
+    id: "growth",
+    name: "Growth",
+    walletCredits: 300,
+    reactionCap: 600,
+    commentCap: 400,
+    monthlyPrice: 179,
+    annualPrice: 1790,
+    annualMonthly: 149.17,
+    savings: 358,
     popular: true,
-    features: ["25 analyses/month", "120 enrichments", "Up to 500 people/post", "Priority support"]
+    features: ["$300 wallet credits/month", "Up to 600 reactions/post", "Up to 400 comments/post", "Priority support"]
   },
-  { 
-    id: "business", 
-    name: "Business", 
-    analyses: 45, 
-    enrichments: 300, 
-    peopleCap: 700, 
-    monthlyPrice: 299, 
-    annualPrice: 2990,
-    annualMonthly: 249.17,
-    savings: 598,
-    features: ["45 analyses/month", "300 enrichments", "Up to 700 people/post", "Dedicated support"]
+  {
+    id: "scale",
+    name: "Scale",
+    walletCredits: 500,
+    reactionCap: 1000,
+    commentCap: 600,
+    monthlyPrice: 279,
+    annualPrice: 2790,
+    annualMonthly: 232.50,
+    savings: 558,
+    features: ["$500 wallet credits/month", "Up to 1,000 reactions/post", "Up to 600 comments/post", "Dedicated support"]
   },
 ];
 
@@ -437,7 +437,7 @@ export default function SettingsPage() {
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
                           <div className={cn("p-2.5 rounded-lg", planDisplay.bgColor)}>
-                            {billing.plan === 'business' ? (
+                            {billing.plan === 'scale' ? (
                               <Crown className={cn("w-5 h-5", planDisplay.color)} />
                             ) : (
                               <Zap className={cn("w-5 h-5", planDisplay.color)} />
@@ -1004,8 +1004,8 @@ export default function SettingsPage() {
             <div className="grid md:grid-cols-3 gap-6 p-6 pt-0">
               {PLANS.map((plan) => {
                 const isCurrent = plan.id === billing?.plan && modalBillingPeriod === billing?.period;
-                const isDowngrade = billing?.plan === 'business' && plan.id !== 'business' ||
-                                   billing?.plan === 'pro' && plan.id === 'starter';
+                const isDowngrade = billing?.plan === 'scale' && plan.id !== 'scale' ||
+                                   billing?.plan === 'growth' && plan.id === 'pro';
                 const price = modalBillingPeriod === 'annual' ? plan.annualMonthly : plan.monthlyPrice;
                 
                 return (

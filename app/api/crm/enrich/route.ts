@@ -8,6 +8,19 @@ import { canEnrich, incrementEnrichmentUsage } from '@/lib/usage';
 // LinkedIn Profile Enrichment API
 // Uses Apify to scrape LinkedIn profile data
 // ============================================================================
+//
+// SECURITY FIX - 2nd January 2026
+// ================================
+// REMOVED: skipUsageTracking parameter that was previously accepted from request body.
+// This was a CRITICAL security vulnerability that allowed any authenticated user to
+// bypass credit/usage tracking by simply sending skipUsageTracking: true in the request.
+//
+// Credits are now ALWAYS tracked and deducted for enrichments.
+// If internal/admin bypasses are ever needed, they should be handled via:
+// 1. A separate internal API endpoint with proper authentication
+// 2. Server-side checks (e.g., checking if request is from internal service)
+// NEVER trust user-provided flags for billing/security decisions.
+// ============================================================================
 
 const APIFY_TOKEN = process.env.APIFY_API_TOKEN;
 const LINKEDIN_SCRAPER_ACTOR_ID = "VhxlqQXRwhW8H5hNV";
@@ -46,7 +59,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { profileUrl, username, skipUsageTracking } = body;
+    // SECURITY: Only extract profileUrl and username from request body.
+    // DO NOT accept skipUsageTracking or any other billing-related flags from user input.
+    const { profileUrl, username } = body;
 
     // Extract username from URL if not provided
     let linkedinUsername = username;
@@ -153,10 +168,10 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Enrich] Successfully enriched: ${linkedinUsername}`);
 
-    // Increment usage (unless explicitly skipped, e.g., for onboarding)
-    if (!skipUsageTracking) {
-      await incrementEnrichmentUsage(user.id);
-    }
+    // SECURITY FIX (2nd Jan 2026): ALWAYS track and deduct credits for enrichments.
+    // Previously this had a skipUsageTracking bypass that was a security vulnerability.
+    // Credits are now always deducted - no user-controlled bypasses allowed.
+    await incrementEnrichmentUsage(user.id);
 
     // Get updated usage
     const updatedUsage = await canEnrich(user.id);
