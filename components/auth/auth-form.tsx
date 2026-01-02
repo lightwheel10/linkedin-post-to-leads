@@ -42,6 +42,19 @@ export function AuthForm({ mode = 'login' }: AuthFormProps) {
   // Create Supabase client for browser
   const supabase = createClient()
 
+  // Get the site URL - use env var for production, fallback to window.location.origin for local dev
+  const getSiteUrl = () => {
+    // In production, always use the configured site URL
+    if (process.env.NEXT_PUBLIC_SITE_URL) {
+      return process.env.NEXT_PUBLIC_SITE_URL
+    }
+    // Fallback for local development
+    if (typeof window !== 'undefined') {
+      return window.location.origin
+    }
+    return 'http://localhost:3000'
+  }
+
   /**
    * Handle magic link sign in.
    * Sends a magic link to the user's email that they can click to sign in.
@@ -59,7 +72,7 @@ export function AuthForm({ mode = 'login' }: AuthFormProps) {
         email,
         options: {
           // Redirect to auth callback which will handle session and redirect
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${getSiteUrl()}/auth/callback`,
         },
       })
 
@@ -91,7 +104,7 @@ export function AuthForm({ mode = 'login' }: AuthFormProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${getSiteUrl()}/auth/callback`,
         },
       })
 

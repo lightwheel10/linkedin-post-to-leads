@@ -189,7 +189,7 @@ export async function POST(request: NextRequest) {
     }
 
     const client = getDodoClient();
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://guffles.com';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.guffles.com';
 
     // =========================================================================
     // STEP 5a: Generate callback token (2nd Jan 2026 - FIX)
