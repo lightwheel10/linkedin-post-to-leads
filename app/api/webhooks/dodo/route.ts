@@ -39,6 +39,15 @@
 //
 // Created: 2nd January 2026
 // Last Updated: 2nd January 2026 - Wallet-based billing model
+//
+// UPDATE (2nd Jan 2026) - Checkout Session Completion:
+// =====================================================
+// Added logic to mark checkout_sessions as 'completed' when payment succeeds.
+// This is CRITICAL for the secure checkout flow:
+// - The callback page polls /api/checkout/status to check payment status
+// - ONLY this webhook can mark a session as 'completed' (security)
+// - This ensures we never trust URL params for payment verification
+// - Also marks onboarding as complete when payment succeeds
 // =============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -59,6 +68,7 @@ import {
   formatCredits,
   WALLET_PLANS,
 } from '@/lib/wallet';
+import { completeOnboarding } from '@/lib/data-store';
 
 // =============================================================================
 // CONFIGURATION
@@ -392,7 +402,58 @@ async function handlePaymentSucceeded(
     }
 
     // -------------------------------------------------------------------------
-    // Step 5: Log the payment for analytics
+    // Step 5: Mark checkout session as completed (NEW - 2nd Jan 2026)
+    // -------------------------------------------------------------------------
+    // This is CRITICAL for the secure checkout flow.
+    // The callback page polls /api/checkout/status which checks this table.
+    // ONLY this webhook can mark status='completed' - this is the security model.
+    // We also complete onboarding here since payment success = onboarding done.
+    // -------------------------------------------------------------------------
+
+    // Try to find the checkout session for this user that's still pending
+    // We use user_id since the webhook might not have the exact session_id
+    const { data: pendingSession } = await supabase
+      .from('checkout_sessions')
+      .select('id, session_id')
+      .eq('user_id', user.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (pendingSession) {
+      // Mark the checkout session as completed
+      await supabase
+        .from('checkout_sessions')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          dodo_subscription_id: subscription_id || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', pendingSession.id);
+
+      console.log('[Dodo Webhook] Marked checkout session as completed:', {
+        sessionId: pendingSession.session_id,
+        userId: user.id,
+      });
+
+      // Complete onboarding for this user
+      // This sets onboarding_completed = true so they go to dashboard on next login
+      try {
+        await completeOnboarding(user.email);
+        console.log('[Dodo Webhook] Onboarding completed for:', user.email);
+      } catch (onboardingErr) {
+        console.error('[Dodo Webhook] Failed to complete onboarding:', onboardingErr);
+        // Don't fail the webhook - user can still complete onboarding via callback
+      }
+    } else {
+      console.log('[Dodo Webhook] No pending checkout session found for user:', user.id);
+      // This is OK - might be a renewal payment, not initial checkout
+    }
+
+    // -------------------------------------------------------------------------
+    // Step 6: Log the payment for analytics
     // -------------------------------------------------------------------------
     await supabase.from('usage_logs').insert({
       user_id: user.id,
@@ -403,6 +464,7 @@ async function handlePaymentSucceeded(
         subscription_id,
         credits_allocated: planConfig.totalCredits,
         credits_forfeited: previousBalance,
+        checkout_session_completed: !!pendingSession,
       },
       created_at: new Date().toISOString(),
     });

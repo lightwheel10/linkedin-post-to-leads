@@ -192,7 +192,7 @@ function StatCard({
     );
 }
 
-/** Call-to-action button linking to waitlist */
+/** Call-to-action button linking to signup */
 function CTAButton({ children, className }: { children: React.ReactNode; className?: string }) {
     return (
         <Button
@@ -203,7 +203,7 @@ function CTAButton({ children, className }: { children: React.ReactNode; classNa
                 className
             )}
         >
-            <Link href="/waitlist" className="flex items-center justify-center gap-2">
+            <Link href="/signup" className="flex items-center justify-center gap-2">
                 {children}
                 <ArrowRight className="w-5 h-5" />
             </Link>
@@ -360,7 +360,7 @@ export default function CalculatorPage() {
                             Get These Savings
                         </CTAButton>
                         <p className="text-xs text-center text-muted-foreground mt-3">
-                            Join the waitlist for early access pricing
+                            7-day free trial, no credit card required
                         </p>
                     </section>
 
@@ -427,10 +427,10 @@ export default function CalculatorPage() {
                     <section className="text-center max-w-xl mx-auto">
                         <h2 className="text-2xl font-bold mb-4">Ready to stop overpaying for leads?</h2>
                         <p className="text-muted-foreground mb-6">
-                            Join the waitlist and be first to access intent-based LinkedIn leads at a fraction of the cost.
+                            Start your free trial and access intent-based LinkedIn leads at a fraction of the cost.
                         </p>
                         <CTAButton className="h-12 px-8">
-                            Join the Waitlist
+                            Start Free Trial
                         </CTAButton>
                     </section>
                 </div>

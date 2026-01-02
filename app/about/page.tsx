@@ -219,11 +219,11 @@ export default function AboutPage() {
                                     size="lg"
                                     className="h-14 px-10 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 w-full sm:w-auto transition-all hover:scale-105 rounded-full font-bold"
                                 >
-                                    <Link href="/waitlist">Join the Waitlist</Link>
+                                    <Link href="/signup">Start Free Trial</Link>
                                 </Button>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card/80 px-4 py-2 rounded-full border border-primary/20 shiny-border">
                                     <CheckCircle2 className="h-4 w-4 text-primary" />
-                                    <span>Launching soon</span>
+                                    <span>7-day free trial</span>
                                 </div>
                             </div>
                         </div>

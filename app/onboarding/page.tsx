@@ -198,38 +198,58 @@ function OnboardingPageContent() {
     loadUserData();
   }, [router]);
 
-  // Handle return from Dodo checkout
+  // =========================================================================
+  // LEGACY: Handle old checkout return URL (2nd Jan 2026)
+  // =========================================================================
+  // DEPRECATED: Dodo now redirects to /checkout/callback instead.
+  // This code is kept as a fallback in case someone has an old bookmark
+  // or the redirect URL wasn't updated. It redirects to the new callback.
+  //
+  // OLD FLOW (broken): /onboarding?checkout=success → middleware blocks → /login
+  // NEW FLOW (works):  /checkout/callback?session_id=xxx → verify via webhook → dashboard
+  // =========================================================================
   useEffect(() => {
     const checkoutStatus = searchParams.get('checkout');
-    const planFromUrl = searchParams.get('plan');
+    const sessionId = searchParams.get('session_id');
 
-    if (checkoutStatus === 'success' && planFromUrl) {
-      // User returned from successful Dodo checkout
-      setIsCompletingCheckout(true);
+    if (checkoutStatus === 'success') {
+      // Redirect to new callback route for proper handling
+      // This handles the case where:
+      // 1. Old checkout links are still floating around
+      // 2. User has session and can complete onboarding
+      console.log('[Onboarding] Legacy checkout=success detected, redirecting to callback');
 
-      // Complete the onboarding
-      const completeOnboarding = async () => {
-        try {
-          const res = await fetch('/api/onboarding/complete', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          });
+      if (sessionId) {
+        // If we have a session_id, redirect to callback with it
+        router.replace(`/checkout/callback?session_id=${sessionId}`);
+      } else {
+        // No session_id, try to complete onboarding directly (if authenticated)
+        // This is the old behavior as a fallback
+        setIsCompletingCheckout(true);
 
-          if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.error || 'Failed to complete onboarding');
+        const completeOnboarding = async () => {
+          try {
+            const res = await fetch('/api/onboarding/complete', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!res.ok) {
+              const errorData = await res.json();
+              throw new Error(errorData.error || 'Failed to complete onboarding');
+            }
+
+            // Clear the URL params and redirect to dashboard
+            router.replace('/dashboard?welcome=true');
+          } catch (err: any) {
+            console.error('Failed to complete onboarding:', err);
+            setError(err.message || 'Something went wrong. Please try again.');
+            setIsCompletingCheckout(false);
           }
+        };
 
-          // Clear the URL params and redirect to dashboard
-          router.replace('/dashboard?welcome=true');
-        } catch (err: any) {
-          console.error('Failed to complete onboarding:', err);
-          setError(err.message || 'Something went wrong. Please try again.');
-          setIsCompletingCheckout(false);
-        }
-      };
-
-      completeOnboarding();
+        completeOnboarding();
+      }
     }
   }, [searchParams, router]);
 

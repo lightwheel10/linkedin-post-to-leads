@@ -1,14 +1,26 @@
 /**
  * Supabase Middleware Client
- * 
+ *
  * MIGRATION NOTE: This file was created as part of the Supabase Auth migration.
  * This module handles session refresh and route protection in the middleware.
- * 
+ *
  * Key responsibilities:
  * 1. Refresh expired sessions automatically
  * 2. Protect routes that require authentication
  * 3. Redirect authenticated users away from auth pages
- * 
+ *
+ * UPDATE (2nd Jan 2026) - Checkout Callback Route:
+ * ================================================
+ * Added /checkout/callback and /api/checkout/status to unprotected paths.
+ *
+ * WHY: When users return from Dodo payment checkout, their session cookies
+ * might not be sent due to browser cross-origin policies. If we required auth
+ * on the callback route, users would be redirected to /login, breaking the flow.
+ *
+ * SECURITY: These routes don't complete any sensitive operations based on
+ * the request alone. They check the checkout_sessions table (updated by webhook)
+ * to verify payment succeeded. Only the webhook can mark sessions as 'completed'.
+ *
  * @see SUPABASE_AUTH_MIGRATION.md for full migration documentation
  */
 
@@ -61,6 +73,31 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // =========================================================================
+  // UNPROTECTED PATHS (2nd Jan 2026)
+  // =========================================================================
+  // These routes are intentionally unprotected for specific reasons:
+  //
+  // /checkout/callback - Returns from Dodo payment, session may be lost
+  // /api/checkout/status - Polling endpoint for callback page
+  //
+  // SECURITY: These routes verify payment via webhook-updated DB records,
+  // not via URL params. They don't perform sensitive ops without verification.
+  // =========================================================================
+  const unprotectedPaths = [
+    '/checkout/callback',
+    '/api/checkout/status',
+  ]
+
+  const isUnprotectedPath = unprotectedPaths.some(path =>
+    request.nextUrl.pathname.startsWith(path)
+  )
+
+  // Skip protection for explicitly unprotected paths
+  if (isUnprotectedPath) {
+    return supabaseResponse
+  }
+
   // Define protected routes that require authentication
   const protectedPaths = [
     '/dashboard',
@@ -71,8 +108,8 @@ export async function updateSession(request: NextRequest) {
     '/api/billing',
     '/api/onboarding'
   ]
-  
-  const isProtectedPath = protectedPaths.some(path => 
+
+  const isProtectedPath = protectedPaths.some(path =>
     request.nextUrl.pathname.startsWith(path)
   )
 

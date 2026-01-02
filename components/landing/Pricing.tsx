@@ -153,8 +153,7 @@ export function Pricing() {
                         Wallet credits let you spend on what matters: AI Search, Post Analysis, or Profile Monitoring. Your choice.
                     </p>
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-                        <span className="text-sm font-semibold text-primary">🚀 Coming Soon</span>
-                        <span className="text-xs text-muted-foreground">• Join the waitlist</span>
+                        <span className="text-sm font-semibold text-primary">🚀 7-Day Free Trial</span>
                     </div>
                 </div>
 
@@ -262,14 +261,14 @@ export function Pricing() {
                                             plan.highlight ? "bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-primary/30" : "",
                                             !plan.highlight ? "border-primary/20 hover:bg-primary/5" : ""
                                         )}
-                                        onClick={() => trackSignupCTAClick('pricing', 'Join Waitlist', plan.name.toLowerCase())}
+                                        onClick={() => trackSignupCTAClick('pricing', 'Start Free Trial', plan.name.toLowerCase())}
                                     >
-                                        <Link href="/waitlist">
-                                            Join Waitlist
+                                        <Link href="/signup">
+                                            Start Free Trial
                                         </Link>
                                     </Button>
                                     <p className="text-xs text-center text-muted-foreground mt-2">
-                                        Get early access
+                                        7-day free trial
                                     </p>
                                 </div>
                             </div>
@@ -299,11 +298,10 @@ export function Pricing() {
                     </div>
                 </div>
 
-                {/* Waitlist Terms */}
+                {/* Trial Terms */}
                 <div className="max-w-2xl mx-auto text-center">
                     <p className="text-sm text-muted-foreground">
-                        Join the waitlist to get early access when we launch.
-                        Waitlist members get priority access and exclusive launch pricing.
+                        Start with a 7-day free trial. Cancel anytime during your trial with no charges.
                     </p>
                 </div>
             </div>

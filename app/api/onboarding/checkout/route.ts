@@ -6,20 +6,37 @@
 // This endpoint saves the user's selected plan and redirects them to Dodo's
 // hosted checkout page to securely enter their payment details.
 //
-// FLOW:
+// FLOW (Updated 2nd Jan 2026 - Fixed session loss issue):
 // 1. User selects plan in onboarding Step 3
 // 2. User clicks "Start Free Trial"
 // 3. This endpoint saves progress and creates Dodo checkout session
-// 4. User is redirected to Dodo's hosted checkout page
-// 5. User enters card details on Dodo's secure page
-// 6. Dodo redirects back to /onboarding?checkout=success
-// 7. Webhook fires to confirm subscription creation
-// 8. Onboarding is completed, user redirected to dashboard
+// 4. *** NEW: We save the session to checkout_sessions table ***
+// 5. User is redirected to Dodo's hosted checkout page
+// 6. User enters card details on Dodo's secure page
+// 7. *** NEW: Dodo redirects to /checkout/callback (unprotected route) ***
+// 8. Webhook fires and marks checkout_sessions.status = 'completed'
+// 9. Callback page polls /api/checkout/status until webhook confirms
+// 10. Once confirmed, onboarding is completed and user goes to dashboard
+//
+// WHY THE CHANGE (2nd Jan 2026):
+// Previously, Dodo redirected to /onboarding?checkout=success. But /onboarding
+// is a protected route. After cross-origin redirect from Dodo, the user's
+// auth session cookies might not be sent (browser security policies), causing
+// the middleware to redirect them to /login. This broke the flow.
+//
+// SOLUTION:
+// - Redirect to /checkout/callback (unprotected route)
+// - Store checkout session in DB with user info BEFORE redirect
+// - Webhook marks session as 'completed' (source of truth)
+// - Callback page verifies payment via DB, not URL params
+// - Complete onboarding based on webhook confirmation, not redirect
 //
 // SECURITY:
 // - Card details are entered on Dodo's hosted page (PCI compliant)
 // - Our server NEVER sees the actual card number
 // - 7-day trial means user isn't charged immediately
+// - We NEVER trust URL params for payment verification
+// - Only the webhook (with signature verification) can confirm payment
 //
 // Created: 2nd January 2026
 // =============================================================================
@@ -174,10 +191,27 @@ export async function POST(request: NextRequest) {
     const client = getDodoClient();
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://guffles.com';
 
-    // Return URL includes query params to indicate successful checkout
-    const returnUrl = `${baseUrl}/onboarding?checkout=success&plan=${planId}`;
+    // =========================================================================
+    // STEP 5a: Generate callback token (2nd Jan 2026 - FIX)
+    // =========================================================================
+    // WHY: Dodo doesn't replace placeholders like {CHECKOUT_SESSION_ID} in URLs.
+    // So we generate our own unique token BEFORE creating the Dodo session,
+    // include it in the return URL, and use it to look up the session later.
+    //
+    // This token is NOT for security - it's just for lookup. The actual
+    // payment verification happens via the webhook marking status='completed'.
+    // =========================================================================
+    const callbackToken = crypto.randomUUID();
+    const returnUrl = `${baseUrl}/checkout/callback?token=${callbackToken}`;
 
-    // Create checkout session with 7-day trial
+    console.log('[Onboarding Checkout] Generated callback token:', {
+      callbackToken,
+      returnUrl,
+    });
+
+    // =========================================================================
+    // STEP 5b: Create Dodo checkout session
+    // =========================================================================
     const checkoutSession = await withDodoErrorHandling(
       () => client.checkoutSessions.create({
         product_cart: [
@@ -189,13 +223,15 @@ export async function POST(request: NextRequest) {
         customer: {
           customer_id: dodoCustomerId,
         },
+        // Use our callback token in the return URL
         return_url: returnUrl,
         metadata: {
           user_id: user.id,
           plan_id: planId,
           billing_period: billingPeriod,
           user_email: userEmail,
-          source: 'onboarding', // Mark this as from onboarding flow
+          callback_token: callbackToken, // Include for traceability
+          source: 'onboarding',
         },
         // 7-day free trial - user won't be charged until trial ends
         subscription_data: {
@@ -211,7 +247,45 @@ export async function POST(request: NextRequest) {
       planId,
       billingPeriod,
       trialDays: 7,
+      returnUrl,
     });
+
+    // =========================================================================
+    // STEP 5c: Save checkout session to database (NEW - 2nd Jan 2026)
+    // =========================================================================
+    // This is CRITICAL for the secure flow:
+    // 1. We store the session with callback_token BEFORE user goes to Dodo
+    // 2. Webhook will update status to 'completed' when payment succeeds
+    // 3. Callback page looks up by callback_token, checks if status='completed'
+    // =========================================================================
+    const { error: sessionError } = await supabase
+      .from('checkout_sessions')
+      .insert({
+        session_id: checkoutSession.session_id,
+        callback_token: callbackToken, // Used by callback page to look up session
+        user_id: user.id,
+        user_email: userEmail,
+        plan_id: planId,
+        billing_period: billingPeriod,
+        status: 'pending', // Will be updated to 'completed' by webhook
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        // Session expires after 24 hours if not completed
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      });
+
+    if (sessionError) {
+      console.error('[Onboarding Checkout] Failed to save checkout session:', sessionError);
+      // Don't fail the checkout - the webhook can still process it
+      // But log it for debugging
+    } else {
+      console.log('[Onboarding Checkout] Saved checkout session to DB:', {
+        sessionId: checkoutSession.session_id,
+        callbackToken,
+        userId: user.id,
+        status: 'pending',
+      });
+    }
 
     // =========================================================================
     // STEP 6: Log checkout initiation for analytics
@@ -224,6 +298,7 @@ export async function POST(request: NextRequest) {
         billing_period: billingPeriod,
         session_id: checkoutSession.session_id,
         credits_to_receive: planConfig.totalCredits,
+        return_url: returnUrl, // Log the new return URL for debugging
       },
       created_at: new Date().toISOString(),
     });

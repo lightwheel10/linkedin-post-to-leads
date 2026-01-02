@@ -74,6 +74,13 @@ export function Navbar() {
 
                     {/* Actions */}
                     <div className="hidden md:flex items-center gap-3">
+                        {/* Fixed: Changed /signin to /login to match actual route - 2nd Jan 2026 */}
+                        <Link
+                            href="/login"
+                            className="text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            Sign In
+                        </Link>
                         <Button
                             asChild
                             size="sm"
@@ -83,9 +90,9 @@ export function Navbar() {
                                 "shadow-[0_1px_10px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_20px_rgba(0,0,0,0.15)]",
                                 "border border-white/10"
                             )}
-                            onClick={() => trackSignupCTAClick('navbar', 'Join Waitlist')}
+                            onClick={() => trackSignupCTAClick('navbar', 'Start Free Trial')}
                         >
-                            <Link href="/waitlist">Join Waitlist</Link>
+                            <Link href="/signup">Start Free Trial</Link>
                         </Button>
                     </div>
 
@@ -123,12 +130,20 @@ export function Navbar() {
                             Pricing
                         </Link>
                         <div className="h-px bg-border/50 my-1" />
+                        {/* Fixed: Changed /signin to /login to match actual route - 2nd Jan 2026 */}
+                        <Link
+                            href="/login"
+                            className="text-sm font-medium text-muted-foreground hover:text-primary p-2 rounded-lg hover:bg-white/5 transition-colors text-center"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            Sign In
+                        </Link>
                         <Button
                             asChild
                             className="w-full bg-primary hover:bg-primary/90 rounded-xl"
-                            onClick={() => trackSignupCTAClick('navbar', 'Join Waitlist')}
+                            onClick={() => trackSignupCTAClick('navbar', 'Start Free Trial')}
                         >
-                            <Link href="/waitlist">Join Waitlist</Link>
+                            <Link href="/signup">Start Free Trial</Link>
                         </Button>
                     </div>
                 )}
