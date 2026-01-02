@@ -4,249 +4,182 @@ import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
-import { ArrowRight, Linkedin, Twitter, Sparkles, Target, Users, Globe, Zap, Shield, Heart, CheckCircle2, TrendingUp, Search, Fingerprint } from "lucide-react";
+import { 
+    Linkedin, 
+    Zap, 
+    Users, 
+    CheckCircle2,
+    Sparkles,
+    MessageSquare,
+    Quote
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 
-// --- Micro-Components for "Living" UI ---
+// --- Custom UI Components for the Redesign ---
 
-const SpotlightCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => {
-    const divRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState({ x: 0, y: 0 });
-    const [opacity, setOpacity] = useState(0);
-
-    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!divRef.current) return;
-        const rect = divRef.current.getBoundingClientRect();
-        setPosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-    };
-
-    return (
-        <div
-            ref={divRef}
-            onMouseMove={handleMouseMove}
-            onMouseEnter={() => setOpacity(1)}
-            onMouseLeave={() => setOpacity(0)}
-            className={cn(
-                "relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-xl transition-all duration-300 hover:border-white/20",
-                className
-            )}
-        >
-            <div
-                className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300"
-                style={{
-                    opacity,
-                    background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, rgba(255,255,255,0.06), transparent 40%)`,
-                }}
-            />
-            <div className="relative h-full">{children}</div>
-        </div>
-    );
-};
-
-const SignalVisual = () => (
-    <div className="relative h-24 w-full overflow-hidden rounded-xl bg-black/20 border border-white/5 flex items-center justify-center">
-        <div className="absolute inset-0 flex items-center justify-center gap-1">
-            {[...Array(12)].map((_, i) => (
-                <div
-                    key={i}
-                    className="w-1.5 bg-emerald-500/50 rounded-full animate-pulse"
-                    style={{
-                        height: `${Math.random() * 60 + 20}%`,
-                        animationDelay: `${i * 0.1}s`,
-                        animationDuration: '1s'
-                    }}
-                />
-            ))}
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        <div className="absolute bottom-3 left-3 flex items-center gap-2 px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-            <span className="text-[10px] font-medium text-emerald-500">Signal Detected</span>
-        </div>
+const BrandGlow = ({ className = "" }: { className?: string }) => (
+    <div className={cn("absolute pointer-events-none -z-10", className)}>
+        <div className="absolute inset-0 bg-primary/20 blur-[120px] rounded-full animate-pulse-slow" />
     </div>
 );
 
-const TrustVisual = () => (
-    <div className="relative h-24 w-full overflow-hidden rounded-xl bg-black/20 border border-white/5 flex items-center justify-center group-hover:bg-black/30 transition-colors">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500/10 via-transparent to-transparent opacity-50" />
-        <Shield className="w-12 h-12 text-blue-500/20 absolute" />
-        <div className="relative z-10 flex flex-col items-center gap-2">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 backdrop-blur-md transform transition-all duration-300 group-hover:scale-110">
-                <Fingerprint className="w-4 h-4 text-blue-500" />
-                <span className="text-xs font-medium text-blue-200">Verified & Secure</span>
-            </div>
-            <div className="flex -space-x-2">
-                {[1, 2, 3].map((i) => (
-                    <div key={i} className="w-6 h-6 rounded-full border border-black bg-white/10 backdrop-blur-sm flex items-center justify-center text-[8px] text-white/60">
-                        <div className="w-full h-full rounded-full bg-gradient-to-br from-white/20 to-transparent" />
-                    </div>
-                ))}
-            </div>
-        </div>
+const MetricCard = ({ label, value, description }: { label: string, value: string, description: string }) => (
+    <div className="flex flex-col p-6 rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-sm">
+        <span className="text-primary font-mono text-xs font-bold uppercase tracking-wider mb-2">{label}</span>
+        <span className="text-3xl font-bold text-foreground mb-1">{value}</span>
+        <span className="text-sm text-muted-foreground">{description}</span>
     </div>
 );
 
 export default function AboutPage() {
     return (
         <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/20 selection:text-primary">
-            {/* Cinematic Background */}
-            <div className="fixed inset-0 z-[-1] pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))]" />
-                <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03]" />
+            {/* Background Layer */}
+            <div className="fixed inset-0 z-[-1]">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(16,185,129,0.15),rgba(255,255,255,0))]" />
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
             </div>
 
             <Navbar />
 
-            <main className="container mx-auto px-4 py-24 md:py-32">
-                {/* HERO SECTION - "The Manifesto" */}
-                <section className="mb-24 relative">
-                    <div className="max-w-4xl mx-auto text-center relative z-10">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 border border-primary/10 text-xs font-medium text-primary/80 mb-10 animate-fade-in-up backdrop-blur-md hover:bg-primary/10 transition-colors cursor-default">
-                            <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-                            <span>Our Manifesto</span>
+            <main className="relative pt-32 pb-20">
+                {/* 1. HERO SECTION - The Big Why */}
+                <section className="container mx-auto px-4 mb-32">
+                    <div className="max-w-4xl mx-auto text-center">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-medium text-primary mb-8 animate-fade-in-up">
+                            <Sparkles className="w-3 h-3" />
+                            <span>The Future of Lead Generation</span>
                         </div>
-
-                        <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-8 leading-[1.1] animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-                            Buying signals are <span className="text-foreground">everywhere.</span> <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-b from-foreground/80 to-foreground/20 font-medium tracking-tighter">
-                                We help you find them.
+                        
+                        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 leading-[1.05] animate-fade-in-up">
+                            We help you find <br className="hidden md:block" />
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-emerald-400 to-primary animate-shimmer bg-[length:200%_auto]">
+                                Buying Intent
                             </span>
+                            <br className="hidden md:block" />
+                            in plain sight.
                         </h1>
 
-                        <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto animate-fade-in-up font-light" style={{ animationDelay: '200ms' }}>
-                            Every day, thousands publicly signal what they need. They comment, like, and engage with content about problems they're facing. We built Guffles to help you find them.
+                        <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-2xl mx-auto animate-fade-in-up delay-100">
+                            Traditional lead gen is broken. Cold outreach is dying. We built Guffles to help you reach out while intent is fresh, not months later.
                         </p>
                     </div>
-
-                    {/* Background Glow */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-primary/10 blur-[100px] rounded-full pointer-events-none opacity-40 mix-blend-screen" />
                 </section>
 
-                {/* VALUES BENTO GRID - Interactive & Alive */}
-                <section className="mb-24">
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4 max-w-4xl mx-auto">
-
-                        {/* Card 1: The Vision (Large) */}
-                        <SpotlightCard className="md:col-span-8 md:row-span-2 min-h-[360px] group">
-                            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2664&auto=format&fit=crop')] bg-cover bg-center opacity-20 transition-all duration-700 group-hover:scale-105 group-hover:opacity-30 grayscale group-hover:grayscale-0" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
-
-                            <div className="absolute bottom-0 left-0 p-6 md:p-8 w-full">
-                                <div className="w-10 h-10 rounded-xl bg-primary/10 backdrop-blur-md border border-primary/10 flex items-center justify-center mb-4 shadow-xl">
-                                    <Users className="w-5 h-5 text-primary" />
-                                </div>
-                                <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2 tracking-tight">Warm Beats Cold. Always.</h3>
-                                <p className="text-sm text-muted-foreground max-w-md leading-relaxed">
-                                    Cold outreach gets 1-2% response rates. When you reach out to someone who just engaged with content about their problem? 10-15%. That's the Guffles difference.
-                                </p>
-                            </div>
-                        </SpotlightCard>
-
-                        {/* Card 2: Signal (Interactive) */}
-                        <SpotlightCard className="md:col-span-4 min-h-[170px] p-5 flex flex-col justify-between group">
-                            <div>
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                                        <Zap className="w-4 h-4" />
+                {/* 2. THE PROBLEM/SOLUTION SECTION - Comparison */}
+                <section className="container mx-auto px-4 mb-40">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+                        <div className="space-y-8">
+                            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+                                Why Guffles? Because <br />
+                                <span className="text-primary">Warm Beats Cold.</span>
+                            </h2>
+                            
+                            <div className="space-y-6">
+                                <div className="flex gap-4">
+                                    <div className="mt-1 flex-shrink-0 w-10 h-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                                        <Users className="w-5 h-5 text-red-500" />
                                     </div>
-                                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-foreground transition-colors -rotate-45 group-hover:rotate-0 duration-300" />
-                                </div>
-                                <h3 className="text-base font-bold text-foreground mb-1">Intent over Volume</h3>
-                                <p className="text-[10px] text-muted-foreground leading-tight">We don't target random profiles. We find people actively showing buying intent.</p>
-                            </div>
-                            <div className="mt-2">
-                                <SignalVisual />
-                            </div>
-                        </SpotlightCard>
-
-                        {/* Card 3: Trust (Interactive) */}
-                        <SpotlightCard className="md:col-span-4 min-h-[170px] p-5 flex flex-col justify-between group">
-                            <div>
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500">
-                                        <Shield className="w-4 h-4" />
+                                    <div>
+                                        <h4 className="text-lg font-bold mb-1">Traditional Databases</h4>
+                                        <p className="text-muted-foreground leading-relaxed">
+                                            Lists of random profiles based on job titles. You're the 50th person reaching out to them today. Response rates? 1-2%.
+                                        </p>
                                     </div>
-                                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-foreground transition-colors -rotate-45 group-hover:rotate-0 duration-300" />
                                 </div>
-                                <h3 className="text-base font-bold text-foreground mb-1">Multi-Platform Vision</h3>
-                                <p className="text-[10px] text-muted-foreground leading-tight">LinkedIn today. Twitter/X, Instagram, Reddit coming soon. Buying signals everywhere.</p>
-                            </div>
-                            <div className="mt-2">
-                                <TrustVisual />
-                            </div>
-                        </SpotlightCard>
 
+                                <div className="flex gap-4">
+                                    <div className="mt-1 flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+                                        <Zap className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-lg font-bold mb-1">Guffles Intent Discovery</h4>
+                                        <p className="text-muted-foreground leading-relaxed">
+                                            We find people actively engaging with content about the problems you solve. Reach out while they're thinking about it. Response rates? 10-15%.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="relative">
+                            <BrandGlow className="top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-50" />
+                            <div className="grid grid-cols-2 gap-4">
+                                <MetricCard label="Efficiency" value="7x" description="Higher response rates" />
+                                <MetricCard label="Accuracy" value="100%" description="Verified social intent" />
+                                <MetricCard label="Speed" value="< 5m" description="From signal to lead" />
+                                <MetricCard label="Integration" value="Sync" description="Native CRM pushing" />
+                            </div>
+                        </div>
                     </div>
                 </section>
 
-                {/* FOUNDER SECTION - Cinematic Parallax */}
-                <section className="mb-24">
-                    <div className="max-w-5xl mx-auto">
-                        <div className="relative rounded-[32px] overflow-hidden bg-card border border-border shadow-2xl">
-                            <div className="grid md:grid-cols-2 gap-0">
-                                {/* Image Side */}
-                                <div className="relative h-[500px] md:h-auto group overflow-hidden">
+                {/* 3. THE FOUNDER'S STORY - Premium & Integrated */}
+                <section className="relative overflow-hidden mb-40">
+                    <div className="container mx-auto px-4 max-w-6xl">
+                        <div className="relative rounded-[40px] border border-white/10 bg-card/50 backdrop-blur-xl overflow-hidden shadow-2xl">
+                            <div className="grid lg:grid-cols-2 gap-0">
+                                {/* Image Column */}
+                                <div className="relative h-[400px] lg:h-auto min-h-[500px]">
                                     <Image
-                                        src="/images/ceo.jpeg"
-                                        alt="Sarah Jenkins"
+                                        src="/images/paras.jpeg"
+                                        alt="Paras Tiwari"
                                         fill
-                                        className="object-cover transition-transform duration-[1.5s] ease-out group-hover:scale-110"
+                                        className="object-cover"
+                                        priority
                                     />
-                                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent mix-blend-multiply" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent md:hidden" />
-
-                                    {/* Floating Badge */}
-                                    <div className="absolute bottom-6 left-6 backdrop-blur-xl bg-white/10 border border-white/20 px-3 py-1.5 rounded-full flex items-center gap-2 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-100">
-                                        <div className="flex -space-x-2">
-                                            {[1, 2, 3].map(i => (
-                                                <div key={i} className="w-5 h-5 rounded-full bg-gray-400 border border-white/20" />
-                                            ))}
-                                        </div>
-                                        <span className="text-[10px] font-medium text-white">Trusted by 10k+ leaders</span>
+                                    <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-transparent" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent lg:hidden" />
+                                    
+                                    {/* Name Overlay for Mobile */}
+                                    <div className="absolute bottom-8 left-8 lg:hidden">
+                                        <div className="text-2xl font-bold">Paras Tiwari</div>
+                                        <div className="text-primary text-sm font-medium">CEO & Founder, Guffles</div>
                                     </div>
                                 </div>
 
-                                {/* Content Side */}
-                                <div className="p-10 md:p-16 flex flex-col justify-center relative">
-                                    {/* Decorative Background Elements */}
-                                    <div className="absolute top-0 right-0 w-full h-full overflow-hidden pointer-events-none">
-                                        <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] bg-primary/5 rounded-full blur-[80px]" />
+                                {/* Content Column */}
+                                <div className="p-8 md:p-16 lg:p-20 flex flex-col justify-center">
+                                    <div className="mb-10">
+                                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+                                            <Quote className="w-6 h-6 text-primary fill-current" />
+                                        </div>
+                                        
+                                        <h2 className="text-3xl md:text-4xl font-bold leading-tight mb-8">
+                                            "I built Guffles to fix the biggest lie in sales: that volume solves everything."
+                                        </h2>
+
+                                        <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
+                                            <p>
+                                                With my background in operations at Amazon and American Express, I've seen first-hand how companies waste millions on cold outreach to people who have zero interest. Every day, thousands of valuable opportunities are lost because businesses don't know how to listen to the market.
+                                            </p>
+                                            <p>
+                                                At Guffles, we believe listening is the new selling. By identifying buying signals in real-time, we help you reach out with relevance, not just persistence.
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    <div className="relative z-10">
-                                        <div className="mb-6">
-                                            <h2 className="text-xs font-bold tracking-widest text-primary uppercase mb-2">The Origin Story</h2>
-                                            <div className="h-px w-10 bg-primary/50" />
+                                    <div className="pt-8 border-t border-white/10 flex items-center justify-between">
+                                        <div className="hidden lg:block">
+                                            <div className="text-xl font-bold text-foreground">Paras Tiwari</div>
+                                            <div className="text-sm text-primary font-medium">CEO & Founder, Guffles</div>
                                         </div>
 
-                                        <blockquote className="text-xl md:text-3xl font-medium leading-tight mb-6 text-foreground">
-                                            "I built Guffles because I was tired of cold outreach to people who didn't care."
-                                        </blockquote>
-
-                                        <div className="space-y-4 text-muted-foreground text-base leading-relaxed">
-                                            <p>
-                                                Traditional lead gen gives you lists of random profiles. But every day, thousands of people publicly signal what they need. They comment, like, and engage with content about problems they're facing.
-                                            </p>
-                                            <p>
-                                                We built Guffles to find these buying signals hiding in plain sight. Now you can reach out while intent is fresh, not when it's too late.
-                                            </p>
-                                        </div>
-
-                                        <div className="mt-10 flex items-center justify-between border-t border-border pt-6">
-                                            <div>
-                                                <div className="text-lg font-bold text-foreground">Sarah Jenkins</div>
-                                                <div className="text-xs text-muted-foreground">Founder & CEO</div>
-                                            </div>
-
-                                            <div className="flex gap-3">
-                                                <Link href="#" className="group p-2.5 rounded-full bg-secondary/50 border border-border hover:bg-secondary hover:border-primary/20 transition-all">
-                                                    <Linkedin className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                                                </Link>
-                                                <Link href="#" className="group p-2.5 rounded-full bg-secondary/50 border border-border hover:bg-secondary hover:border-primary/20 transition-all">
-                                                    <Twitter className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                                                </Link>
-                                            </div>
+                                        <div className="flex gap-4">
+                                            <Link 
+                                                href="https://www.linkedin.com/in/paras-tiwari-221a9b34b" 
+                                                target="_blank"
+                                                className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/10 hover:border-primary/20 transition-all group"
+                                            >
+                                                <Linkedin className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                            </Link>
+                                            <Link 
+                                                href="#" 
+                                                className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/10 hover:border-primary/20 transition-all group"
+                                            >
+                                                <MessageSquare className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                            </Link>
                                         </div>
                                     </div>
                                 </div>
@@ -255,34 +188,43 @@ export default function AboutPage() {
                     </div>
                 </section>
 
-                {/* CTA SECTION - The Finale */}
-                <section className="mb-16">
-                    <div className="relative rounded-[32px] overflow-hidden bg-gradient-to-b from-primary/5 to-transparent border border-primary/10 p-10 md:p-24 text-center group">
-                        {/* Dynamic Background */}
-                        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 mix-blend-overlay" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-[2s] ease-in-out" />
+                {/* 4. FINAL CTA - Updated 02 Jan 2026 to match Landing Page CTA style */}
+                <section className="container mx-auto px-4 py-24">
+                    <div className="relative rounded-[40px] overflow-hidden bg-gradient-to-br from-primary/20 via-emerald-500/10 to-card/50 border border-primary/30 p-8 md:p-20 text-center shiny-border">
+                        {/* Noise Texture */}
+                        <div
+                            className="absolute inset-0 opacity-20 pointer-events-none"
+                            style={{
+                                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+                            }}
+                        />
+
+                        {/* Decorative Blurs */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/30 rounded-full blur-[100px] pointer-events-none" />
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/30 rounded-full blur-[100px] pointer-events-none" />
 
                         <div className="relative z-10 max-w-3xl mx-auto">
-                            <h2 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight text-foreground">
-                                Ready to find buyers <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-400 to-primary animate-shimmer bg-[length:200%_auto]">
-                                    showing real intent?
-                                </span>
+                            <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight">
+                                Ready to turn signals <br />
+                                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-emerald-400 to-primary animate-shimmer bg-[length:200%_auto]">into revenue?</span>
                             </h2>
-                            <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
+
+                            <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
                                 Stop cold outreach. Start warm conversations with people actively engaging with content about problems you solve.
                             </p>
+
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                                <Link href="/signup">
-                                    <button className="h-14 px-8 rounded-full bg-primary text-primary-foreground font-bold text-base hover:bg-primary/90 transition-all hover:scale-105 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)]">
-                                        Get Started Free
-                                    </button>
-                                </Link>
-                                <Link href="/contact">
-                                    <button className="h-14 px-8 rounded-full bg-background/50 border border-input text-foreground font-medium text-base hover:bg-accent hover:text-accent-foreground transition-all hover:scale-105 backdrop-blur-md">
-                                        Talk to Sales
-                                    </button>
-                                </Link>
+                                <Button
+                                    asChild
+                                    size="lg"
+                                    className="h-14 px-10 text-lg bg-primary hover:bg-primary/90 shadow-xl shadow-primary/30 w-full sm:w-auto transition-all hover:scale-105 rounded-full font-bold"
+                                >
+                                    <Link href="/waitlist">Join the Waitlist</Link>
+                                </Button>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-card/80 px-4 py-2 rounded-full border border-primary/20 shiny-border">
+                                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                                    <span>Launching soon</span>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -30,9 +30,11 @@ const ConnectingBeamRight = () => (
 export function HowItWorks() {
     // --- State Management ---
     const [activeStep, setActiveStep] = useState(0);
-    const [step1Progress, setStep1Progress] = useState(0);
+    // 02 Jan 2026: Initialize with 100 (full) so the first load doesn't show an empty bar for Step 1
+    const [step1Progress, setStep1Progress] = useState(100);
     const [step2Filter, setStep2Filter] = useState<'all' | 'founders'>('all');
-    const [step3Leads, setStep3Leads] = useState<number[]>([]);
+    // 02 Jan 2026: Initialize with leads so Step 3 isn't a black hole on initial page load
+    const [step3Leads, setStep3Leads] = useState<number[]>([1, 2, 3]);
 
     // Auto-play sequence logic
     useEffect(() => {
@@ -42,28 +44,50 @@ export function HowItWorks() {
         return () => clearInterval(interval);
     }, []);
 
+    // --- Step Animations (Added/Refined 02 Jan 2026) ---
+    // PROBLEM: Previously, steps would only populate when their activeStep was reached.
+    // FIX: We now ensure every step has a "default/full" state, and only resets to "animate" 
+    // when it becomes the activeStep. This prevents the "empty panel" look on first load.
+
+    // Step 1: Progress Animation Simulation
+    useEffect(() => {
+        if (activeStep === 0) {
+            // Reset to start animation
+            setStep1Progress(0);
+            const duration = 2000;
+            const intervalTime = 20; 
+            const steps = duration / intervalTime;
+            const increment = 100 / steps;
+            
+            const timer = setInterval(() => {
+                setStep1Progress(prev => {
+                    const next = prev + increment;
+                    if (next >= 100) {
+                        clearInterval(timer);
+                        return 100;
+                    }
+                    return next;
+                });
+            }, intervalTime);
+            
+            return () => clearInterval(timer);
+        } else {
+            // 02 Jan 2026: When not active, Step 1 should stay at 100% (Completed)
+            setStep1Progress(100);
+        }
+    }, [activeStep]);
+
     // Step 2: Filter Simulation
     useEffect(() => {
         if (activeStep === 1) {
-            // Start with 'all'
             setStep2Filter('all');
-            
-            // Switch to 'founders' after delay
-            const timer1 = setTimeout(() => {
-                setStep2Filter('founders');
-            }, 800);
-
-            // Revert to 'all' before leaving step
-            const timer2 = setTimeout(() => {
-                setStep2Filter('all');
-            }, 4500);
-
+            const timer1 = setTimeout(() => setStep2Filter('founders'), 800);
+            const timer2 = setTimeout(() => setStep2Filter('all'), 4500);
             return () => {
                 clearTimeout(timer1);
                 clearTimeout(timer2);
             };
         } else {
-            // Reset when not active
             setStep2Filter('all');
         }
     }, [activeStep]);
@@ -71,11 +95,15 @@ export function HowItWorks() {
     // Step 3: Lead Generation Simulation
     useEffect(() => {
         if (activeStep === 2) {
+            // Reset to empty to start the "finding leads" animation
             setStep3Leads([]);
             const interval = setInterval(() => {
-                setStep3Leads(prev => [...prev, prev.length + 1].slice(-4)); // Keep last 4
+                setStep3Leads(prev => [...prev, prev.length + 1].slice(-4)); 
             }, 800);
             return () => clearInterval(interval);
+        } else {
+            // 02 Jan 2026: When not active, show a full set of leads so it's not empty
+            setStep3Leads([1, 2, 3]);
         }
     }, [activeStep]);
 
