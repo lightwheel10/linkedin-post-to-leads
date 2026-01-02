@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 "use client";
 
 import Link from "next/link";
@@ -235,10 +234,4 @@ export default function AboutPage() {
             <Footer />
         </div>
     );
-=======
-import { redirect } from "next/navigation";
-
-export default function AboutPage() {
-    redirect("/");
->>>>>>> 315a2869c731d37c04011b4945e4aefabd497434
 }
