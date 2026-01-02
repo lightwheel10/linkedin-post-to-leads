@@ -118,6 +118,7 @@ export default function OnboardingPage() {
   const [error, setError] = useState('');
   const [initialLoading, setInitialLoading] = useState(true);
   const [profileFetched, setProfileFetched] = useState(false);
+  const [entryMode, setEntryMode] = useState<'choose' | 'linkedin' | 'manual'>('choose');
   
   // Form data
   const [data, setData] = useState<OnboardingData>({
@@ -173,9 +174,10 @@ export default function OnboardingPage() {
             billing_period: user.billing_period || 'monthly'
           }));
 
-          // If profile already fetched
+          // If profile already has data, skip the choose screen
           if (user.full_name && user.company && user.role) {
             setProfileFetched(true);
+            setEntryMode(user.linkedin_url ? 'linkedin' : 'manual');
           }
 
           // Resume at saved onboarding step (from database)
@@ -574,149 +576,322 @@ export default function OnboardingPage() {
           <span className={cn(step >= 3 && "text-primary font-medium")}>Plan</span>
         </div>
 
-        {/* Step 1: LinkedIn Profile */}
+        {/* Step 1: Profile Entry */}
         {step === 1 && (
           <Card className="border-border/50 shadow-xl animate-fade-in-up max-w-2xl mx-auto">
-            <CardHeader className="text-center pb-2">
-              <div className="mx-auto w-12 h-12 rounded-full bg-[#0A66C2]/10 flex items-center justify-center mb-4">
-                <Linkedin className="w-6 h-6 text-[#0A66C2]" />
-              </div>
-              <CardTitle className="text-2xl">Connect Your LinkedIn</CardTitle>
-              <CardDescription className="text-base">
-                We'll auto-fill your details from your profile
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6 pt-4">
-              {/* LinkedIn URL Input */}
-              <div className="space-y-3">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <Linkedin className="w-4 h-4 text-[#0A66C2]" />
-                  Your LinkedIn Profile URL
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="https://linkedin.com/in/yourname"
-                    value={data.linkedin_url}
-                    onChange={(e) => setData(prev => ({ ...prev, linkedin_url: e.target.value }))}
-                    className="h-11 flex-1"
-                    disabled={isFetching}
-                  />
-                  <Button 
-                    onClick={fetchLinkedInProfile}
-                    disabled={isFetching || !data.linkedin_url.trim()}
-                    className="h-11 px-4"
+            {/* Choice Screen - Choose between LinkedIn or Manual */}
+            {entryMode === 'choose' && (
+              <>
+                <CardHeader className="text-center pb-2">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <User className="w-6 h-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-2xl">Let's Get Started</CardTitle>
+                  <CardDescription className="text-base">
+                    How would you like to set up your profile?
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-4">
+                  {/* Option 1: LinkedIn */}
+                  <button
+                    onClick={() => setEntryMode('linkedin')}
+                    className="w-full p-4 rounded-lg border-2 border-border hover:border-[#0A66C2] hover:bg-[#0A66C2]/5 transition-all text-left group"
                   >
-                    {isFetching ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Search className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-                {isFetching && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-2">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Fetching your profile details...
-                  </p>
-                )}
-              </div>
-
-              {/* Profile Preview / Edit */}
-              {profileFetched && (
-                <div className="space-y-4 p-4 rounded-lg bg-muted/30 border animate-fade-in-up">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      {data.profile_picture ? (
-                        <img 
-                          src={data.profile_picture} 
-                          alt={data.full_name}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="w-6 h-6 text-primary" />
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-sm font-medium flex items-center gap-2">
-                          Profile Found
-                          <CheckCircle className="w-4 h-4 text-primary" />
-                        </p>
-                        <p className="text-xs text-muted-foreground">Edit details below if needed</p>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-[#0A66C2]/10 flex items-center justify-center group-hover:bg-[#0A66C2]/20 transition-colors">
+                        <Linkedin className="w-6 h-6 text-[#0A66C2]" />
                       </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-foreground">Import from LinkedIn</p>
+                        <p className="text-sm text-muted-foreground">Auto-fill your details from your LinkedIn profile</p>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-[#0A66C2] transition-colors" />
                     </div>
-                    <Edit3 className="w-4 h-4 text-muted-foreground" />
+                  </button>
+
+                  {/* Option 2: Manual */}
+                  <button
+                    onClick={() => setEntryMode('manual')}
+                    className="w-full p-4 rounded-lg border-2 border-border hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                        <Edit3 className="w-6 h-6 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-foreground">Enter Details Manually</p>
+                        <p className="text-sm text-muted-foreground">Fill in your information yourself</p>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                  </button>
+                </CardContent>
+              </>
+            )}
+
+            {/* LinkedIn Mode */}
+            {entryMode === 'linkedin' && (
+              <>
+                <CardHeader className="text-center pb-2">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-[#0A66C2]/10 flex items-center justify-center mb-4">
+                    <Linkedin className="w-6 h-6 text-[#0A66C2]" />
+                  </div>
+                  <CardTitle className="text-2xl">Connect Your LinkedIn</CardTitle>
+                  <CardDescription className="text-base">
+                    We'll auto-fill your details from your profile
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-4">
+                  {/* LinkedIn URL Input */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      <Linkedin className="w-4 h-4 text-[#0A66C2]" />
+                      Your LinkedIn Profile URL
+                    </label>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="https://linkedin.com/in/yourname"
+                        value={data.linkedin_url}
+                        onChange={(e) => setData(prev => ({ ...prev, linkedin_url: e.target.value }))}
+                        className="h-11 flex-1"
+                        disabled={isFetching}
+                      />
+                      <Button
+                        onClick={fetchLinkedInProfile}
+                        disabled={isFetching || !data.linkedin_url.trim()}
+                        className="h-11 px-4"
+                      >
+                        {isFetching ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Search className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    {isFetching && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-2">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Fetching your profile details...
+                      </p>
+                    )}
                   </div>
 
-                  <div className="grid gap-4">
+                  {/* Profile Preview / Edit */}
+                  {profileFetched && (
+                    <div className="space-y-4 p-4 rounded-lg bg-muted/30 border animate-fade-in-up">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {data.profile_picture ? (
+                            <img
+                              src={data.profile_picture}
+                              alt={data.full_name}
+                              className="w-12 h-12 rounded-full object-cover border-2 border-primary/20"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                              <User className="w-6 h-6 text-primary" />
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-sm font-medium flex items-center gap-2">
+                              Profile Found
+                              <CheckCircle className="w-4 h-4 text-primary" />
+                            </p>
+                            <p className="text-xs text-muted-foreground">Edit details below if needed</p>
+                          </div>
+                        </div>
+                        <Edit3 className="w-4 h-4 text-muted-foreground" />
+                      </div>
+
+                      <div className="grid gap-4">
+                        {/* Full Name */}
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                            <User className="w-3 h-3" />
+                            Full Name
+                          </label>
+                          <Input
+                            value={data.full_name}
+                            onChange={(e) => setData(prev => ({ ...prev, full_name: e.target.value }))}
+                            className="h-9"
+                          />
+                        </div>
+
+                        {/* Company */}
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                            <Building2 className="w-3 h-3" />
+                            Company
+                          </label>
+                          <Input
+                            value={data.company}
+                            onChange={(e) => setData(prev => ({ ...prev, company: e.target.value }))}
+                            className="h-9"
+                          />
+                        </div>
+
+                        {/* Role */}
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                            <Briefcase className="w-3 h-3" />
+                            Your Role
+                          </label>
+                          <Input
+                            value={data.role}
+                            onChange={(e) => setData(prev => ({ ...prev, role: e.target.value }))}
+                            className="h-9"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {error && (
+                    <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setEntryMode('choose');
+                        setError('');
+                      }}
+                      className="h-11"
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                    {profileFetched ? (
+                      <Button
+                        onClick={handleStep1Next}
+                        className="flex-1 h-11"
+                        disabled={isSaving}
+                      >
+                        {isSaving ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : null}
+                        Continue
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center">
+                        <p className="text-sm text-muted-foreground">
+                          Enter your LinkedIn URL to continue
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </>
+            )}
+
+            {/* Manual Entry Mode */}
+            {entryMode === 'manual' && (
+              <>
+                <CardHeader className="text-center pb-2">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <User className="w-6 h-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-2xl">Tell Us About Yourself</CardTitle>
+                  <CardDescription className="text-base">
+                    Fill in your details to get started
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-4">
+                  <div className="space-y-4">
                     {/* Full Name */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                        <User className="w-3 h-3" />
-                        Full Name
+                      <label className="text-sm font-medium flex items-center gap-1.5">
+                        <User className="w-4 h-4 text-muted-foreground" />
+                        Full Name <span className="text-destructive">*</span>
                       </label>
                       <Input
+                        placeholder="John Doe"
                         value={data.full_name}
                         onChange={(e) => setData(prev => ({ ...prev, full_name: e.target.value }))}
-                        className="h-9"
+                        className="h-11"
                       />
                     </div>
 
                     {/* Company */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                        <Building2 className="w-3 h-3" />
-                        Company
+                      <label className="text-sm font-medium flex items-center gap-1.5">
+                        <Building2 className="w-4 h-4 text-muted-foreground" />
+                        Company <span className="text-destructive">*</span>
                       </label>
                       <Input
+                        placeholder="Acme Inc."
                         value={data.company}
                         onChange={(e) => setData(prev => ({ ...prev, company: e.target.value }))}
-                        className="h-9"
+                        className="h-11"
                       />
                     </div>
 
                     {/* Role */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                        <Briefcase className="w-3 h-3" />
-                        Your Role
+                      <label className="text-sm font-medium flex items-center gap-1.5">
+                        <Briefcase className="w-4 h-4 text-muted-foreground" />
+                        Your Role <span className="text-destructive">*</span>
                       </label>
                       <Input
+                        placeholder="Sales Manager"
                         value={data.role}
                         onChange={(e) => setData(prev => ({ ...prev, role: e.target.value }))}
-                        className="h-9"
+                        className="h-11"
+                      />
+                    </div>
+
+                    {/* LinkedIn URL (Optional) */}
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium flex items-center gap-1.5">
+                        <Linkedin className="w-4 h-4 text-[#0A66C2]" />
+                        LinkedIn URL <span className="text-muted-foreground font-normal">(optional)</span>
+                      </label>
+                      <Input
+                        placeholder="https://linkedin.com/in/yourname"
+                        value={data.linkedin_url}
+                        onChange={(e) => setData(prev => ({ ...prev, linkedin_url: e.target.value }))}
+                        className="h-11"
                       />
                     </div>
                   </div>
-                </div>
-              )}
 
-              {error && (
-                <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
-                  {error}
-                </div>
-              )}
+                  {error && (
+                    <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                      {error}
+                    </div>
+                  )}
 
-              {profileFetched ? (
-                <Button 
-                  onClick={handleStep1Next} 
-                  className="w-full h-11"
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : null}
-                  Continue
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              ) : (
-                <div className="text-center pt-2">
-                  <p className="text-sm text-muted-foreground">
-                    Enter your LinkedIn URL above to continue
-                  </p>
-                </div>
-              )}
-            </CardContent>
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setEntryMode('choose');
+                        setError('');
+                      }}
+                      className="h-11"
+                    >
+                      <ArrowLeft className="mr-2 h-4 w-4" />
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleStep1Next}
+                      className="flex-1 h-11"
+                      disabled={isSaving || !data.full_name.trim() || !data.company.trim() || !data.role.trim()}
+                    >
+                      {isSaving ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : null}
+                      Continue
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </>
+            )}
           </Card>
         )}
 
