@@ -1,36 +1,27 @@
 // =============================================================================
-// CHECKOUT SESSION API
+// ONBOARDING CHECKOUT API
 // =============================================================================
 //
-// Creates a Dodo Payments checkout session for subscription purchases.
+// Creates a Dodo Payments checkout session during onboarding with 7-day trial.
+// This endpoint saves the user's selected plan and redirects them to Dodo's
+// hosted checkout page to securely enter their payment details.
 //
-// WALLET-BASED BILLING MODEL:
-// ===========================
-// Users subscribe to plans that give them wallet credits each billing cycle:
-// - Pro ($79/mo) → $150 wallet credits
-// - Growth ($179/mo) → $300 wallet credits
-// - Scale ($279/mo) → $500 wallet credits
+// FLOW:
+// 1. User selects plan in onboarding Step 3
+// 2. User clicks "Start Free Trial"
+// 3. This endpoint saves progress and creates Dodo checkout session
+// 4. User is redirected to Dodo's hosted checkout page
+// 5. User enters card details on Dodo's secure page
+// 6. Dodo redirects back to /onboarding?checkout=success
+// 7. Webhook fires to confirm subscription creation
+// 8. Onboarding is completed, user redirected to dashboard
 //
-// CHECKOUT FLOW:
-// ==============
-// 1. User selects a plan in the UI (pricing page or settings)
-// 2. Frontend calls POST /api/billing/checkout with plan ID
-// 3. This endpoint creates a Dodo checkout session with 7-day trial
-// 4. Frontend redirects user to the checkout URL
-// 5. User enters payment details on Dodo's hosted checkout page
-// 6. After checkout, user is redirected back to success URL
-// 7. Dodo creates subscription with trial period (no charge until trial ends)
-// 8. After 7 days, Dodo charges the card and sends payment.succeeded webhook
-// 9. Webhook handler resets wallet to plan credits
-//
-// IMPORTANT NOTES:
-// ================
-// - Free plan users can upgrade to any paid plan
-// - Existing subscribers can switch plans (proration handled by Dodo)
-// - All plans are monthly (no annual billing for wallet model)
+// SECURITY:
+// - Card details are entered on Dodo's hosted page (PCI compliant)
+// - Our server NEVER sees the actual card number
+// - 7-day trial means user isn't charged immediately
 //
 // Created: 2nd January 2026
-// Last Updated: 2nd January 2026 - Added 7-day trial period support
 // =============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -50,52 +41,17 @@ import { WALLET_PLANS, formatCredits } from '@/lib/wallet';
 // TYPES
 // =============================================================================
 
-/**
- * Request body for creating a checkout session.
- */
-interface CheckoutRequest {
+interface OnboardingCheckoutRequest {
   /** Plan ID: 'pro', 'growth', or 'scale' */
   planId: string;
-  /** Optional URL to redirect after successful payment */
-  successUrl?: string;
-  /** Optional URL to redirect if user cancels */
-  cancelUrl?: string;
-  /** Optional: Number of trial days (defaults to 7 for new subscriptions) */
-  trialDays?: number;
+  /** Billing period: 'monthly' or 'annual' */
+  billingPeriod: 'monthly' | 'annual';
 }
 
 // =============================================================================
-// POST /api/billing/checkout
+// POST /api/onboarding/checkout
 // =============================================================================
 
-/**
- * Creates a Dodo checkout session for the specified plan.
- *
- * This endpoint:
- * 1. Validates the user is authenticated
- * 2. Validates the plan ID is a valid wallet plan
- * 3. Creates or retrieves the Dodo customer
- * 4. Creates a checkout session with the subscription product
- * 5. Returns the checkout URL for redirect
- *
- * Request body:
- * {
- *   "planId": "pro",        // Required: pro, growth, or scale
- *   "successUrl": "...",    // Optional: override default success URL
- *   "cancelUrl": "..."      // Optional: override default cancel URL
- * }
- *
- * Response:
- * {
- *   "checkoutUrl": "https://checkout.dodopayments.com/...",
- *   "sessionId": "sess_xxx",
- *   "planDetails": {
- *     "name": "Pro",
- *     "price": "$79/mo",
- *     "credits": "$150"
- *   }
- * }
- */
 export async function POST(request: NextRequest) {
   try {
     // =========================================================================
@@ -113,7 +69,7 @@ export async function POST(request: NextRequest) {
     // =========================================================================
     // STEP 2: Parse and validate request body
     // =========================================================================
-    let body: CheckoutRequest;
+    let body: OnboardingCheckoutRequest;
     try {
       body = await request.json();
     } catch {
@@ -123,33 +79,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { planId, successUrl, cancelUrl, trialDays = 7 } = body;
+    const { planId, billingPeriod } = body;
 
-    // -------------------------------------------------------------------------
-    // Validate planId is a valid wallet plan
-    // -------------------------------------------------------------------------
-    if (!planId) {
+    // Validate planId
+    if (!planId || !isValidWalletPlan(planId)) {
       return NextResponse.json(
-        { error: 'Missing planId. Please specify a plan.' },
+        { error: `Invalid plan: ${planId}. Valid plans are: pro, growth, scale` },
         { status: 400 }
       );
     }
 
-    if (!isValidWalletPlan(planId)) {
+    // Validate billing period
+    if (!billingPeriod || !['monthly', 'annual'].includes(billingPeriod)) {
       return NextResponse.json(
-        {
-          error: `Invalid plan: ${planId}. Valid plans are: pro, growth, scale`,
-          validPlans: Object.keys(WALLET_PLANS),
-        },
+        { error: 'Invalid billing period. Must be "monthly" or "annual"' },
         { status: 400 }
       );
     }
 
-    // Get plan config for response
     const planConfig = WALLET_PLANS[planId as keyof typeof WALLET_PLANS];
 
     // =========================================================================
-    // STEP 3: Get or create user and Dodo customer
+    // STEP 3: Get user and create/retrieve Dodo customer
     // =========================================================================
     const user = await getOrCreateUser(userEmail);
     const supabase = await createClient();
@@ -159,12 +110,7 @@ export async function POST(request: NextRequest) {
     let dodoCustomerId = user.dodo_customer_id;
 
     if (!dodoCustomerId) {
-      // -----------------------------------------------------------------------
       // Create a new Dodo customer
-      // -----------------------------------------------------------------------
-      // This links the user's email to a Dodo customer account.
-      // The customer ID is stored in our database for future lookups.
-      // -----------------------------------------------------------------------
       const client = getDodoClient();
 
       const customer = await withDodoErrorHandling(
@@ -186,14 +132,34 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', user.id);
 
-      console.log('[Checkout] Created Dodo customer:', {
+      console.log('[Onboarding Checkout] Created Dodo customer:', {
         userId: user.id,
         dodoCustomerId,
       });
     }
 
     // =========================================================================
-    // STEP 4: Get Dodo product ID for the selected plan
+    // STEP 4: Save onboarding progress (plan selection)
+    // =========================================================================
+    // Save the selected plan so we can reference it after checkout completes
+    await supabase
+      .from('users')
+      .update({
+        selected_plan: planId,
+        billing_period: billingPeriod,
+        onboarding_step: 3, // Mark that they're at step 3
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+
+    console.log('[Onboarding Checkout] Saved plan selection:', {
+      userId: user.id,
+      planId,
+      billingPeriod,
+    });
+
+    // =========================================================================
+    // STEP 5: Get Dodo product ID and create checkout session
     // =========================================================================
     let productId: string;
     try {
@@ -205,54 +171,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // =========================================================================
-    // STEP 5: Create checkout session
-    // =========================================================================
     const client = getDodoClient();
-
-    // Determine redirect URLs
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://guffles.com';
-    const defaultSuccessUrl = `${baseUrl}/dashboard?checkout=success&plan=${planId}`;
-    const defaultCancelUrl = `${baseUrl}/pricing?checkout=cancelled`;
 
-    // Create the checkout session
-    // This returns a URL where the user can enter payment details
+    // Return URL includes query params to indicate successful checkout
+    const returnUrl = `${baseUrl}/onboarding?checkout=success&plan=${planId}`;
+
+    // Create checkout session with 7-day trial
     const checkoutSession = await withDodoErrorHandling(
       () => client.checkoutSessions.create({
-        // Product to purchase (subscription)
         product_cart: [
           {
             product_id: productId,
             quantity: 1,
           },
         ],
-        // Link to existing customer
         customer: {
           customer_id: dodoCustomerId,
         },
-        // Redirect URL after checkout (success or cancel)
-        return_url: successUrl || defaultSuccessUrl,
-        // Metadata for tracking (passed through to webhooks)
+        return_url: returnUrl,
         metadata: {
           user_id: user.id,
           plan_id: planId,
+          billing_period: billingPeriod,
           user_email: userEmail,
+          source: 'onboarding', // Mark this as from onboarding flow
         },
-        // Subscription settings - 7-day free trial
-        // This allows users to try the service before being charged
+        // 7-day free trial - user won't be charged until trial ends
         subscription_data: {
-          trial_period_days: trialDays,
+          trial_period_days: 7,
         },
       }),
-      'creating checkout session'
+      'creating onboarding checkout session'
     );
 
-    console.log('[Checkout] Created checkout session:', {
+    console.log('[Onboarding Checkout] Created checkout session:', {
       sessionId: checkoutSession.session_id,
       userId: user.id,
       planId,
-      trialDays,
-      credits: formatCredits(planConfig.totalCredits),
+      billingPeriod,
+      trialDays: 7,
     });
 
     // =========================================================================
@@ -260,9 +218,10 @@ export async function POST(request: NextRequest) {
     // =========================================================================
     await supabase.from('usage_logs').insert({
       user_id: user.id,
-      action: 'checkout_initiated',
+      action: 'onboarding_checkout_initiated',
       metadata: {
         plan_id: planId,
+        billing_period: billingPeriod,
         session_id: checkoutSession.session_id,
         credits_to_receive: planConfig.totalCredits,
       },
@@ -270,9 +229,10 @@ export async function POST(request: NextRequest) {
     });
 
     // =========================================================================
-    // STEP 7: Return checkout URL with plan details
+    // STEP 7: Return checkout URL
     // =========================================================================
     return NextResponse.json({
+      success: true,
       checkoutUrl: checkoutSession.checkout_url,
       sessionId: checkoutSession.session_id,
       planDetails: {
@@ -280,16 +240,12 @@ export async function POST(request: NextRequest) {
         name: planConfig.name,
         price: formatCredits(planConfig.priceInCents) + '/mo',
         credits: formatCredits(planConfig.totalCredits),
-        breakdown: {
-          base: formatCredits(planConfig.baseCredits),
-          bonus: formatCredits(planConfig.bonusCredits),
-        },
+        trialDays: 7,
       },
     });
   } catch (error) {
-    console.error('[Checkout] Error:', error);
+    console.error('[Onboarding Checkout] Error:', error);
 
-    // Handle known Dodo errors
     if (error instanceof DodoError) {
       return NextResponse.json(
         { error: error.message, code: error.code },
@@ -297,7 +253,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generic error response
     return NextResponse.json(
       { error: 'Failed to create checkout session. Please try again.' },
       { status: 500 }

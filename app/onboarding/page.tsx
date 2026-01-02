@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -109,12 +109,15 @@ const PLANS = [
   }
 ];
 
-export default function OnboardingPage() {
+function OnboardingPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<OnboardingStep>(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [isCompletingCheckout, setIsCompletingCheckout] = useState(false);
   const [error, setError] = useState('');
   const [initialLoading, setInitialLoading] = useState(true);
   const [profileFetched, setProfileFetched] = useState(false);
@@ -135,10 +138,7 @@ export default function OnboardingPage() {
     billing_period: 'monthly'
   });
 
-  // Payment form state (placeholder for Dodo integration)
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvc, setCardCvc] = useState('');
+  // Payment is now handled via Dodo hosted checkout - no card form needed
 
   // Custom keyword inputs
   const [newIcpKeyword, setNewIcpKeyword] = useState('');
@@ -194,6 +194,41 @@ export default function OnboardingPage() {
     }
     loadUserData();
   }, [router]);
+
+  // Handle return from Dodo checkout
+  useEffect(() => {
+    const checkoutStatus = searchParams.get('checkout');
+    const planFromUrl = searchParams.get('plan');
+
+    if (checkoutStatus === 'success' && planFromUrl) {
+      // User returned from successful Dodo checkout
+      setIsCompletingCheckout(true);
+
+      // Complete the onboarding
+      const completeOnboarding = async () => {
+        try {
+          const res = await fetch('/api/onboarding/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          if (!res.ok) {
+            const errorData = await res.json();
+            throw new Error(errorData.error || 'Failed to complete onboarding');
+          }
+
+          // Clear the URL params and redirect to dashboard
+          router.replace('/dashboard?welcome=true');
+        } catch (err: any) {
+          console.error('Failed to complete onboarding:', err);
+          setError(err.message || 'Something went wrong. Please try again.');
+          setIsCompletingCheckout(false);
+        }
+      };
+
+      completeOnboarding();
+    }
+  }, [searchParams, router]);
 
   const fetchLinkedInProfile = async () => {
     if (!data.linkedin_url.trim()) {
@@ -351,82 +386,35 @@ export default function OnboardingPage() {
       setError('Please select a plan');
       return;
     }
-    
-    // TODO: Integrate with Dodo Payment Gateway
-    // ============================================
-    // 1. Initialize Dodo payment SDK
-    // 2. Create payment method with card details
-    // 3. Create subscription with 7-day trial
-    // 4. On success, save payment_method_id and subscription_id to user
-    // 5. Set trial_ends_at to 7 days from now
-    // ============================================
-    
-    // For now, validate card fields (placeholder validation)
-    if (!cardNumber.trim() || !cardExpiry.trim() || !cardCvc.trim()) {
-      setError('Please enter your card details');
-      return;
-    }
 
     setError('');
-    setIsLoading(true);
-    
+    setIsRedirecting(true);
+
     try {
-      // Calculate trial end date (7 days from now)
-      const trialEndsAt = new Date();
-      trialEndsAt.setDate(trialEndsAt.getDate() + 7);
-
-      // Extract masked card info (NEVER store full card number)
-      const cardLastFour = getCardLastFour(cardNumber);
-      const cardBrand = detectCardBrand(cardNumber);
-
-      // Save selected plan, billing period, trial info, and masked card info
-      await saveProgress({
-        selected_plan: data.selected_plan,
-        billing_period: data.billing_period,
-        trial_ends_at: trialEndsAt.toISOString(),
-        // Store only masked card info for display purposes
-        card_last_four: cardLastFour,
-        card_brand: cardBrand,
-        card_expiry: cardExpiry // Already in MM/YY format
-      });
-
-      // =============================================================================
-      // TODO: DODO PAYMENT GATEWAY INTEGRATION
-      // - Initialize Dodo SDK
-      // - Tokenize card (card number is sent directly to Dodo, never to our server)
-      // - Create customer with payment method
-      // - Create subscription with 7-day trial
-      // 
-      // const dodoClient = new DodoClient(process.env.DODO_API_KEY);
-      // const paymentMethod = await dodoClient.paymentMethods.create({
-      //   card: { number: cardNumber, exp: cardExpiry, cvc: cardCvc }
-      // });
-      // const subscription = await dodoClient.subscriptions.create({
-      //   customer_email: userEmail,
-      //   plan_id: data.selected_plan,
-      //   payment_method_id: paymentMethod.id,
-      //   trial_days: 7
-      // });
-      // 
-      // Note: In production, use Dodo's client-side tokenization to ensure
-      // card numbers never touch our servers. Only the token is sent to backend.
-      // =============================================================================
-
-      // Complete onboarding
-      const res = await fetch('/api/onboarding/complete', {
+      // Call onboarding checkout API to create Dodo checkout session
+      const res = await fetch('/api/onboarding/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId: data.selected_plan,
+          billingPeriod: data.billing_period,
+        }),
       });
-      
+
+      const result = await res.json();
+
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to complete onboarding');
+        throw new Error(result.error || 'Failed to create checkout session');
       }
-      
-      router.push('/dashboard');
+
+      // Redirect to Dodo's hosted checkout page
+      // User will enter their card details there (PCI compliant)
+      // After checkout, they'll be redirected back to /onboarding?checkout=success
+      window.location.href = result.checkoutUrl;
     } catch (err: any) {
-      setError(err.message);
-      setIsLoading(false);
+      console.error('Checkout error:', err);
+      setError(err.message || 'Something went wrong. Please try again.');
+      setIsRedirecting(false);
     }
   };
 
@@ -482,44 +470,7 @@ export default function OnboardingPage() {
     }));
   };
 
-  // Format card number with spaces
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || '';
-    const parts = [];
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-    return parts.length ? parts.join(' ') : value;
-  };
-
-  // Format expiry as MM/YY
-  const formatExpiry = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
-    }
-    return v;
-  };
-
-  // Detect card brand from card number (first 6 digits)
-  const detectCardBrand = (number: string): string => {
-    const cleaned = number.replace(/\s/g, '');
-    if (/^4/.test(cleaned)) return 'visa';
-    if (/^5[1-5]/.test(cleaned) || /^2[2-7]/.test(cleaned)) return 'mastercard';
-    if (/^3[47]/.test(cleaned)) return 'amex';
-    if (/^6(?:011|5)/.test(cleaned)) return 'discover';
-    if (/^35/.test(cleaned)) return 'jcb';
-    if (/^3(?:0[0-5]|[68])/.test(cleaned)) return 'diners';
-    return 'card';
-  };
-
-  // Get last 4 digits of card
-  const getCardLastFour = (number: string): string => {
-    const cleaned = number.replace(/\s/g, '');
-    return cleaned.slice(-4);
-  };
+  // Card formatting functions removed - payment handled via Dodo hosted checkout
 
   if (initialLoading) {
     return (
@@ -527,6 +478,25 @@ export default function OnboardingPage() {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading screen when completing checkout after returning from Dodo
+  if (isCompletingCheckout) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold mb-2">Setting Up Your Account</h2>
+            <p className="text-muted-foreground text-sm">
+              Please wait while we complete your subscription setup...
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -1245,7 +1215,7 @@ export default function OnboardingPage() {
                   );
                 })()}
 
-                {/* Payment Card */}
+                {/* Checkout Card - Redirects to Dodo hosted checkout */}
                 <Card className="border-2 border-border shadow-xl">
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-3">
@@ -1253,52 +1223,16 @@ export default function OnboardingPage() {
                         <CreditCard className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <CardTitle className="text-lg">Payment Details</CardTitle>
+                        <CardTitle className="text-lg">Start Your Free Trial</CardTitle>
                         <CardDescription>You won't be charged until your trial ends</CardDescription>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {/* Card Number */}
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium">Card Number</label>
-                      <Input
-                        placeholder="4242 4242 4242 4242"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-                        maxLength={19}
-                        className="h-11"
-                      />
-                    </div>
-
-                    {/* Expiry & CVC */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-medium">Expiry Date</label>
-                        <Input
-                          placeholder="MM/YY"
-                          value={cardExpiry}
-                          onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
-                          maxLength={5}
-                          className="h-11"
-                        />
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-medium">CVC</label>
-                        <Input
-                          placeholder="123"
-                          value={cardCvc}
-                          onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                          maxLength={4}
-                          className="h-11"
-                        />
-                      </div>
-                    </div>
-
                     {/* Security Note */}
                     <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg">
                       <Shield className="w-4 h-4 text-primary" />
-                      <span>Your payment info is secured with 256-bit SSL encryption</span>
+                      <span>You'll enter your payment details on our secure checkout page</span>
                     </div>
 
                     {error && (
@@ -1313,7 +1247,7 @@ export default function OnboardingPage() {
                       const isAnnual = data.billing_period === 'annual';
                       const displayPrice = isAnnual ? selectedPlan?.annualMonthly : selectedPlan?.monthlyPrice;
                       const totalPrice = isAnnual ? selectedPlan?.annualPrice : selectedPlan?.monthlyPrice;
-                      
+
                       return (
                         <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                           <div className="flex items-center gap-2 mb-2">
@@ -1321,17 +1255,17 @@ export default function OnboardingPage() {
                             <span className="font-semibold text-sm">7-Day Free Trial</span>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            Try all features free for 7 days. You'll only be charged 
+                            Try all features free for 7 days. You'll only be charged
                             <span className="text-foreground font-medium">
-                              {isAnnual 
-                                ? ` $${totalPrice}/year ($${displayPrice?.toFixed(0)}/mo) ` 
+                              {isAnnual
+                                ? ` $${totalPrice}/year ($${displayPrice?.toFixed(0)}/mo) `
                                 : ` $${displayPrice}/month `
                               }
                             </span>
                             after your trial ends. Cancel anytime.
                             {isAnnual && selectedPlan && (
                               <span className="block mt-1 text-primary">
-                                🎉 You're saving ${selectedPlan.savings}/year!
+                                You're saving ${selectedPlan.savings}/year!
                               </span>
                             )}
                           </p>
@@ -1340,25 +1274,31 @@ export default function OnboardingPage() {
                     })()}
 
                     <div className="flex gap-3 pt-2">
-                      <Button 
+                      <Button
                         variant="outline"
-                        onClick={() => setStep(2)} 
+                        onClick={() => setStep(2)}
                         className="h-11"
+                        disabled={isRedirecting}
                       >
                         <ArrowLeft className="mr-2 h-4 w-4" />
                         Back
                       </Button>
-                      <Button 
-                        onClick={handleStep3Next} 
+                      <Button
+                        onClick={handleStep3Next}
                         className="flex-1 h-11 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25"
-                        disabled={isLoading}
+                        disabled={isRedirecting}
                       >
-                        {isLoading ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {isRedirecting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Redirecting to checkout...
+                          </>
                         ) : (
-                          <Zap className="mr-2 h-4 w-4" />
+                          <>
+                            <Zap className="mr-2 h-4 w-4" />
+                            Start Free Trial
+                          </>
                         )}
-                        Start Free Trial
                       </Button>
                     </div>
                   </CardContent>
@@ -1384,12 +1324,28 @@ export default function OnboardingPage() {
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground mt-6">
-          {step < 3 
+          {step < 3
             ? "You can always update these settings later in your dashboard"
             : "By starting your trial, you agree to our Terms of Service and Privacy Policy"
           }
         </p>
       </div>
     </div>
+  );
+}
+
+// Wrap in Suspense for useSearchParams()
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground text-sm">Loading...</p>
+        </div>
+      </div>
+    }>
+      <OnboardingPageContent />
+    </Suspense>
   );
 }
