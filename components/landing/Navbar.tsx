@@ -106,41 +106,49 @@ export function Navbar() {
                 </div>
 
                 {/* Mobile Nav */}
+                {/* 
+                    05 Jan 2026 - Mobile Optimization:
+                    - Solid background (bg-background) instead of transparent
+                    - Larger tap targets (py-3 instead of p-2)
+                    - Better padding (p-5 instead of p-4)
+                    - Reduced gap for tighter layout (gap-1 instead of gap-3)
+                    - Larger button height for easier tapping
+                */}
                 {isMobileMenuOpen && (
-                    <div className="md:hidden absolute top-full left-0 w-full mt-3 bg-background/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 flex flex-col gap-3 shadow-2xl animate-in fade-in slide-in-from-top-2">
+                    <div className="md:hidden absolute top-full left-0 w-full mt-3 bg-background backdrop-blur-xl border border-white/10 rounded-2xl p-5 flex flex-col gap-1 shadow-2xl animate-in fade-in slide-in-from-top-2">
                         <Link
                             href="/#features"
-                            className="text-sm font-medium text-muted-foreground hover:text-primary p-2 rounded-lg hover:bg-white/5 transition-colors"
+                            className="text-sm font-medium text-muted-foreground hover:text-primary py-3 px-3 rounded-lg hover:bg-white/5 transition-colors"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             Features
                         </Link>
                         <Link
                             href="/#how-it-works"
-                            className="text-sm font-medium text-muted-foreground hover:text-primary p-2 rounded-lg hover:bg-white/5 transition-colors"
+                            className="text-sm font-medium text-muted-foreground hover:text-primary py-3 px-3 rounded-lg hover:bg-white/5 transition-colors"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             How it works
                         </Link>
                         <Link
                             href="/#pricing"
-                            className="text-sm font-medium text-muted-foreground hover:text-primary p-2 rounded-lg hover:bg-white/5 transition-colors"
+                            className="text-sm font-medium text-muted-foreground hover:text-primary py-3 px-3 rounded-lg hover:bg-white/5 transition-colors"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             Pricing
                         </Link>
-                        <div className="h-px bg-border/50 my-1" />
+                        <div className="h-px bg-border/50 my-2" />
                         {/* Fixed: Changed /signin to /login to match actual route - 2nd Jan 2026 */}
                         <Link
                             href="/login"
-                            className="text-sm font-medium text-muted-foreground hover:text-primary p-2 rounded-lg hover:bg-white/5 transition-colors text-center"
+                            className="text-sm font-medium text-muted-foreground hover:text-primary py-3 px-3 rounded-lg hover:bg-white/5 transition-colors text-center"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
                             Sign In
                         </Link>
                         <Button
                             asChild
-                            className="w-full bg-primary hover:bg-primary/90 rounded-xl"
+                            className="w-full h-12 bg-primary hover:bg-primary/90 rounded-xl mt-1"
                             onClick={() => trackSignupCTAClick('navbar', 'Start Free Trial')}
                         >
                             <Link href="/signup">Start Free Trial</Link>
