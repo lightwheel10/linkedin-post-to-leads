@@ -158,7 +158,8 @@ export function Pricing() {
                 </div>
 
                 {/* Pricing Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-12">
+                {/* 05 Jan 2026: Mobile optimization - increased gap, removed scale on mobile to prevent overlap */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 lg:gap-8 mb-12">
                     {PRICING_PLANS.map((plan) => {
                         const Icon = plan.icon;
                         return (
@@ -167,7 +168,9 @@ export function Pricing() {
                                 className={cn(
                                     "relative flex flex-col rounded-2xl p-6 transition-all duration-300",
                                     plan.highlight 
-                                        ? "bg-background/60 backdrop-blur-xl border border-primary/20 shadow-2xl shadow-primary/5 ring-1 ring-primary/20 z-10 scale-105 md:-translate-y-4" 
+                                        // 05 Jan 2026: md:scale-105 prevents mobile overlap, scale only on desktop
+                                        // Mobile gets border highlight instead of scale effect
+                                        ? "bg-background/60 backdrop-blur-xl border-2 border-primary/30 md:border border-primary/20 shadow-2xl shadow-primary/5 ring-1 ring-primary/20 z-10 md:scale-105 md:-translate-y-4" 
                                         : "bg-background/40 backdrop-blur-md border border-white/10 hover:border-white/20 hover:bg-background/50 shadow-lg"
                                 )}
                             >
