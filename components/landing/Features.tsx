@@ -21,7 +21,7 @@ import {
     Check,
     Loader2
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const PROFILES = [
     {
@@ -59,6 +59,30 @@ export function Features() {
     const [isLoading, setIsLoading] = useState(false);
     const [currentProfileIndex, setCurrentProfileIndex] = useState(0);
     const [hoveredBarIndex, setHoveredBarIndex] = useState<number | null>(null);
+    // 05 Jan 2026: Track selected bar for mobile tap interaction (Profile Monitoring)
+    const [selectedBarIndex, setSelectedBarIndex] = useState<number | null>(null);
+    // 05 Jan 2026: Auto-animate Export & Integrate on mobile
+    const [isMobileExportAnimating, setIsMobileExportAnimating] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    // 05 Jan 2026: Detect mobile screen size
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // 05 Jan 2026: Continuous animation for Export & Integrate on mobile
+    // Updated 05 Jan 2026: Changed from toggle to always-on for smooth continuous loop
+    useEffect(() => {
+        if (!isMobile) {
+            setIsMobileExportAnimating(false);
+            return;
+        }
+        // On mobile, just keep animation running continuously (no toggle/restart)
+        setIsMobileExportAnimating(true);
+    }, [isMobile]);
 
     const MOCK_LEADS = [
         {
@@ -348,81 +372,113 @@ export function Features() {
                             </div>
                             
                             {/* Chart Container */}
+                            {/* 05 Jan 2026: Added mobile tap support - uses selectedBarIndex for mobile, hoveredBarIndex for desktop */}
+                            {/* 05 Jan 2026: Added onClick to deselect bar when clicking empty space in chart */}
                             <div 
                                 className="relative h-32 w-full bg-card/40 border border-white/5 rounded-lg overflow-hidden p-4 flex items-end group/chart"
                                 onMouseLeave={() => setHoveredBarIndex(null)}
+                                onClick={() => setSelectedBarIndex(null)}
                             >
                                 
                                 {/* Background Grid */}
                                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:14px_14px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
 
                                 {/* Interactive Bars */}
-                                {CHART_DATA.map((bar, i) => (
-                                    <div 
-                                        key={i}
-                                        className="relative flex-1 h-full flex items-end justify-center px-1 group/bar min-w-0"
-                                        onMouseEnter={() => setHoveredBarIndex(i)}
-                                    >
+                                {CHART_DATA.map((bar, i) => {
+                                    // 05 Jan 2026: Combine hover (desktop) and selected (mobile tap) states
+                                    const isActiveBar = hoveredBarIndex === i || selectedBarIndex === i;
+                                    
+                                    return (
                                         <div 
-                                            className="relative w-full bg-white/5 rounded-t-[2px] transition-all duration-300 hover:bg-primary/10 border-t border-white/10 hover:border-primary/30"
-                                            style={{ height: `${bar.height}%` }}
+                                            key={i}
+                                            className="relative flex-1 h-full flex items-end justify-center px-1 group/bar min-w-0 cursor-pointer"
+                                            onMouseEnter={() => setHoveredBarIndex(i)}
+                                            // 05 Jan 2026: Mobile tap to select/deselect bar
+                                            // 05 Jan 2026: stopPropagation prevents chart container click from clearing selection
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedBarIndex(prev => prev === i ? null : i);
+                                            }}
                                         >
-                                            {/* Content Mask for Fills */}
-                                            <div className="absolute inset-0 rounded-t-[2px] overflow-hidden">
-                                                {/* Standard State - Subtle Gradient */}
-                                                <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-50" />
-                                                
-                                                {/* Hover Glow Effect - Bottom Up Fill */}
-                                                <div className="absolute inset-x-0 bottom-0 top-5 bg-gradient-to-t from-primary/40 via-primary/20 to-transparent opacity-0 group-hover/bar:opacity-100 transition-all duration-500 transform translate-y-full group-hover/bar:translate-y-0" />
+                                            <div 
+                                                className={cn(
+                                                    "relative w-full bg-white/5 rounded-t-[2px] transition-all duration-300 border-t border-white/10",
+                                                    isActiveBar && "bg-primary/10 border-primary/30"
+                                                )}
+                                                style={{ height: `${bar.height}%` }}
+                                            >
+                                                {/* Content Mask for Fills */}
+                                                <div className="absolute inset-0 rounded-t-[2px] overflow-hidden">
+                                                    {/* Standard State - Subtle Gradient */}
+                                                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-50" />
+                                                    
+                                                    {/* Hover/Active Glow Effect - Bottom Up Fill */}
+                                                    {/* 05 Jan 2026: Changed from group-hover to isActiveBar state for mobile support */}
+                                                    <div className={cn(
+                                                        "absolute inset-x-0 bottom-0 top-5 bg-gradient-to-t from-primary/40 via-primary/20 to-transparent transition-all duration-500 transform",
+                                                        isActiveBar ? "opacity-100 translate-y-0" : "opacity-0 translate-y-full"
+                                                    )} />
 
-                                                {/* Animated Growth Fill (Initial Load) */}
-                                                <div 
-                                                    className="absolute bottom-0 left-0 w-full bg-white/5 transition-all duration-[1000ms] ease-out"
-                                                    style={{ 
-                                                        height: '100%',
-                                                        transform: 'scaleY(0)',
-                                                        animation: `grow-up 1s ease-out forwards ${i * 0.1}s` 
-                                                    }}
-                                                />
+                                                    {/* Animated Growth Fill (Initial Load) */}
+                                                    <div 
+                                                        className="absolute bottom-0 left-0 w-full bg-white/5 transition-all duration-[1000ms] ease-out"
+                                                        style={{ 
+                                                            height: '100%',
+                                                            transform: 'scaleY(0)',
+                                                            animation: `grow-up 1s ease-out forwards ${i * 0.1}s` 
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
 
                                 {/* Dynamic Data Tooltip - Positioned Top Left */}
-                                <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-md border border-green-500/20 shadow-lg rounded-lg p-1.5 px-2.5 flex items-center gap-2.5 z-20 transition-all duration-200 min-w-[100px] pointer-events-none">
-                                    <div className="flex flex-col">
-                                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">
-                                            {hoveredBarIndex !== null ? CHART_DATA[hoveredBarIndex].label : 'Weekly'}
-                                        </span>
-                                        <span className="text-base font-bold text-foreground leading-none transition-all duration-200 mt-0.5">
-                                            {hoveredBarIndex !== null ? CHART_DATA[hoveredBarIndex].value : '241'}
-                                        </span>
-                                    </div>
-                                    <div className="h-6 w-px bg-border" />
-                                    <div className={`flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full border transition-colors duration-200 ${
-                                        (hoveredBarIndex !== null ? CHART_DATA[hoveredBarIndex].change : '+12.5%').startsWith('+') 
-                                            ? 'text-green-500 bg-green-500/10 border-green-500/20' 
-                                            : 'text-rose-500 bg-rose-500/10 border-rose-500/20'
-                                    }`}>
-                                        {(hoveredBarIndex !== null ? CHART_DATA[hoveredBarIndex].change : '+12.5%').startsWith('+') 
-                                            ? <TrendingUp className="w-2 h-2" /> 
-                                            : <TrendingDown className="w-2 h-2" />
-                                        }
-                                        <span>{hoveredBarIndex !== null ? CHART_DATA[hoveredBarIndex].change : '+12.5%'}</span>
-                                    </div>
-                                </div>
+                                {/* 05 Jan 2026: Updated to use activeBarIndex which combines hover and selected states */}
+                                {(() => {
+                                    const activeBarIndex = hoveredBarIndex ?? selectedBarIndex;
+                                    return (
+                                        <div className="absolute top-2 left-2 bg-background/90 backdrop-blur-md border border-green-500/20 shadow-lg rounded-lg p-1.5 px-2.5 flex items-center gap-2.5 z-20 transition-all duration-200 min-w-[100px] pointer-events-none">
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-semibold">
+                                                    {activeBarIndex !== null ? CHART_DATA[activeBarIndex].label : 'Weekly'}
+                                                </span>
+                                                <span className="text-base font-bold text-foreground leading-none transition-all duration-200 mt-0.5">
+                                                    {activeBarIndex !== null ? CHART_DATA[activeBarIndex].value : '241'}
+                                                </span>
+                                            </div>
+                                            <div className="h-6 w-px bg-border" />
+                                            <div className={`flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded-full border transition-colors duration-200 ${
+                                                (activeBarIndex !== null ? CHART_DATA[activeBarIndex].change : '+12.5%').startsWith('+') 
+                                                    ? 'text-green-500 bg-green-500/10 border-green-500/20' 
+                                                    : 'text-rose-500 bg-rose-500/10 border-rose-500/20'
+                                            }`}>
+                                                {(activeBarIndex !== null ? CHART_DATA[activeBarIndex].change : '+12.5%').startsWith('+') 
+                                                    ? <TrendingUp className="w-2 h-2" /> 
+                                                    : <TrendingDown className="w-2 h-2" />
+                                                }
+                                                <span>{activeBarIndex !== null ? CHART_DATA[activeBarIndex].change : '+12.5%'}</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         </div>
                     </div>
 
                     {/* Feature 4: Export & Integrate */}
+                    {/* 05 Jan 2026: Added isMobileExportAnimating for continuous animation on mobile screens */}
                     <div className="group md:col-span-2 relative overflow-hidden rounded-xl border border-white/10 bg-background/40 backdrop-blur-xl shadow-sm ring-1 ring-white/5 p-6 transition-all duration-300 hover:shadow-2xl hover:border-primary/20 hover:ring-primary/10">
                         <div className="grid md:grid-cols-2 gap-8 items-center h-full">
                             <div className="relative z-10">
                                 <div className="mb-6 md:mb-0">
                                     <div className="flex items-center gap-3 mb-2">
-                                        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                        <div className={cn(
+                                            "w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center transition-transform duration-300",
+                                            "group-hover:scale-110",
+                                            isMobileExportAnimating && "scale-110"
+                                        )}>
                                             <Share2 className="w-4 h-4 text-indigo-500" />
                                         </div>
                                         <h3 className="text-lg font-semibold">Export & Integrate</h3>
@@ -437,13 +493,25 @@ export function Features() {
                                 <div className="absolute inset-0 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] opacity-[0.05]" />
                                 
                                 {/* Animated Background Gradient */}
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                                {/* 05 Jan 2026: Mobile uses CSS animation for continuous seamless loop */}
+                                {/* Desktop uses transition on hover */}
+                                <div className={cn(
+                                    "absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/5 to-transparent",
+                                    isMobileExportAnimating 
+                                        ? "animate-gradient-sweep" 
+                                        : "-translate-x-full transition-transform duration-1000 ease-in-out group-hover:translate-x-full"
+                                )} />
 
                                 <div className="relative z-10 flex items-center gap-3">
                                     {/* Source: Lead */}
                                     <div className="relative flex flex-col items-center justify-center z-20">
                                         <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center relative">
-                                            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping opacity-0 group-hover:opacity-100" />
+                                            {/* 05 Jan 2026: Ping effect on mobile or hover */}
+                                            <div className={cn(
+                                                "absolute inset-0 bg-primary/20 rounded-full animate-ping transition-opacity",
+                                                isMobileExportAnimating ? "opacity-100" : "opacity-0",
+                                                "group-hover:opacity-100"
+                                            )} />
                                             <Database className="w-4 h-4 text-primary" />
                                         </div>
                                         <span className="absolute -bottom-6 text-[10px] font-medium text-muted-foreground whitespace-nowrap">Leads</span>
@@ -468,8 +536,13 @@ export function Features() {
                                                 strokeDasharray="4 4" 
                                             />
                                             
-                                            {/* Animated Overlay Lines (Visible on Hover) */}
-                                            <g className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                            {/* Animated Overlay Lines (Visible on Hover or Mobile Animation) */}
+                                            {/* 05 Jan 2026: Added isMobileExportAnimating check */}
+                                            <g className={cn(
+                                                "transition-opacity duration-300",
+                                                isMobileExportAnimating ? "opacity-100" : "opacity-0",
+                                                "group-hover:opacity-100"
+                                            )}>
                                                 <path 
                                                     d="M0 48 H32 C 48 48, 48 28, 96 28" 
                                                     stroke="url(#gradient-flow)" 
@@ -496,12 +569,21 @@ export function Features() {
                                     </div>
 
                                     {/* Destinations */}
+                                    {/* 05 Jan 2026: Added isMobileExportAnimating for border/bg color changes on mobile */}
                                     <div className="flex flex-col justify-center gap-6 z-20">
-                                        <div className="flex items-center gap-2 p-1.5 px-2.5 rounded bg-white/5 border border-white/10 transition-colors group-hover:border-green-500/30 group-hover:bg-green-500/5">
+                                        <div className={cn(
+                                            "flex items-center gap-2 p-1.5 px-2.5 rounded bg-white/5 border border-white/10 transition-colors",
+                                            isMobileExportAnimating && "border-green-500/30 bg-green-500/5",
+                                            "group-hover:border-green-500/30 group-hover:bg-green-500/5"
+                                        )}>
                                             <FileSpreadsheet className="w-3.5 h-3.5 text-green-500" />
                                             <span className="text-[10px] font-medium">Excel Export</span>
                                         </div>
-                                        <div className="flex items-center gap-2 p-1.5 px-2.5 rounded bg-white/5 border border-white/10 transition-colors group-hover:border-blue-500/30 group-hover:bg-blue-500/5">
+                                        <div className={cn(
+                                            "flex items-center gap-2 p-1.5 px-2.5 rounded bg-white/5 border border-white/10 transition-colors",
+                                            isMobileExportAnimating && "border-blue-500/30 bg-blue-500/5",
+                                            "group-hover:border-blue-500/30 group-hover:bg-blue-500/5"
+                                        )}>
                                             <UploadCloud className="w-3.5 h-3.5 text-blue-500" />
                                             <span className="text-[10px] font-medium">CRM Sync</span>
                                         </div>

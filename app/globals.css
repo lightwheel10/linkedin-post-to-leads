@@ -54,6 +54,24 @@
   --animate-spin-slow: spin-slow 10s linear infinite;
   --animate-typing: typing 2.5s steps(20, end) infinite;
   --animate-dash-shuttle: dash-shuttle 1.5s linear infinite;
+  /* 05 Jan 2026: Continuous gradient sweep for Export & Integrate mobile animation */
+  --animate-gradient-sweep: gradient-sweep 2.5s ease-in-out infinite;
+}
+
+/* 05 Jan 2026: Continuous looping gradient sweep for mobile Export & Integrate */
+@keyframes gradient-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(100%);
+  }
+  50.01% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
 }
 
 @keyframes dash-shuttle {
