@@ -1,10 +1,18 @@
 "use client";
 
+/**
+ * 05 Jan 2026 - Contact Page Updates:
+ * - Removed Phone and Location cards (kept only Email)
+ * - Added existing CTA component from landing page
+ * - Mobile optimized: smaller padding, responsive text sizes, centered email card
+ */
+
 import Link from "next/link";
 import { useState } from "react";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
-import { Mail, MapPin, Phone, ChevronDown, Zap, Shield, Database, CreditCard, Link2, Target } from "lucide-react";
+import { CTA } from "@/components/landing/CTA";
+import { Mail, ChevronDown, Zap, Shield, Database, CreditCard, Link2, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { trackFAQExpand } from "@/lib/analytics";
 
@@ -18,24 +26,26 @@ export default function ContactPage() {
 
             <Navbar />
 
-            <main className="container mx-auto px-4 py-24 md:py-32">
+            {/* 05 Jan 2026: Reduced mobile padding (py-16 vs py-24) */}
+            <main className="container mx-auto px-4 py-16 md:py-32">
                 {/* Header Section */}
-                <div className="max-w-3xl mx-auto text-center mb-16">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                {/* 05 Jan 2026: Reduced mobile margin (mb-10 vs mb-16), smaller text on mobile */}
+                <div className="max-w-3xl mx-auto text-center mb-10 md:mb-16">
+                    <h1 className="text-3xl md:text-5xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                         Get in Touch
                     </h1>
-                    <p className="text-lg text-muted-foreground leading-relaxed">
-                        Have questions about Guffles? We're here to help. Reach out to us through any of the channels below.
+                    <p className="text-base md:text-lg text-muted-foreground leading-relaxed px-2">
+                        Have questions about Guffles? We're here to help. Reach out to us below.
                     </p>
                 </div>
 
-                {/* Contact Cards Grid */}
-                <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+                {/* 05 Jan 2026: Single centered Email card, removed Phone and Location */}
+                <div className="max-w-sm mx-auto mb-10 md:mb-16">
                     {/* Email Card */}
-                    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card/50 backdrop-blur-xl p-8 hover:border-primary/50 transition-all duration-300">
+                    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card/50 backdrop-blur-xl p-6 md:p-8 hover:border-primary/50 transition-all duration-300 text-center">
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                         <div className="relative z-10">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center mb-4">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center mb-4 mx-auto">
                                 <Mail className="w-6 h-6 text-white" />
                             </div>
                             <h3 className="font-semibold text-foreground mb-2">Email Us</h3>
@@ -47,50 +57,26 @@ export default function ContactPage() {
                             </a>
                         </div>
                     </div>
-
-                    {/* Phone Card */}
-                    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card/50 backdrop-blur-xl p-8 hover:border-primary/50 transition-all duration-300">
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <div className="relative z-10">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center mb-4">
-                                <Phone className="w-6 h-6 text-white" />
-                            </div>
-                            <h3 className="font-semibold text-foreground mb-2">Call Us</h3>
-                            <a
-                                href="tel:+1234567890"
-                                className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                            >
-                                +1 (234) 567-890
-                            </a>
-                        </div>
-                    </div>
-
-                    {/* Location Card */}
-                    <div className="group relative overflow-hidden rounded-2xl border border-border bg-card/50 backdrop-blur-xl p-8 hover:border-primary/50 transition-all duration-300">
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                        <div className="relative z-10">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center mb-4">
-                                <MapPin className="w-6 h-6 text-white" />
-                            </div>
-                            <h3 className="font-semibold text-foreground mb-2">Visit Us</h3>
-                            <p className="text-sm text-muted-foreground">
-                                123 Innovation Street<br />
-                                San Francisco, CA 94105
-                            </p>
-                        </div>
-                    </div>
                 </div>
 
                 {/* FAQ Section */}
                 <FAQSection />
             </main>
 
+            {/* 05 Jan 2026: Added existing CTA component from landing page */}
+            <CTA />
+
             <Footer />
         </div>
     );
 }
 
-// Modern FAQ Accordion Component
+/**
+ * 05 Jan 2026 - FAQ Section Mobile Optimization:
+ * - Reduced mobile margins and padding
+ * - Smaller text on mobile
+ * - Adjusted answer padding for mobile
+ */
 function FAQSection() {
     const [openIndex, setOpenIndex] = useState<number | null>(0);
 
@@ -141,14 +127,16 @@ function FAQSection() {
 
     return (
         <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
+            {/* 05 Jan 2026: Reduced mobile margin (mb-8 vs mb-12) */}
+            <div className="text-center mb-8 md:mb-12">
                 <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-medium text-primary/80 mb-4">
                     <span>FAQ</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold mb-3 text-foreground">
+                {/* 05 Jan 2026: Smaller text on mobile */}
+                <h2 className="text-2xl md:text-4xl font-bold mb-2 md:mb-3 text-foreground">
                     Frequently Asked Questions
                 </h2>
-                <p className="text-muted-foreground">Everything you need to know about Guffles</p>
+                <p className="text-sm md:text-base text-muted-foreground">Everything you need to know about Guffles</p>
             </div>
 
             <div className="space-y-3">
@@ -160,7 +148,8 @@ function FAQSection() {
                         <div
                             key={index}
                             className={cn(
-                                "group relative overflow-hidden rounded-2xl border backdrop-blur-xl transition-all duration-300",
+                                // 05 Jan 2026: Reduced border radius on mobile (rounded-xl vs rounded-2xl)
+                                "group relative overflow-hidden rounded-xl md:rounded-2xl border backdrop-blur-xl transition-all duration-300",
                                 isOpen
                                     ? "bg-card/60 border-primary/30 shadow-lg shadow-primary/5"
                                     : "bg-card/40 border-border hover:border-primary/20 hover:bg-card/50"
@@ -179,21 +168,23 @@ function FAQSection() {
                                     }
                                     setOpenIndex(isOpen ? null : index);
                                 }}
-                                className="relative w-full text-left p-6 flex items-center gap-4 cursor-pointer"
+                                // 05 Jan 2026: Reduced mobile padding (p-4 vs p-6), smaller gap
+                                className="relative w-full text-left p-4 md:p-6 flex items-center gap-3 md:gap-4 cursor-pointer"
                             >
-                                {/* Icon */}
+                                {/* Icon - 05 Jan 2026: Smaller on mobile */}
                                 <div className={cn(
-                                    "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 shrink-0",
+                                    "w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center transition-all duration-300 shrink-0",
                                     faq.iconBg,
                                     isOpen && "scale-110"
                                 )}>
-                                    <Icon className={cn("w-5 h-5", faq.iconColor)} />
+                                    <Icon className={cn("w-4 h-4 md:w-5 md:h-5", faq.iconColor)} />
                                 </div>
 
                                 {/* Question */}
                                 <div className="flex-1 min-w-0">
+                                    {/* 05 Jan 2026: Smaller text on mobile */}
                                     <h3 className={cn(
-                                        "text-base md:text-lg font-semibold transition-colors duration-200",
+                                        "text-sm md:text-lg font-semibold transition-colors duration-200",
                                         isOpen ? "text-foreground" : "text-foreground/90"
                                     )}>
                                         {faq.question}
@@ -202,7 +193,7 @@ function FAQSection() {
 
                                 {/* Chevron */}
                                 <ChevronDown className={cn(
-                                    "w-5 h-5 text-muted-foreground transition-transform duration-300 shrink-0",
+                                    "w-4 h-4 md:w-5 md:h-5 text-muted-foreground transition-transform duration-300 shrink-0",
                                     isOpen && "rotate-180 text-primary"
                                 )} />
                             </button>
@@ -212,8 +203,9 @@ function FAQSection() {
                                 "overflow-hidden transition-all duration-300 ease-in-out",
                                 isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                             )}>
-                                <div className="px-6 pb-6 pl-[72px]">
-                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                {/* 05 Jan 2026: Adjusted mobile padding (pl-14 vs pl-[72px]) */}
+                                <div className="px-4 md:px-6 pb-4 md:pb-6 pl-14 md:pl-[72px]">
+                                    <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
                                         {faq.answer}
                                     </p>
                                 </div>
