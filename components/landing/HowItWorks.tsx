@@ -131,8 +131,17 @@ export function HowItWorks() {
                     </p>
                 </div>
 
+                {/* 
+                    05 Jan 2026 - Mobile Improvements:
+                    ==================================
+                    1. Added step number badges (1, 2, 3) - MOBILE ONLY (md:hidden)
+                       - Desktop uses horizontal connecting beams for visual flow
+                       - Mobile uses numbered badges since beams are hidden
+                    2. Disabled scale-105 on mobile (md:scale-105) to prevent horizontal overflow
+                    3. Increased inactive card opacity on mobile (opacity-80 vs opacity-60) for better visibility
+                */}
                 <div className="relative grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-                    {/* Connecting Beams */}
+                    {/* Connecting Beams - Desktop */}
                     <div className="absolute top-[45%] left-[31%] w-[5%] h-[2px] bg-gradient-to-r from-primary/10 via-primary/40 to-primary/10 hidden md:block opacity-50">
                         <div className="absolute inset-0 bg-primary/30 animate-pulse" />
                     </div>
@@ -141,13 +150,27 @@ export function HowItWorks() {
                     </div>
 
                     {/* --- STEP 1: CONNECT --- */}
+                    {/* 05 Jan 2026: md:scale-105 prevents mobile overflow, opacity-80 md:opacity-60 keeps cards visible on mobile */}
                     <div 
                         className={cn(
                             "group relative flex flex-col transition-all duration-500 ease-out",
-                            activeStep === 0 ? "scale-105 z-20" : "scale-100 opacity-60 hover:opacity-100 hover:scale-[1.02]"
+                            activeStep === 0 
+                                ? "md:scale-105 z-20" 
+                                : "scale-100 opacity-80 md:opacity-60 hover:opacity-100 md:hover:scale-[1.02]"
                         )}
                         onMouseEnter={() => setActiveStep(0)}
                     >
+                        {/* 05 Jan 2026: Step Number Badge - mobile only (md:hidden), desktop uses horizontal beams instead */}
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center md:hidden">
+                            <div className={cn(
+                                "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300",
+                                activeStep === 0 
+                                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30" 
+                                    : "bg-background text-muted-foreground border-white/20"
+                            )}>
+                                1
+                            </div>
+                        </div>
                         <div className="relative h-[340px] bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
                             <div className="flex-1 flex items-center justify-center pt-0 pb-20"> 
                                 <div className="relative w-64 h-48 transform transition-transform duration-500 group-hover:translate-y-[-8px]">
@@ -203,10 +226,23 @@ export function HowItWorks() {
                     <div 
                         className={cn(
                             "group relative flex flex-col transition-all duration-500 ease-out",
-                            activeStep === 1 ? "scale-105 z-20" : "scale-100 opacity-60 hover:opacity-100 hover:scale-[1.02]"
+                            activeStep === 1 
+                                ? "md:scale-105 z-20" 
+                                : "scale-100 opacity-80 md:opacity-60 hover:opacity-100 md:hover:scale-[1.02]"
                         )}
                         onMouseEnter={() => setActiveStep(1)}
                     >
+                        {/* 05 Jan 2026: Step Number Badge - mobile only (md:hidden) */}
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center md:hidden">
+                            <div className={cn(
+                                "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300",
+                                activeStep === 1 
+                                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30" 
+                                    : "bg-background text-muted-foreground border-white/20"
+                            )}>
+                                2
+                            </div>
+                        </div>
                         <div className="relative h-[340px] bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
                             <div className="flex-1 flex items-center justify-center pt-0 pb-20">
                                 <div className="relative w-64 bg-white/[0.03] border border-white/5 rounded-[20px] p-4 backdrop-blur-sm transform transition-transform duration-500 group-hover:translate-y-[-8px]">
@@ -288,10 +324,23 @@ export function HowItWorks() {
                     <div 
                          className={cn(
                             "group relative flex flex-col transition-all duration-500 ease-out",
-                            activeStep === 2 ? "scale-105 z-20" : "scale-100 opacity-60 hover:opacity-100 hover:scale-[1.02]"
+                            activeStep === 2 
+                                ? "md:scale-105 z-20" 
+                                : "scale-100 opacity-80 md:opacity-60 hover:opacity-100 md:hover:scale-[1.02]"
                         )}
                         onMouseEnter={() => setActiveStep(2)}
                     >
+                        {/* 05 Jan 2026: Step Number Badge - mobile only (md:hidden) */}
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center md:hidden">
+                            <div className={cn(
+                                "w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300",
+                                activeStep === 2 
+                                    ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/30" 
+                                    : "bg-background text-muted-foreground border-white/20"
+                            )}>
+                                3
+                            </div>
+                        </div>
                         <div className="relative h-[340px] bg-[#0A0A0A] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
                             <div className="flex-1 flex flex-col justify-center items-center pt-0 pb-20">
                                 <div className="relative w-64 bg-white/[0.03] border border-white/5 rounded-[20px] p-4 backdrop-blur-sm transform transition-transform duration-500 group-hover:translate-y-[-8px]">

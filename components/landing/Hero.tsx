@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle, Play, Sparkles, Search, MapPin, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle, Play, MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { trackSignupCTAClick, trackTryDemoClick } from "@/lib/analytics";
@@ -206,12 +206,6 @@ export function Hero() {
 
                     {/* LEFT PANEL - Copy & CTA */}
                     <div className="flex flex-col space-y-4 text-left max-w-2xl mx-auto lg:mx-0">
-                        {/* Badge */}
-                        <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-medium text-primary/80 w-fit animate-fade-in-up" style={{ animationDelay: '0ms' }}>
-                            <Sparkles className="w-3 h-3" />
-                            <span>Intent-Based Lead Discovery</span>
-                        </div>
-
                         {/* Headline */}
                         <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
                             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight leading-tight text-foreground pl-1">
@@ -413,30 +407,29 @@ export function Hero() {
                                                 </>
                                             ) : (
                                                 <>
-                                                    <div className="flex items-center gap-2.5">
-                                                        <div className={cn("w-8 h-8 rounded-full border border-white/10 overflow-hidden", lead.isGrayscale ? "bg-muted grayscale" : "bg-gradient-to-br from-orange-500/20 to-red-500/20")}>
+                                                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                                        <div className={cn("w-8 h-8 rounded-full border border-white/10 overflow-hidden flex-shrink-0", lead.isGrayscale ? "bg-muted grayscale" : "bg-gradient-to-br from-orange-500/20 to-red-500/20")}>
                                                             <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${lead.image}`} alt={lead.name} className="w-full h-full object-cover" />
                                                         </div>
-                                                        <div>
+                                                        <div className="min-w-0 overflow-hidden">
                                                             <div className="flex items-center gap-1.5">
-                                                                <span className={cn("text-[11px] font-medium", lead.action === 'view' ? "text-muted-foreground" : "text-foreground font-semibold")}>{lead.name}</span>
-                                                                <span className={matchBadgeClass}>{lead.matchScore}% Match</span>
+                                                                <span className={cn("text-[11px] font-medium truncate", lead.action === 'view' ? "text-muted-foreground" : "text-foreground font-semibold")}>{lead.name}</span>
+                                                                <span className={cn(matchBadgeClass, "flex-shrink-0")}>{lead.matchScore}% Match</span>
                                                             </div>
                                                             <div className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                                                                <span>{lead.role}</span>
-                                                                <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/50" />
-                                                                <span>{lead.company}</span>
+                                                                <span className="truncate">{lead.role}</span>
+                                                                <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/50 flex-shrink-0" />
+                                                                <span className="truncate">{lead.company}</span>
                                                             </div>
                                                         </div>
                                                     </div>
                                                     {lead.action === 'find_email' ? (
-                                                        <Button size="sm" variant="outline" className="h-6 text-[9px] px-2 border-primary/30 text-primary scan-button gap-1.5">
+                                                        <Button size="sm" variant="outline" className="h-6 text-[9px] px-2 border-primary/30 text-primary scan-button gap-1.5 flex-shrink-0">
                                                             <Loader2 className="w-3 h-3 spinner-slow" />
-                                                            <Search className="w-2.5 h-2.5 opacity-70" />
                                                             Finding Email
                                                         </Button>
                                                     ) : (
-                                                        <Button size="sm" variant="ghost" className="h-6 text-[9px] px-2 text-muted-foreground">
+                                                        <Button size="sm" variant="ghost" className="h-6 text-[9px] px-2 text-muted-foreground flex-shrink-0">
                                                             View
                                                         </Button>
                                                     )}
