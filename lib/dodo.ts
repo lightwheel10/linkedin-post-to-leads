@@ -228,7 +228,8 @@ export function isValidWalletPlan(planId: string): boolean {
 export async function verifyWebhookSignature(
   payload: string,
   signature: string,
-  timestamp: string
+  timestamp: string,
+  webhookId?: string
 ): Promise<boolean> {
   const secret = process.env.DODO_WEBHOOK_SECRET;
 
@@ -238,8 +239,9 @@ export async function verifyWebhookSignature(
   }
 
   try {
-    // Dodo sends signatures in format: "v1,<base64_signature>"
-    // We need to strip the version prefix and use base64 encoding
+    // Dodo uses standardwebhooks format
+    // Signature format: "v1,<base64_signature>"
+    // Signed payload format: webhook_id.timestamp.payload
     let actualSignature = signature;
 
     // Check if signature has version prefix (e.g., "v1,")
@@ -249,28 +251,38 @@ export async function verifyWebhookSignature(
       console.log('[Dodo Webhook] Parsed signature version:', parts[0]);
     }
 
-    // Construct the signed payload (timestamp.payload)
-    const signedPayload = `${timestamp}.${payload}`;
-
     // Import crypto for HMAC computation (Node.js built-in)
     const crypto = await import('crypto');
 
-    // Compute expected signature as base64 (Dodo uses base64, not hex)
+    // Dodo uses standardwebhooks format: msg_id.timestamp.payload
+    // The secret needs to be base64 decoded if it starts with whsec_
+    let signingSecret = secret;
+    if (secret.startsWith('whsec_')) {
+      // The secret after whsec_ is base64 encoded
+      signingSecret = secret.substring(6); // Remove 'whsec_' prefix
+    }
+    const secretBytes = Buffer.from(signingSecret, 'base64');
+
+    // Construct the signed payload (webhook_id.timestamp.payload)
+    const signedPayload = webhookId
+      ? `${webhookId}.${timestamp}.${payload}`
+      : `${timestamp}.${payload}`;
+
+    // Compute expected signature as base64
     const expectedSignature = crypto
-      .createHmac('sha256', secret)
+      .createHmac('sha256', secretBytes)
       .update(signedPayload)
       .digest('base64');
 
     // DEBUG: Log comparison values to diagnose
     console.log('[Dodo Webhook] DEBUG - Signature verification:', {
       secretPrefix: secret.substring(0, 15) + '...',
-      secretLength: secret.length,
+      webhookId: webhookId || 'not provided',
       timestamp,
       payloadLength: payload.length,
+      signedPayloadPreview: signedPayload.substring(0, 50) + '...',
       receivedSig: actualSignature.substring(0, 20) + '...',
-      receivedSigLength: actualSignature.length,
       expectedSig: expectedSignature.substring(0, 20) + '...',
-      expectedSigLength: expectedSignature.length,
       match: actualSignature === expectedSignature,
     });
 

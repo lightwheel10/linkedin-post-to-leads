@@ -114,6 +114,8 @@ export async function POST(request: NextRequest) {
                       request.headers.get('x-webhook-signature') || '';
     const timestamp = request.headers.get('webhook-timestamp') ||
                       request.headers.get('x-webhook-timestamp') || '';
+    const webhookId = request.headers.get('webhook-id') ||
+                      request.headers.get('x-webhook-id') || '';
 
     // Get raw body for signature verification
     const rawBody = await request.text();
@@ -123,6 +125,7 @@ export async function POST(request: NextRequest) {
       signature: signature ? `${signature.substring(0, 20)}...` : 'MISSING',
       signatureLength: signature?.length,
       timestamp,
+      webhookId: webhookId || 'MISSING',
       allHeaders: Object.fromEntries(request.headers.entries()),
     });
 
@@ -156,7 +159,7 @@ export async function POST(request: NextRequest) {
     // This ensures the webhook came from Dodo and wasn't tampered with.
     // =========================================================================
     if (signature) {
-      const isValid = await verifyWebhookSignature(rawBody, signature, timestamp);
+      const isValid = await verifyWebhookSignature(rawBody, signature, timestamp, webhookId);
 
       if (!isValid) {
         console.error('[Dodo Webhook] Invalid signature');
