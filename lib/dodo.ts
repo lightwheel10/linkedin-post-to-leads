@@ -238,17 +238,28 @@ export async function verifyWebhookSignature(
   }
 
   try {
+    // Dodo sends signatures in format: "v1,<base64_signature>"
+    // We need to strip the version prefix and use base64 encoding
+    let actualSignature = signature;
+
+    // Check if signature has version prefix (e.g., "v1,")
+    if (signature.includes(',')) {
+      const parts = signature.split(',');
+      actualSignature = parts[1] || signature;
+      console.log('[Dodo Webhook] Parsed signature version:', parts[0]);
+    }
+
     // Construct the signed payload (timestamp.payload)
     const signedPayload = `${timestamp}.${payload}`;
 
     // Import crypto for HMAC computation (Node.js built-in)
     const crypto = await import('crypto');
 
-    // Compute expected signature
+    // Compute expected signature as base64 (Dodo uses base64, not hex)
     const expectedSignature = crypto
       .createHmac('sha256', secret)
       .update(signedPayload)
-      .digest('hex');
+      .digest('base64');
 
     // DEBUG: Log comparison values to diagnose
     console.log('[Dodo Webhook] DEBUG - Signature verification:', {
@@ -256,15 +267,16 @@ export async function verifyWebhookSignature(
       secretLength: secret.length,
       timestamp,
       payloadLength: payload.length,
-      receivedSigPrefix: signature.substring(0, 20) + '...',
-      receivedSigLength: signature.length,
-      expectedSigPrefix: expectedSignature.substring(0, 20) + '...',
+      receivedSig: actualSignature.substring(0, 20) + '...',
+      receivedSigLength: actualSignature.length,
+      expectedSig: expectedSignature.substring(0, 20) + '...',
       expectedSigLength: expectedSignature.length,
+      match: actualSignature === expectedSignature,
     });
 
     // Use timing-safe comparison to prevent timing attacks
-    const signatureBuffer = Buffer.from(signature, 'hex');
-    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+    const signatureBuffer = Buffer.from(actualSignature, 'base64');
+    const expectedBuffer = Buffer.from(expectedSignature, 'base64');
 
     if (signatureBuffer.length !== expectedBuffer.length) {
       console.log('[Dodo Webhook] DEBUG - Buffer length mismatch:', {
