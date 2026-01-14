@@ -211,18 +211,23 @@ export function isValidWalletPlan(planId: string): boolean {
 // WEBHOOK VERIFICATION
 // =============================================================================
 
+import { Webhook } from 'standardwebhooks';
+
 /**
- * Verifies a Dodo webhook signature using HMAC-SHA256.
+ * Verifies a Dodo webhook signature using the standardwebhooks library.
  *
  * CRITICAL: Always verify webhook signatures before processing events.
  * This prevents malicious actors from sending fake webhook events.
  *
- * The signature is computed as:
- * HMAC-SHA256(webhook_secret, timestamp + "." + payload)
+ * Dodo uses the Standard Webhooks specification:
+ * - Headers: webhook-id, webhook-timestamp, webhook-signature
+ * - Signed payload: msg_id.timestamp.payload
+ * - Secret format: whsec_<base64_encoded_secret>
  *
  * @param payload - The raw request body as a string
  * @param signature - The signature from the webhook-signature header
  * @param timestamp - The timestamp from the webhook-timestamp header
+ * @param webhookId - The webhook ID from the webhook-id header
  * @returns true if the signature is valid, false otherwise
  */
 export async function verifyWebhookSignature(
@@ -239,68 +244,33 @@ export async function verifyWebhookSignature(
   }
 
   try {
-    // Dodo uses standardwebhooks format
-    // Signature format: "v1,<base64_signature>"
-    // Signed payload format: webhook_id.timestamp.payload
-    let actualSignature = signature;
+    // Use the standardwebhooks library for verification
+    // This is the same library Dodo uses, ensuring compatibility
+    const wh = new Webhook(secret);
 
-    // Check if signature has version prefix (e.g., "v1,")
-    if (signature.includes(',')) {
-      const parts = signature.split(',');
-      actualSignature = parts[1] || signature;
-      console.log('[Dodo Webhook] Parsed signature version:', parts[0]);
-    }
+    // Construct the headers object expected by standardwebhooks
+    const headers = {
+      'webhook-id': webhookId || '',
+      'webhook-timestamp': timestamp,
+      'webhook-signature': signature,
+    };
 
-    // Import crypto for HMAC computation (Node.js built-in)
-    const crypto = await import('crypto');
-
-    // Dodo uses standardwebhooks format: msg_id.timestamp.payload
-    // The secret needs to be base64 decoded if it starts with whsec_
-    let signingSecret = secret;
-    if (secret.startsWith('whsec_')) {
-      // The secret after whsec_ is base64 encoded
-      signingSecret = secret.substring(6); // Remove 'whsec_' prefix
-    }
-    const secretBytes = Buffer.from(signingSecret, 'base64');
-
-    // Construct the signed payload (webhook_id.timestamp.payload)
-    const signedPayload = webhookId
-      ? `${webhookId}.${timestamp}.${payload}`
-      : `${timestamp}.${payload}`;
-
-    // Compute expected signature as base64
-    const expectedSignature = crypto
-      .createHmac('sha256', secretBytes)
-      .update(signedPayload)
-      .digest('base64');
-
-    // DEBUG: Log comparison values to diagnose
-    console.log('[Dodo Webhook] DEBUG - Signature verification:', {
+    // DEBUG: Log verification attempt
+    console.log('[Dodo Webhook] DEBUG - Verifying with standardwebhooks:', {
       secretPrefix: secret.substring(0, 15) + '...',
       webhookId: webhookId || 'not provided',
       timestamp,
+      signaturePreview: signature.substring(0, 30) + '...',
       payloadLength: payload.length,
-      signedPayloadPreview: signedPayload.substring(0, 50) + '...',
-      receivedSig: actualSignature.substring(0, 20) + '...',
-      expectedSig: expectedSignature.substring(0, 20) + '...',
-      match: actualSignature === expectedSignature,
     });
 
-    // Use timing-safe comparison to prevent timing attacks
-    const signatureBuffer = Buffer.from(actualSignature, 'base64');
-    const expectedBuffer = Buffer.from(expectedSignature, 'base64');
+    // Verify the webhook - throws if invalid
+    wh.verify(payload, headers);
 
-    if (signatureBuffer.length !== expectedBuffer.length) {
-      console.log('[Dodo Webhook] DEBUG - Buffer length mismatch:', {
-        receivedLength: signatureBuffer.length,
-        expectedLength: expectedBuffer.length,
-      });
-      return false;
-    }
-
-    return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
+    console.log('[Dodo Webhook] Signature verified successfully');
+    return true;
   } catch (error) {
-    console.error('[Dodo Webhook] Signature verification error:', error);
+    console.error('[Dodo Webhook] Signature verification failed:', error);
     return false;
   }
 }
