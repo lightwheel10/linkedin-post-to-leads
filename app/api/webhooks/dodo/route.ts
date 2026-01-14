@@ -118,6 +118,14 @@ export async function POST(request: NextRequest) {
     // Get raw body for signature verification
     const rawBody = await request.text();
 
+    // DEBUG: Log all headers and signature info to diagnose verification issue
+    console.log('[Dodo Webhook] DEBUG - Headers received:', {
+      signature: signature ? `${signature.substring(0, 20)}...` : 'MISSING',
+      signatureLength: signature?.length,
+      timestamp,
+      allHeaders: Object.fromEntries(request.headers.entries()),
+    });
+
     if (!rawBody) {
       console.error('[Dodo Webhook] Empty request body');
       return NextResponse.json(

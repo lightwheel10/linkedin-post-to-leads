@@ -250,11 +250,27 @@ export async function verifyWebhookSignature(
       .update(signedPayload)
       .digest('hex');
 
+    // DEBUG: Log comparison values to diagnose
+    console.log('[Dodo Webhook] DEBUG - Signature verification:', {
+      secretPrefix: secret.substring(0, 15) + '...',
+      secretLength: secret.length,
+      timestamp,
+      payloadLength: payload.length,
+      receivedSigPrefix: signature.substring(0, 20) + '...',
+      receivedSigLength: signature.length,
+      expectedSigPrefix: expectedSignature.substring(0, 20) + '...',
+      expectedSigLength: expectedSignature.length,
+    });
+
     // Use timing-safe comparison to prevent timing attacks
     const signatureBuffer = Buffer.from(signature, 'hex');
     const expectedBuffer = Buffer.from(expectedSignature, 'hex');
 
     if (signatureBuffer.length !== expectedBuffer.length) {
+      console.log('[Dodo Webhook] DEBUG - Buffer length mismatch:', {
+        receivedLength: signatureBuffer.length,
+        expectedLength: expectedBuffer.length,
+      });
       return false;
     }
 
