@@ -257,6 +257,17 @@ const POSTS = [
     date: "Dec 25, 2025",
     readTime: "7 min read",
     image: "/images/blog/prioritize-leads/header.png"
+  },
+  {
+    id: 22,
+    slug: "zoominfo-alternatives",
+    title: "ZoomInfo Alternatives: 10 Cheaper B2B Data Tools (2026)",
+    excerpt: "Compare 10 cheaper ZoomInfo alternatives with real pricing from $33-199/month. Honest pros, cons, and the intent-based approach most guides miss.",
+    category: "Tool Comparisons",
+    author: "Sarah Chen",
+    date: "Jan 14, 2026",
+    readTime: "8 min read",
+    image: "/images/blog/zoominfo-alternatives/header.png"
   }
 ];
 
