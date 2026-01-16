@@ -268,6 +268,17 @@ const POSTS = [
     date: "Jan 14, 2026",
     readTime: "8 min read",
     image: "/images/blog/zoominfo-alternatives/header.png"
+  },
+  {
+    id: 23,
+    slug: "cold-email-fail",
+    title: "Why Cold Emails Fail: 7 Reasons Your Outreach Gets Ignored",
+    excerpt: "Discover why 95% of cold emails fail and the root cause most sales teams miss. Learn how to fix low response rates with intent-based prospecting.",
+    category: "Strategy",
+    author: "Sarah Chen",
+    date: "Jan 15, 2026",
+    readTime: "7 min read",
+    image: "/images/blog/cold-email-fail/header.png"
   }
 ];
 
