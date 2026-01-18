@@ -279,6 +279,17 @@ const POSTS = [
     date: "Jan 15, 2026",
     readTime: "7 min read",
     image: "/images/blog/cold-email-fail/header.png"
+  },
+  {
+    id: 24,
+    slug: "linkedin-voice-messages-response-rates",
+    title: "LinkedIn Voice Messages: Get 40% Response Rates",
+    excerpt: "Learn how LinkedIn voice messages achieve 40% response rates - plus the targeting strategy most articles miss. Scripts, timing, and best practices inside.",
+    category: "LinkedIn Lead Generation",
+    author: "Sarah Chen",
+    date: "Jan 19, 2026",
+    readTime: "8 min read",
+    image: "/images/blog/linkedin-voice-messages-response-rates/header.png"
   }
 ];
 
