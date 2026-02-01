@@ -104,34 +104,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { event_type, event_id, data } = payload;
+    const { type: eventType, data } = payload;
 
     console.log('[Dodo Webhook] Received event:', {
-      type: event_type,
-      eventId: event_id,
-      customerId: data?.customer_id,
+      type: eventType,
+      webhookId,
+      customerId: getCustomerId(data),
       subscriptionId: data?.subscription_id,
       productId: data?.product_id,
     });
 
-    // Idempotency: skip duplicate events
+    // Idempotency: skip duplicate events (webhook-id header is the unique event identifier)
     const supabase = createAdminClient();
 
-    const { data: existingEvent } = await supabase
-      .from('webhook_events')
-      .select('id')
-      .eq('event_id', event_id)
-      .single();
+    if (webhookId) {
+      const { data: existingEvent } = await supabase
+        .from('webhook_events')
+        .select('id')
+        .eq('event_id', webhookId)
+        .single();
 
-    if (existingEvent) {
-      console.log('[Dodo Webhook] Duplicate event, skipping:', event_id);
-      return NextResponse.json({ received: true, duplicate: true });
+      if (existingEvent) {
+        console.log('[Dodo Webhook] Duplicate event, skipping:', webhookId);
+        return NextResponse.json({ received: true, duplicate: true });
+      }
     }
 
     // Process event
     let processingResult: { success: boolean; message?: string } = { success: true };
 
-    switch (event_type) {
+    switch (eventType) {
       case DodoWebhookEvents.PAYMENT_SUCCEEDED:
         processingResult = await handlePaymentSucceeded(data);
         break;
@@ -165,14 +167,14 @@ export async function POST(request: NextRequest) {
         break;
 
       default:
-        console.log('[Dodo Webhook] Unhandled event type:', event_type);
+        console.log('[Dodo Webhook] Unhandled event type:', eventType);
         // Still return 200 - we don't want Dodo to retry for unhandled events
     }
 
     // Record event for idempotency
     await supabase.from('webhook_events').insert({
-      event_id,
-      event_type,
+      event_id: webhookId,
+      event_type: eventType,
       payload: data,
       processed_at: new Date().toISOString(),
       processing_result: processingResult,
@@ -180,8 +182,8 @@ export async function POST(request: NextRequest) {
 
     const duration = Date.now() - startTime;
     console.log('[Dodo Webhook] Event processed:', {
-      eventId: event_id,
-      type: event_type,
+      eventId: webhookId,
+      type: eventType,
       duration: `${duration}ms`,
       success: processingResult.success,
     });

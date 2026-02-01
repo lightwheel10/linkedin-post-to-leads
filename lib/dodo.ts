@@ -513,10 +513,11 @@ export type DodoWebhookEventType = typeof DodoWebhookEvents[keyof typeof DodoWeb
  * Extend this as needed based on actual webhook payloads.
  */
 export interface DodoWebhookPayload {
-  event_type: string;
-  event_id: string;
-  created_at: string;
+  business_id: string;
+  type: string;
+  timestamp: string;
   data: {
+    payload_type?: string;
     customer?: { customer_id?: string; email?: string; name?: string };
     subscription_id?: string;
     payment_id?: string;
