@@ -4,14 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
-import { 
-    Linkedin, 
-    Zap, 
-    Users, 
+import {
+    Linkedin,
+    Zap,
+    Users,
     CheckCircle2,
-    Sparkles,
-    MessageSquare,
-    Quote
+    Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -115,75 +113,30 @@ export default function AboutPage() {
                     </div>
                 </section>
 
-                {/* 3. THE FOUNDER'S STORY - Premium & Integrated */}
-                <section className="relative overflow-hidden mb-40">
-                    <div className="container mx-auto px-4 max-w-6xl">
-                        <div className="relative rounded-[40px] border border-white/10 bg-card/50 backdrop-blur-xl overflow-hidden shadow-2xl">
-                            <div className="grid lg:grid-cols-2 gap-0">
-                                {/* Image Column */}
-                                <div className="relative h-[400px] lg:h-auto min-h-[500px]">
-                                    <Image
-                                        src="/images/paras.jpeg"
-                                        alt="Paras Tiwari"
-                                        fill
-                                        className="object-cover"
-                                        priority
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-transparent" />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent lg:hidden" />
-                                    
-                                    {/* Name Overlay for Mobile */}
-                                    <div className="absolute bottom-8 left-8 lg:hidden">
-                                        <div className="text-2xl font-bold">Paras Tiwari</div>
-                                        <div className="text-primary text-sm font-medium">CEO & Founder, Guffles</div>
-                                    </div>
-                                </div>
-
-                                {/* Content Column */}
-                                <div className="p-8 md:p-16 lg:p-20 flex flex-col justify-center">
-                                    <div className="mb-10">
-                                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
-                                            <Quote className="w-6 h-6 text-primary fill-current" />
-                                        </div>
-                                        
-                                        <h2 className="text-3xl md:text-4xl font-bold leading-tight mb-8">
-                                            "I built Guffles to fix the biggest lie in sales: that volume solves everything."
-                                        </h2>
-
-                                        <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
-                                            <p>
-                                                With my background in operations at Amazon and American Express, I've seen first-hand how companies waste millions on cold outreach to people who have zero interest. Every day, thousands of valuable opportunities are lost because businesses don't know how to listen to the market.
-                                            </p>
-                                            <p>
-                                                At Guffles, we believe listening is the new selling. By identifying buying signals in real-time, we help you reach out with relevance, not just persistence.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-8 border-t border-white/10 flex items-center justify-between">
-                                        <div className="hidden lg:block">
-                                            <div className="text-xl font-bold text-foreground">Paras Tiwari</div>
-                                            <div className="text-sm text-primary font-medium">CEO & Founder, Guffles</div>
-                                        </div>
-
-                                        <div className="flex gap-4">
-                                            <Link 
-                                                href="https://www.linkedin.com/in/paras-tiwari-221a9b34b" 
-                                                target="_blank"
-                                                className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/10 hover:border-primary/20 transition-all group"
-                                            >
-                                                <Linkedin className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                                            </Link>
-                                            <Link 
-                                                href="#" 
-                                                className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/10 hover:border-primary/20 transition-all group"
-                                            >
-                                                <MessageSquare className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                                            </Link>
-                                        </div>
-                                    </div>
-                                </div>
+                {/* 3. BUILT BY - Compact founder credit */}
+                <section className="container mx-auto px-4 mb-40">
+                    <div className="max-w-2xl mx-auto">
+                        <div className="rounded-2xl border border-white/10 bg-card/50 backdrop-blur-xl p-8 flex items-center gap-6">
+                            <Image
+                                src="/images/paras.jpeg"
+                                alt="Paras Tiwari"
+                                width={64}
+                                height={64}
+                                className="rounded-full object-cover flex-shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                                <div className="text-base font-semibold text-foreground">Built by Paras Tiwari</div>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Former ops at Amazon &amp; Amex. Built Guffles to replace cold outreach with intent-based selling.
+                                </p>
                             </div>
+                            <Link
+                                href="https://www.linkedin.com/in/paras-tiwari-221a9b34b"
+                                target="_blank"
+                                className="flex-shrink-0 w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-primary/10 hover:border-primary/20 transition-all group"
+                            >
+                                <Linkedin className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                            </Link>
                         </div>
                     </div>
                 </section>
