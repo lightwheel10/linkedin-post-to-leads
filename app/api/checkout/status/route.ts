@@ -91,13 +91,27 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Still pending — webhook hasn't confirmed yet. Check Dodo's API directly
-    // as a fallback since webhook delivery can be delayed by minutes.
-    if (checkoutSession.session_id) {
-      try {
-        const dodoSession = await getDodoClient().checkoutSessions.retrieve(checkoutSession.session_id);
+    // Still pending — webhook hasn't confirmed yet. Check Dodo's subscription API
+    // directly. Dodo creates the subscription as 'active' immediately (even for trials),
+    // but webhook delivery and ₹1 payment verification can be delayed by minutes.
+    try {
+      const { data: user } = await supabase
+        .from('users')
+        .select('dodo_customer_id')
+        .eq('id', checkoutSession.user_id)
+        .single();
 
-        if (dodoSession.payment_status === 'succeeded') {
+      if (user?.dodo_customer_id) {
+        const subs = await getDodoClient().subscriptions.list({
+          customer_id: user.dodo_customer_id,
+          page_size: 5,
+        });
+
+        // Dodo's own demo checks for 'active' or 'trialing' as success
+        const validSub = subs.items?.find(
+          (s: any) => s.status === 'active' || s.status === 'trialing'
+        );
+        if (validSub) {
           await supabase
             .from('checkout_sessions')
             .update({ status: 'completed', completed_at: now.toISOString(), updated_at: now.toISOString() })
@@ -116,9 +130,9 @@ export async function GET(request: NextRequest) {
             message: 'Trial activated!'
           });
         }
-      } catch (err) {
-        console.error('[Checkout Status] Dodo API fallback failed:', err);
       }
+    } catch (err) {
+      console.error('[Checkout Status] Dodo subscription check failed:', err);
     }
 
     return NextResponse.json({
