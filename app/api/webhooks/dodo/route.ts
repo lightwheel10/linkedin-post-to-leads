@@ -4,7 +4,7 @@
 // payment.succeeded resets wallet credits (fires after trial or on renewal).
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import {
   verifyWebhookSignature,
   isWebhookTimestampValid,
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Idempotency: skip duplicate events
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data: existingEvent } = await supabase
       .from('webhook_events')
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
 async function handlePaymentSucceeded(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { customer_id, subscription_id, product_id, payment_id } = data;
 
   try {
@@ -241,7 +241,7 @@ async function handlePaymentSucceeded(
     const previousBalance = user.wallet_balance || 0;
     const planConfig = WALLET_PLANS[planId];
 
-    const walletResult = await resetWalletCredits(user.id, planId);
+    const walletResult = await resetWalletCredits(user.id, planId, supabase);
 
     if (!walletResult.success) {
       console.error('[Dodo Webhook] Failed to reset wallet:', walletResult.error);
@@ -298,7 +298,7 @@ async function handlePaymentSucceeded(
 async function handlePaymentFailed(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { customer_id, subscription_id } = data;
 
   try {
@@ -350,7 +350,7 @@ async function handlePaymentFailed(
 async function handleSubscriptionCreated(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { customer_id, subscription_id, product_id, status } = data;
   const metadata = (data as Record<string, unknown>).metadata as Record<string, string> | undefined;
 
@@ -473,7 +473,7 @@ async function handleSubscriptionCreated(
 
     // Complete onboarding (idempotent — safe to call multiple times)
     try {
-      await completeOnboarding(user.email);
+      await completeOnboarding(user.email, supabase);
       console.log('[Dodo Webhook] Onboarding completed for:', user.email);
     } catch (err) {
       console.error('[Dodo Webhook] Failed to complete onboarding:', err);
@@ -493,7 +493,7 @@ async function handleSubscriptionCreated(
 async function handleSubscriptionActive(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { customer_id, subscription_id } = data;
 
   try {
@@ -546,7 +546,7 @@ async function handleSubscriptionActive(
 
     // Idempotent — safe if subscription.created already called this
     try {
-      await completeOnboarding(user.email);
+      await completeOnboarding(user.email, supabase);
     } catch (err) {
       console.error('[Dodo Webhook] Failed to complete onboarding:', err);
     }
@@ -562,7 +562,7 @@ async function handleSubscriptionActive(
 async function handleSubscriptionUpdated(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { customer_id, subscription_id, product_id, status } = data;
 
   try {
@@ -620,7 +620,7 @@ async function handleSubscriptionUpdated(
 async function handleSubscriptionCancelled(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { customer_id, subscription_id } = data;
 
   try {
@@ -663,7 +663,7 @@ async function handleSubscriptionCancelled(
 async function handleSubscriptionExpired(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { customer_id, subscription_id } = data;
 
   try {
@@ -686,7 +686,8 @@ async function handleSubscriptionExpired(
     if (user) {
       const clearResult = await clearWalletBalance(
         user.id,
-        'Subscription expired - remaining credits forfeited'
+        'Subscription expired - remaining credits forfeited',
+        supabase
       );
 
       console.log('[Dodo Webhook] Wallet cleared:', {
@@ -717,7 +718,7 @@ async function handleSubscriptionExpired(
 async function handleSubscriptionRenewed(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { subscription_id } = data;
 
   try {
@@ -748,7 +749,7 @@ async function handleSubscriptionRenewed(
 async function handleTrialEnding(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { customer_id, subscription_id } = data;
 
   try {

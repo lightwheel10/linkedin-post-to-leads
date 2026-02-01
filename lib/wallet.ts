@@ -46,6 +46,7 @@
 // =============================================================================
 
 import { createClient } from '@/lib/supabase/server';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
 // =============================================================================
 // TYPES
@@ -523,7 +524,8 @@ export async function deductCredits(
  */
 export async function resetWalletCredits(
   userId: string,
-  planId: WalletPlanId
+  planId: WalletPlanId,
+  client?: SupabaseClient
 ): Promise<WalletOperationResult> {
   const config = getPlanWalletConfig(planId);
   if (!config) {
@@ -534,7 +536,7 @@ export async function resetWalletCredits(
     };
   }
 
-  const supabase = await createClient();
+  const supabase = client ?? await createClient();
 
   // Get current balance for logging (to show how much was forfeited)
   const { data: user } = await supabase
@@ -658,9 +660,10 @@ export async function getWalletTransactions(
  */
 export async function clearWalletBalance(
   userId: string,
-  reason: string = 'Subscription ended'
+  reason: string = 'Subscription ended',
+  client?: SupabaseClient
 ): Promise<WalletOperationResult> {
-  const supabase = await createClient();
+  const supabase = client ?? await createClient();
 
   // Get current balance for logging
   const { data: user } = await supabase

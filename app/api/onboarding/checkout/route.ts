@@ -45,6 +45,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getOrCreateUser } from '@/lib/data-store';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import {
   getDodoClient,
   getDodoProductId,
@@ -250,42 +251,36 @@ export async function POST(request: NextRequest) {
       returnUrl,
     });
 
-    // =========================================================================
-    // STEP 5c: Save checkout session to database (NEW - 2nd Jan 2026)
-    // =========================================================================
-    // This is CRITICAL for the secure flow:
-    // 1. We store the session with callback_token BEFORE user goes to Dodo
-    // 2. Webhook will update status to 'completed' when payment succeeds
-    // 3. Callback page looks up by callback_token, checks if status='completed'
-    // =========================================================================
-    const { error: sessionError } = await supabase
+    // Save checkout session — uses admin client to bypass RLS
+    const adminSupabase = createAdminClient();
+    const { error: sessionError } = await adminSupabase
       .from('checkout_sessions')
       .insert({
         session_id: checkoutSession.session_id,
-        callback_token: callbackToken, // Used by callback page to look up session
+        callback_token: callbackToken,
         user_id: user.id,
         user_email: userEmail,
         plan_id: planId,
         billing_period: billingPeriod,
-        status: 'pending', // Will be updated to 'completed' by webhook
+        status: 'pending',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        // Session expires after 24 hours if not completed
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       });
 
     if (sessionError) {
       console.error('[Onboarding Checkout] Failed to save checkout session:', sessionError);
-      // Don't fail the checkout - the webhook can still process it
-      // But log it for debugging
-    } else {
-      console.log('[Onboarding Checkout] Saved checkout session to DB:', {
-        sessionId: checkoutSession.session_id,
-        callbackToken,
-        userId: user.id,
-        status: 'pending',
-      });
+      return NextResponse.json(
+        { error: 'Failed to initialize checkout session. Please try again.' },
+        { status: 500 }
+      );
     }
+
+    console.log('[Onboarding Checkout] Saved checkout session:', {
+      sessionId: checkoutSession.session_id,
+      callbackToken,
+      userId: user.id,
+    });
 
     // =========================================================================
     // STEP 6: Log checkout initiation for analytics

@@ -1,8 +1,9 @@
 // Checkout status polling endpoint — checks if webhook has confirmed payment.
 // Intentionally unprotected (auth cookies may be lost after Dodo redirect).
+// Uses admin client to bypass RLS — no user auth context available here.
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { completeOnboarding } from '@/lib/data-store';
 
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data: checkoutSession, error: sessionError } = await supabase
       .from('checkout_sessions')
@@ -65,7 +66,7 @@ export async function GET(request: NextRequest) {
       // Idempotent — webhook already completed onboarding, this is a safety net
       if (isAuthenticated && userEmail === checkoutSession.user_email) {
         try {
-          await completeOnboarding(userEmail);
+          await completeOnboarding(userEmail, supabase);
         } catch (err) {
           console.error('[Checkout Status] Failed to complete onboarding:', err);
         }

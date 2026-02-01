@@ -1,19 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
+import { type SupabaseClient } from '@supabase/supabase-js';
 
-// ============================================================================
-// DATA STORE - Supabase PostgreSQL Storage
-// ============================================================================
-//
-// MIGRATION NOTE (14 Dec 2025):
-// Changed from basic Supabase client (lib/supabase.ts) to SSR-aware client
-// (lib/supabase/server.ts) for consistency and proper RLS support.
-//
-// Each function now creates its own client instance via `await createClient()`.
-// This is the recommended pattern for Next.js App Router as it ensures
-// proper cookie handling and user session context for Row Level Security.
-//
-// See: https://supabase.com/docs/guides/auth/server-side/nextjs
-// ============================================================================
+// Data Store — Supabase PostgreSQL storage layer.
+// Uses the cookie-based server client by default (preserves RLS).
+// Functions called from webhooks accept an optional admin client parameter
+// to bypass RLS when there's no user auth context.
 
 // ============================================================================
 // TYPES
@@ -113,8 +104,11 @@ export interface Lead {
 // USER OPERATIONS
 // ============================================================================
 
-export async function getUser(email: string): Promise<User | null> {
-  const supabase = await createClient();
+export async function getUser(
+  email: string,
+  client?: SupabaseClient
+): Promise<User | null> {
+  const supabase = client ?? await createClient();
   const { data, error } = await supabase
     .from('users')
     .select('*')
@@ -287,10 +281,15 @@ export async function updateUserOnboarding(email: string, data: OnboardingData):
 }
 
 /**
- * Marks onboarding as complete for a user
+ * Marks onboarding as complete for a user.
+ * Accepts optional supabase client for webhook/server-to-server contexts
+ * where there's no user auth session (bypasses RLS).
  */
-export async function completeOnboarding(email: string): Promise<User | null> {
-  const supabase = await createClient();
+export async function completeOnboarding(
+  email: string,
+  client?: SupabaseClient
+): Promise<User | null> {
+  const supabase = client ?? await createClient();
   const { error } = await supabase
     .from('users')
     .update({
@@ -301,7 +300,7 @@ export async function completeOnboarding(email: string): Promise<User | null> {
 
   if (error) return null;
 
-  return getUser(email);
+  return getUser(email, client);
 }
 
 /**
