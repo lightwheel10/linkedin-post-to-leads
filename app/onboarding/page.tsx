@@ -13,7 +13,6 @@ import {
   Building2,
   Briefcase,
   MapPin,
-  Target,
   Sparkles,
   Check,
   Plus,
@@ -576,9 +575,6 @@ function OnboardingPageContent() {
             {entryMode === 'choose' && (
               <>
                 <CardHeader className="text-center pb-2">
-                  <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <User className="w-6 h-6 text-primary" />
-                  </div>
                   <CardTitle className="text-2xl">Let's Get Started</CardTitle>
                   <CardDescription className="text-base">
                     How would you like to set up your profile?
@@ -626,9 +622,6 @@ function OnboardingPageContent() {
             {entryMode === 'linkedin' && (
               <>
                 <CardHeader className="text-center pb-2">
-                  <div className="mx-auto w-12 h-12 rounded-full bg-[#0A66C2]/10 flex items-center justify-center mb-4">
-                    <Linkedin className="w-6 h-6 text-[#0A66C2]" />
-                  </div>
                   <CardTitle className="text-2xl">Connect Your LinkedIn</CardTitle>
                   <CardDescription className="text-base">
                     We'll auto-fill your details from your profile
@@ -785,9 +778,6 @@ function OnboardingPageContent() {
             {entryMode === 'manual' && (
               <>
                 <CardHeader className="text-center pb-2">
-                  <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <User className="w-6 h-6 text-primary" />
-                  </div>
                   <CardTitle className="text-2xl">Tell Us About Yourself</CardTitle>
                   <CardDescription className="text-base">
                     Fill in your details to get started
@@ -892,9 +882,6 @@ function OnboardingPageContent() {
         {step === 2 && (
           <Card className="border-border/50 shadow-xl animate-fade-in-up max-w-2xl mx-auto">
             <CardHeader className="text-center pb-2">
-              <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <Target className="w-6 h-6 text-primary" />
-              </div>
               <CardTitle className="text-2xl">Define Your Ideal Customer</CardTitle>
               <CardDescription className="text-base">
                 Help us find the best leads for your business
