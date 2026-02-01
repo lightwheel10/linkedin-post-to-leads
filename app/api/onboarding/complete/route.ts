@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getUser, completeOnboarding } from '@/lib/data-store';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 // Marks onboarding complete. Subscription is managed exclusively by webhooks.
 export async function POST() {
@@ -40,6 +41,27 @@ export async function POST() {
       return NextResponse.json({
         error: 'Please select a subscription plan'
       }, { status: 400 });
+    }
+
+    // Verify payment was confirmed by Dodo webhook.
+    // The subscription record is only created by the webhook handler after
+    // verifying Dodo's cryptographic signature on the subscription.active event.
+    const adminSupabase = createAdminClient();
+
+    const { data: subscription } = await adminSupabase
+      .from('subscriptions')
+      .select('id, status')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trialing'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!subscription) {
+      return NextResponse.json({
+        error: 'Payment not confirmed yet. Please complete checkout first.',
+        code: 'PAYMENT_NOT_CONFIRMED'
+      }, { status: 402 });
     }
 
     const completedUser = await completeOnboarding(userEmail);

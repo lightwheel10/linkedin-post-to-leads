@@ -255,20 +255,8 @@ export async function verifyWebhookSignature(
       'webhook-signature': signature,
     };
 
-    // DEBUG: Log verification attempt (v3 - using standardwebhooks library)
-    console.log('[Dodo Webhook] DEBUG v3 - Verifying with standardwebhooks:', {
-      secretPrefix: secret.substring(0, 15) + '...',
-      secretLength: secret.length,
-      webhookId: webhookId || 'not provided',
-      timestamp,
-      signaturePreview: signature.substring(0, 30) + '...',
-      payloadLength: payload.length,
-    });
-
-    // Verify the webhook - throws if invalid
+    // Verify — throws if invalid
     wh.verify(payload, headers);
-
-    console.log('[Dodo Webhook] Signature verified successfully');
     return true;
   } catch (error) {
     console.error('[Dodo Webhook] Signature verification failed:', error);
