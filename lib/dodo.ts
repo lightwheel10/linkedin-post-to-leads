@@ -496,6 +496,7 @@ export const DodoWebhookEvents = {
   // Subscription events
   SUBSCRIPTION_CREATED: 'subscription.created',
   SUBSCRIPTION_UPDATED: 'subscription.updated',
+  SUBSCRIPTION_ACTIVE: 'subscription.active',
   SUBSCRIPTION_CANCELLED: 'subscription.cancelled',
   SUBSCRIPTION_EXPIRED: 'subscription.expired',
   SUBSCRIPTION_TRIAL_ENDING: 'subscription.trial_ending',

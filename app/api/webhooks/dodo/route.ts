@@ -1,54 +1,7 @@
-// =============================================================================
-// DODO PAYMENTS WEBHOOK HANDLER
-// =============================================================================
-//
-// This endpoint receives webhook events from Dodo Payments and processes them
-// for the wallet-based billing system.
-//
-// WALLET-BASED BILLING MODEL:
-// ===========================
-// - Users subscribe to plans: Pro ($79), Growth ($179), Scale ($279)
-// - Each billing cycle, wallet is RESET to plan's credit amount
-// - Users spend credits on actions throughout the month
-// - Unused credits are FORFEITED at end of billing cycle (no rollover)
-//
-// CREDIT ALLOCATION PER PLAN:
-// ===========================
-// | Plan   | Price   | Wallet Credits | Breakdown              |
-// |--------|---------|----------------|------------------------|
-// | Pro    | $79/mo  | $150           | $100 base + $50 bonus  |
-// | Growth | $179/mo | $300           | $200 base + $100 bonus |
-// | Scale  | $279/mo | $500           | $300 base + $200 bonus |
-//
-// WEBHOOK EVENTS HANDLED:
-// =======================
-// - payment.succeeded: Reset wallet credits for new billing cycle
-// - payment.failed: Mark subscription as past_due
-// - subscription.created: Initialize wallet with plan credits
-// - subscription.updated: Update plan and wallet credits if changed
-// - subscription.cancelled: Keep wallet until period ends
-// - subscription.expired: Clear wallet and downgrade to free
-// - subscription.renewed: Alias for payment.succeeded
-//
-// CRITICAL SECURITY REQUIREMENTS:
-// ===============================
-// 1. Always verify webhook signatures before processing
-// 2. Always validate timestamps to prevent replay attacks
-// 3. Use idempotency - handle duplicate events gracefully
-// 4. Never expose internal errors to the webhook caller
-//
-// Created: 2nd January 2026
-// Last Updated: 2nd January 2026 - Wallet-based billing model
-//
-// UPDATE (2nd Jan 2026) - Checkout Session Completion:
-// =====================================================
-// Added logic to mark checkout_sessions as 'completed' when payment succeeds.
-// This is CRITICAL for the secure checkout flow:
-// - The callback page polls /api/checkout/status to check payment status
-// - ONLY this webhook can mark a session as 'completed' (security)
-// - This ensures we never trust URL params for payment verification
-// - Also marks onboarding as complete when payment succeeds
-// =============================================================================
+// Dodo Payments webhook handler for wallet-based billing.
+// Security: signature verification, timestamp validation, idempotent processing.
+// subscription.created marks checkout completed (fires immediately, even with trial).
+// payment.succeeded resets wallet credits (fires after trial or on renewal).
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
@@ -70,46 +23,15 @@ import {
 } from '@/lib/wallet';
 import { completeOnboarding } from '@/lib/data-store';
 
-// =============================================================================
-// CONFIGURATION
-// =============================================================================
-
-/**
- * Disable body parsing - we need the raw body for signature verification.
- * Next.js App Router handles this automatically.
- */
+// Raw body needed for signature verification
 export const runtime = 'nodejs';
 
-// =============================================================================
-// WEBHOOK HANDLER
-// =============================================================================
-
-/**
- * POST /api/webhooks/dodo
- *
- * Handles incoming webhook events from Dodo Payments.
- * This endpoint is called by Dodo's servers whenever a payment event occurs.
- *
- * THE CRITICAL FLOW:
- * 1. User subscribes → subscription.created → Initialize wallet
- * 2. Payment succeeds → payment.succeeded → RESET wallet to plan credits
- * 3. Payment fails → payment.failed → Mark as past_due
- * 4. User cancels → subscription.cancelled → Keep wallet until period ends
- * 5. Period ends → subscription.expired → Clear wallet, downgrade to free
- *
- * Security measures implemented:
- * 1. Signature verification using HMAC-SHA256
- * 2. Timestamp validation to prevent replay attacks
- * 3. Idempotent processing using event IDs
- * 4. Proper error handling without exposing internals
- */
+/** POST /api/webhooks/dodo — processes Dodo payment/subscription events */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // =========================================================================
-    // STEP 1: Extract headers and body
-    // =========================================================================
+    // Extract headers and body
     const signature = request.headers.get('webhook-signature') ||
                       request.headers.get('x-webhook-signature') || '';
     const timestamp = request.headers.get('webhook-timestamp') ||
@@ -137,13 +59,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // =========================================================================
-    // STEP 2: Validate timestamp (prevent replay attacks)
-    // =========================================================================
-    // Replay attacks occur when an attacker captures a valid webhook and
-    // resends it later. By validating the timestamp, we ensure the webhook
-    // was sent recently (within 5 minutes).
-    // =========================================================================
+    // Validate timestamp (prevents replay attacks)
     if (timestamp && !isWebhookTimestampValid(timestamp)) {
       console.error('[Dodo Webhook] Invalid or expired timestamp');
       return NextResponse.json(
@@ -152,12 +68,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // =========================================================================
-    // STEP 3: Verify webhook signature
-    // =========================================================================
-    // The signature is computed as: HMAC-SHA256(secret, timestamp + "." + body)
-    // This ensures the webhook came from Dodo and wasn't tampered with.
-    // =========================================================================
+    // Verify webhook signature (HMAC-SHA256)
     if (signature) {
       const isValid = await verifyWebhookSignature(rawBody, signature, timestamp, webhookId);
 
@@ -180,9 +91,7 @@ export async function POST(request: NextRequest) {
       console.warn('[Dodo Webhook] Processing unsigned webhook (dev mode)');
     }
 
-    // =========================================================================
-    // STEP 4: Parse the webhook payload
-    // =========================================================================
+    // Parse payload
     let payload: DodoWebhookPayload;
     try {
       payload = JSON.parse(rawBody);
@@ -204,12 +113,7 @@ export async function POST(request: NextRequest) {
       productId: data?.product_id,
     });
 
-    // =========================================================================
-    // STEP 5: Check for duplicate events (idempotency)
-    // =========================================================================
-    // Dodo may send the same event multiple times (retries, network issues).
-    // We use the event_id to ensure we only process each event once.
-    // =========================================================================
+    // Idempotency: skip duplicate events
     const supabase = await createClient();
 
     const { data: existingEvent } = await supabase
@@ -223,18 +127,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, duplicate: true });
     }
 
-    // =========================================================================
-    // STEP 6: Process the event
-    // =========================================================================
+    // Process event
     let processingResult: { success: boolean; message?: string } = { success: true };
 
     switch (event_type) {
-      // -----------------------------------------------------------------------
-      // PAYMENT EVENTS
-      // -----------------------------------------------------------------------
       case DodoWebhookEvents.PAYMENT_SUCCEEDED:
-        // THIS IS THE KEY EVENT FOR WALLET RESETS
-        // Every time a payment succeeds (initial or renewal), we reset the wallet
         processingResult = await handlePaymentSucceeded(data);
         break;
 
@@ -242,12 +139,12 @@ export async function POST(request: NextRequest) {
         processingResult = await handlePaymentFailed(data);
         break;
 
-      // -----------------------------------------------------------------------
-      // SUBSCRIPTION LIFECYCLE EVENTS
-      // -----------------------------------------------------------------------
       case DodoWebhookEvents.SUBSCRIPTION_CREATED:
-        // Initial subscription - wallet is set up by handlePaymentSucceeded
         processingResult = await handleSubscriptionCreated(data);
+        break;
+
+      case DodoWebhookEvents.SUBSCRIPTION_ACTIVE:
+        processingResult = await handleSubscriptionActive(data);
         break;
 
       case DodoWebhookEvents.SUBSCRIPTION_UPDATED:
@@ -255,18 +152,14 @@ export async function POST(request: NextRequest) {
         break;
 
       case DodoWebhookEvents.SUBSCRIPTION_CANCELLED:
-        // User cancelled - they keep wallet credits until period ends
         processingResult = await handleSubscriptionCancelled(data);
         break;
 
       case DodoWebhookEvents.SUBSCRIPTION_EXPIRED:
-        // Period ended without renewal - CLEAR wallet and downgrade
         processingResult = await handleSubscriptionExpired(data);
         break;
 
       case DodoWebhookEvents.SUBSCRIPTION_RENEWED:
-        // Renewal is essentially a successful payment
-        // handlePaymentSucceeded already resets the wallet
         processingResult = await handleSubscriptionRenewed(data);
         break;
 
@@ -279,9 +172,7 @@ export async function POST(request: NextRequest) {
         // Still return 200 - we don't want Dodo to retry for unhandled events
     }
 
-    // =========================================================================
-    // STEP 7: Record the processed event (for idempotency)
-    // =========================================================================
+    // Record event for idempotency
     await supabase.from('webhook_events').insert({
       event_id,
       event_type,
@@ -311,25 +202,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// =============================================================================
-// EVENT HANDLERS
-// =============================================================================
-
 /**
- * Handles successful payment events.
- *
- * THIS IS THE MOST IMPORTANT HANDLER FOR THE WALLET SYSTEM.
- *
- * When a payment succeeds (either initial or recurring), we:
- * 1. Find the user by their Dodo customer ID
- * 2. Determine their plan from the product ID
- * 3. RESET their wallet to the plan's credit amount (unused credits are lost)
- * 4. Update the subscription status to active
- *
- * CREDIT RESET BEHAVIOR:
- * - Previous balance is FORFEITED (logged for transparency)
- * - New balance is set to plan's total credits
- * - Example: Pro plan → wallet reset to $150 (15000 cents)
+ * Handles payment.succeeded — resets wallet credits for the billing cycle.
+ * Previous balance is forfeited, new balance set to plan's credit amount.
  */
 async function handlePaymentSucceeded(
   data: DodoWebhookPayload['data']
@@ -344,9 +219,6 @@ async function handlePaymentSucceeded(
       product_id,
     });
 
-    // -------------------------------------------------------------------------
-    // Step 1: Find the user by their Dodo customer ID
-    // -------------------------------------------------------------------------
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('id, email, wallet_balance, plan')
@@ -358,9 +230,6 @@ async function handlePaymentSucceeded(
       return { success: false, message: 'User not found' };
     }
 
-    // -------------------------------------------------------------------------
-    // Step 2: Determine the plan from the product ID
-    // -------------------------------------------------------------------------
     const planId = getPlanFromDodoProductId(product_id || '');
 
     if (!planId || !isWalletPlan(planId)) {
@@ -368,12 +237,7 @@ async function handlePaymentSucceeded(
       return { success: false, message: 'Unknown product' };
     }
 
-    // -------------------------------------------------------------------------
-    // Step 3: RESET wallet credits to plan amount
-    // -------------------------------------------------------------------------
-    // This is the key operation - we REPLACE the balance, not add to it.
-    // Any unused credits from the previous period are forfeited.
-    // -------------------------------------------------------------------------
+    // Reset wallet — previous balance forfeited, new balance = plan credits
     const previousBalance = user.wallet_balance || 0;
     const planConfig = WALLET_PLANS[planId];
 
@@ -392,9 +256,6 @@ async function handlePaymentSucceeded(
       forfeited: formatCredits(previousBalance),
     });
 
-    // -------------------------------------------------------------------------
-    // Step 4: Update subscription status to active
-    // -------------------------------------------------------------------------
     if (subscription_id) {
       const now = new Date();
       const periodEnd = new Date(now);
@@ -412,60 +273,7 @@ async function handlePaymentSucceeded(
         .eq('dodo_subscription_id', subscription_id);
     }
 
-    // -------------------------------------------------------------------------
-    // Step 5: Mark checkout session as completed (NEW - 2nd Jan 2026)
-    // -------------------------------------------------------------------------
-    // This is CRITICAL for the secure checkout flow.
-    // The callback page polls /api/checkout/status which checks this table.
-    // ONLY this webhook can mark status='completed' - this is the security model.
-    // We also complete onboarding here since payment success = onboarding done.
-    // -------------------------------------------------------------------------
-
-    // Try to find the checkout session for this user that's still pending
-    // We use user_id since the webhook might not have the exact session_id
-    const { data: pendingSession } = await supabase
-      .from('checkout_sessions')
-      .select('id, session_id')
-      .eq('user_id', user.id)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (pendingSession) {
-      // Mark the checkout session as completed
-      await supabase
-        .from('checkout_sessions')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          dodo_subscription_id: subscription_id || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', pendingSession.id);
-
-      console.log('[Dodo Webhook] Marked checkout session as completed:', {
-        sessionId: pendingSession.session_id,
-        userId: user.id,
-      });
-
-      // Complete onboarding for this user
-      // This sets onboarding_completed = true so they go to dashboard on next login
-      try {
-        await completeOnboarding(user.email);
-        console.log('[Dodo Webhook] Onboarding completed for:', user.email);
-      } catch (onboardingErr) {
-        console.error('[Dodo Webhook] Failed to complete onboarding:', onboardingErr);
-        // Don't fail the webhook - user can still complete onboarding via callback
-      }
-    } else {
-      console.log('[Dodo Webhook] No pending checkout session found for user:', user.id);
-      // This is OK - might be a renewal payment, not initial checkout
-    }
-
-    // -------------------------------------------------------------------------
-    // Step 6: Log the payment for analytics
-    // -------------------------------------------------------------------------
+    // Log the payment for analytics
     await supabase.from('usage_logs').insert({
       user_id: user.id,
       action: 'payment_succeeded',
@@ -475,7 +283,6 @@ async function handlePaymentSucceeded(
         subscription_id,
         credits_allocated: planConfig.totalCredits,
         credits_forfeited: previousBalance,
-        checkout_session_completed: !!pendingSession,
       },
       created_at: new Date().toISOString(),
     });
@@ -487,18 +294,7 @@ async function handlePaymentSucceeded(
   }
 }
 
-/**
- * Handles failed payment events.
- *
- * When a payment fails (e.g., card declined), we:
- * 1. Mark the subscription as past_due
- * 2. The user KEEPS their remaining wallet credits
- * 3. They can still use credits until they run out
- * 4. After a grace period, Dodo will send subscription.expired
- *
- * NOTE: We don't immediately revoke access on payment failure.
- * This gives users time to update their payment method.
- */
+/** Handles payment.failed — marks subscription past_due, keeps wallet credits. */
 async function handlePaymentFailed(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
@@ -508,9 +304,7 @@ async function handlePaymentFailed(
   try {
     console.log('[Dodo Webhook] Payment failed:', { subscription_id });
 
-    // -------------------------------------------------------------------------
-    // Mark subscription as past_due (not immediately cancelled)
-    // -------------------------------------------------------------------------
+    // Mark past_due — user keeps credits, Dodo sends subscription.expired after grace period
     if (subscription_id) {
       await supabase
         .from('subscriptions')
@@ -521,9 +315,6 @@ async function handlePaymentFailed(
         .eq('dodo_subscription_id', subscription_id);
     }
 
-    // -------------------------------------------------------------------------
-    // Find user for logging/notification
-    // -------------------------------------------------------------------------
     const { data: user } = await supabase
       .from('users')
       .select('id, email')
@@ -553,44 +344,33 @@ async function handlePaymentFailed(
 
 /**
  * Handles new subscription creation.
- *
- * When a subscription is created:
- * 1. We record the subscription in our database
- * 2. The wallet is NOT set here - it's set by handlePaymentSucceeded
- *    (which fires right after subscription.created)
- *
- * NOTE: The initial payment.succeeded webhook handles wallet setup.
- * This handler just ensures the subscription record exists.
+ * Fires immediately even with trial — this is the trigger for checkout completion.
+ * Wallet credits are set later by handlePaymentSucceeded (after trial or immediately).
  */
 async function handleSubscriptionCreated(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
   const supabase = await createClient();
   const { customer_id, subscription_id, product_id, status } = data;
+  const metadata = (data as Record<string, unknown>).metadata as Record<string, string> | undefined;
 
   try {
     console.log('[Dodo Webhook] Subscription created:', {
       subscription_id,
       product_id,
       status,
+      has_metadata: !!metadata,
     });
 
-    // -------------------------------------------------------------------------
-    // Determine plan from product ID
-    // -------------------------------------------------------------------------
     const planId = getPlanFromDodoProductId(product_id || '');
-
     if (!planId) {
       console.warn('[Dodo Webhook] Unknown product_id:', product_id);
       return { success: true, message: 'Unknown product' };
     }
 
-    // -------------------------------------------------------------------------
-    // Find the user
-    // -------------------------------------------------------------------------
     const { data: user } = await supabase
       .from('users')
-      .select('id')
+      .select('id, email')
       .eq('dodo_customer_id', customer_id)
       .single();
 
@@ -599,14 +379,12 @@ async function handleSubscriptionCreated(
       return { success: false, message: 'User not found' };
     }
 
-    // -------------------------------------------------------------------------
-    // Create subscription record (if it doesn't exist)
-    // -------------------------------------------------------------------------
+    // Upsert subscription record
     const now = new Date();
     const periodEnd = new Date(now);
     periodEnd.setMonth(periodEnd.getMonth() + 1);
+    const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    // Check if subscription already exists
     const { data: existingSub } = await supabase
       .from('subscriptions')
       .select('id')
@@ -616,7 +394,7 @@ async function handleSubscriptionCreated(
     const subscriptionData = {
       user_id: user.id,
       plan: planId,
-      period: 'monthly', // All wallet plans are monthly
+      period: 'monthly',
       status: mapDodoSubscriptionStatus(status || 'active'),
       dodo_subscription_id: subscription_id,
       current_period_start: now.toISOString(),
@@ -638,7 +416,68 @@ async function handleSubscriptionCreated(
         });
     }
 
-    // NOTE: Wallet credits are set by handlePaymentSucceeded, not here
+    // Set user plan fields (replaces activateUserPlan which created duplicate subscriptions)
+    await supabase
+      .from('users')
+      .update({
+        plan: planId,
+        plan_started_at: now.toISOString(),
+        plan_expires_at: periodEnd.toISOString(),
+        trial_ends_at: trialEnd.toISOString(),
+        analyses_used: 0,
+        enrichments_used: 0,
+        usage_reset_at: now.toISOString(),
+        updated_at: now.toISOString(),
+      })
+      .eq('id', user.id);
+
+    // Mark checkout session as completed (webhook is sole authority)
+    // Match by callback_token from metadata first, fall back to user_id + pending
+    let pendingSession = null;
+
+    if (metadata?.callback_token) {
+      const { data: session } = await supabase
+        .from('checkout_sessions')
+        .select('id, session_id')
+        .eq('callback_token', metadata.callback_token)
+        .eq('status', 'pending')
+        .single();
+      pendingSession = session;
+    }
+
+    if (!pendingSession) {
+      const { data: session } = await supabase
+        .from('checkout_sessions')
+        .select('id, session_id')
+        .eq('user_id', user.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      pendingSession = session;
+    }
+
+    if (pendingSession) {
+      await supabase
+        .from('checkout_sessions')
+        .update({
+          status: 'completed',
+          completed_at: now.toISOString(),
+          dodo_subscription_id: subscription_id || null,
+          updated_at: now.toISOString(),
+        })
+        .eq('id', pendingSession.id);
+
+      console.log('[Dodo Webhook] Checkout session completed:', pendingSession.session_id);
+    }
+
+    // Complete onboarding (idempotent — safe to call multiple times)
+    try {
+      await completeOnboarding(user.email);
+      console.log('[Dodo Webhook] Onboarding completed for:', user.email);
+    } catch (err) {
+      console.error('[Dodo Webhook] Failed to complete onboarding:', err);
+    }
 
     return { success: true };
   } catch (error) {
@@ -648,16 +487,78 @@ async function handleSubscriptionCreated(
 }
 
 /**
- * Handles subscription updates.
- *
- * This is called when:
- * - User changes their plan (upgrade/downgrade)
- * - Subscription status changes
- *
- * For plan changes:
- * - If upgrading, the new payment will reset wallet to higher amount
- * - If downgrading, it typically takes effect at next billing cycle
+ * Handles subscription activation.
+ * Safety net: if subscription.created missed the checkout completion, this catches it.
  */
+async function handleSubscriptionActive(
+  data: DodoWebhookPayload['data']
+): Promise<{ success: boolean; message?: string }> {
+  const supabase = await createClient();
+  const { customer_id, subscription_id } = data;
+
+  try {
+    console.log('[Dodo Webhook] Subscription active:', { subscription_id });
+
+    // Update subscription status to active
+    if (subscription_id) {
+      await supabase
+        .from('subscriptions')
+        .update({
+          status: 'active',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('dodo_subscription_id', subscription_id);
+    }
+
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, email')
+      .eq('dodo_customer_id', customer_id)
+      .single();
+
+    if (!user) {
+      return { success: false, message: 'User not found' };
+    }
+
+    // Safety net: complete any pending checkout session for this user
+    const { data: pendingSession } = await supabase
+      .from('checkout_sessions')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (pendingSession) {
+      await supabase
+        .from('checkout_sessions')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          dodo_subscription_id: subscription_id || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', pendingSession.id);
+
+      console.log('[Dodo Webhook] Safety net: checkout session completed via subscription.active');
+    }
+
+    // Idempotent — safe if subscription.created already called this
+    try {
+      await completeOnboarding(user.email);
+    } catch (err) {
+      console.error('[Dodo Webhook] Failed to complete onboarding:', err);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('[Dodo Webhook] Error handling subscription.active:', error);
+    return { success: false, message: String(error) };
+  }
+}
+
+/** Handles subscription.updated — plan changes, status changes. Wallet reset on next payment. */
 async function handleSubscriptionUpdated(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
@@ -671,9 +572,6 @@ async function handleSubscriptionUpdated(
       status,
     });
 
-    // -------------------------------------------------------------------------
-    // Update subscription status
-    // -------------------------------------------------------------------------
     const updateData: Record<string, unknown> = {
       status: mapDodoSubscriptionStatus(status || 'active'),
       updated_at: new Date().toISOString(),
@@ -692,9 +590,6 @@ async function handleSubscriptionUpdated(
       .update(updateData)
       .eq('dodo_subscription_id', subscription_id);
 
-    // -------------------------------------------------------------------------
-    // If plan changed, update user record too
-    // -------------------------------------------------------------------------
     if (updateData.plan) {
       const { data: user } = await supabase
         .from('users')
@@ -711,7 +606,6 @@ async function handleSubscriptionUpdated(
           })
           .eq('id', user.id);
 
-        // NOTE: Wallet is NOT reset here - that happens on next payment
       }
     }
 
@@ -722,17 +616,7 @@ async function handleSubscriptionUpdated(
   }
 }
 
-/**
- * Handles subscription cancellation.
- *
- * When a user cancels:
- * 1. Subscription is marked as cancelled
- * 2. User KEEPS their wallet credits until period ends
- * 3. They can continue using credits until expiration
- * 4. At period end, subscription.expired will clear the wallet
- *
- * This allows users to use what they paid for, even after cancelling.
- */
+/** Handles subscription.cancelled — keeps wallet until period ends. */
 async function handleSubscriptionCancelled(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
@@ -742,9 +626,6 @@ async function handleSubscriptionCancelled(
   try {
     console.log('[Dodo Webhook] Subscription cancelled:', { subscription_id });
 
-    // -------------------------------------------------------------------------
-    // Mark subscription as cancelled (but don't clear wallet yet)
-    // -------------------------------------------------------------------------
     await supabase
       .from('subscriptions')
       .update({
@@ -753,9 +634,6 @@ async function handleSubscriptionCancelled(
       })
       .eq('dodo_subscription_id', subscription_id);
 
-    // -------------------------------------------------------------------------
-    // Log for analytics
-    // -------------------------------------------------------------------------
     const { data: user } = await supabase
       .from('users')
       .select('id, wallet_balance')
@@ -774,9 +652,6 @@ async function handleSubscriptionCancelled(
       });
     }
 
-    // NOTE: User keeps their wallet credits until period ends
-    // subscription.expired event will clear the wallet
-
     return { success: true };
   } catch (error) {
     console.error('[Dodo Webhook] Error handling subscription.cancelled:', error);
@@ -784,18 +659,7 @@ async function handleSubscriptionCancelled(
   }
 }
 
-/**
- * Handles subscription expiration.
- *
- * This is called when:
- * - A cancelled subscription reaches its period end
- * - A past_due subscription exhausts its grace period
- *
- * When a subscription expires:
- * 1. Clear the user's wallet balance (any remaining credits are lost)
- * 2. Downgrade the user to the free plan
- * 3. Mark subscription as expired
- */
+/** Handles subscription.expired — clears wallet, downgrades to free. */
 async function handleSubscriptionExpired(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
@@ -805,9 +669,6 @@ async function handleSubscriptionExpired(
   try {
     console.log('[Dodo Webhook] Subscription expired:', { subscription_id });
 
-    // -------------------------------------------------------------------------
-    // Mark subscription as expired
-    // -------------------------------------------------------------------------
     await supabase
       .from('subscriptions')
       .update({
@@ -816,9 +677,6 @@ async function handleSubscriptionExpired(
       })
       .eq('dodo_subscription_id', subscription_id);
 
-    // -------------------------------------------------------------------------
-    // Find the user and clear their wallet
-    // -------------------------------------------------------------------------
     const { data: user } = await supabase
       .from('users')
       .select('id, wallet_balance')
@@ -826,7 +684,6 @@ async function handleSubscriptionExpired(
       .single();
 
     if (user) {
-      // Clear wallet balance (any remaining credits are forfeited)
       const clearResult = await clearWalletBalance(
         user.id,
         'Subscription expired - remaining credits forfeited'
@@ -856,13 +713,7 @@ async function handleSubscriptionExpired(
   }
 }
 
-/**
- * Handles subscription renewal.
- *
- * This is similar to payment.succeeded but specific to renewals.
- * The wallet reset is handled by handlePaymentSucceeded, so this
- * handler just ensures subscription dates are updated.
- */
+/** Handles subscription.renewed — updates period dates. Wallet reset via payment.succeeded. */
 async function handleSubscriptionRenewed(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
@@ -872,9 +723,6 @@ async function handleSubscriptionRenewed(
   try {
     console.log('[Dodo Webhook] Subscription renewed:', { subscription_id });
 
-    // -------------------------------------------------------------------------
-    // Update subscription period dates
-    // -------------------------------------------------------------------------
     const now = new Date();
     const periodEnd = new Date(now);
     periodEnd.setMonth(periodEnd.getMonth() + 1);
@@ -889,8 +737,6 @@ async function handleSubscriptionRenewed(
       })
       .eq('dodo_subscription_id', subscription_id);
 
-    // NOTE: Wallet reset is handled by handlePaymentSucceeded
-
     return { success: true };
   } catch (error) {
     console.error('[Dodo Webhook] Error handling subscription.renewed:', error);
@@ -898,12 +744,7 @@ async function handleSubscriptionRenewed(
   }
 }
 
-/**
- * Handles trial ending notification.
- *
- * Called a few days before a trial period ends.
- * This is a good place to send reminder emails.
- */
+/** Handles subscription.trial_ending — notification before trial expires. */
 async function handleTrialEnding(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
@@ -913,9 +754,6 @@ async function handleTrialEnding(
   try {
     console.log('[Dodo Webhook] Trial ending soon:', { subscription_id });
 
-    // -------------------------------------------------------------------------
-    // Find user for notification
-    // -------------------------------------------------------------------------
     const { data: user } = await supabase
       .from('users')
       .select('id, email')

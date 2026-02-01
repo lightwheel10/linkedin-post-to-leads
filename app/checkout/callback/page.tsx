@@ -1,32 +1,5 @@
-// =============================================================================
-// CHECKOUT CALLBACK PAGE
-// =============================================================================
-//
-// Created: 2nd January 2026
-// Purpose: Handle return from Dodo checkout without requiring authentication
-//
-// WHY THIS PAGE EXISTS:
-// ====================
-// When users complete payment on Dodo's hosted checkout and are redirected back,
-// their auth session cookies might not be sent due to browser security policies
-// (SameSite cookies, ITP in Safari, etc.). If we redirected to a protected route
-// like /onboarding, the middleware would see no session and redirect to /login.
-//
-// This page is INTENTIONALLY unprotected. It:
-// 1. Receives the session_id from the URL (from Dodo's redirect)
-// 2. Polls /api/checkout/status to check if the WEBHOOK has confirmed payment
-// 3. Once confirmed, completes onboarding and redirects to dashboard
-// 4. Handles the case where user's auth session was lost gracefully
-//
-// SECURITY MODEL:
-// ==============
-// - We NEVER trust the URL params to mean "payment succeeded"
-// - The session_id is only used to look up the checkout session in our DB
-// - Only the WEBHOOK (with signature verification) can mark status = 'completed'
-// - Even if someone guesses a session_id, they can't complete onboarding
-//   unless the webhook has actually confirmed payment
-//
-// =============================================================================
+// Checkout callback — intentionally unprotected (auth cookies may be lost after Dodo redirect).
+// Polls /api/checkout/status until webhook marks session completed. Never trusts URL params.
 
 'use client';
 
@@ -35,10 +8,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, CheckCircle, XCircle, AlertCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-// =============================================================================
-// TYPES
-// =============================================================================
 
 type CheckoutStatus = 'verifying' | 'completing' | 'success' | 'failed' | 'session_lost' | 'expired';
 
@@ -51,15 +20,9 @@ interface StatusResponse {
   requires_login?: boolean;
 }
 
-// =============================================================================
-// MAIN COMPONENT
-// =============================================================================
-
 function CheckoutCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Updated 2nd Jan 2026: Use 'token' instead of 'session_id'
-  // Dodo doesn't replace {CHECKOUT_SESSION_ID} placeholders, so we use our own token
   const callbackToken = searchParams.get('token');
 
   const [status, setStatus] = useState<CheckoutStatus>('verifying');
@@ -67,14 +30,7 @@ function CheckoutCallbackContent() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [pollCount, setPollCount] = useState(0);
 
-  // =========================================================================
-  // Poll for checkout status
-  // =========================================================================
-  // We poll the status endpoint which checks:
-  // 1. If the checkout session exists in our DB (looked up by callback_token)
-  // 2. If the WEBHOOK has marked it as 'completed'
-  // 3. If the user is authenticated (for seamless redirect)
-  // =========================================================================
+  // Poll status endpoint until webhook marks checkout completed
   const checkStatus = useCallback(async () => {
     if (!callbackToken) {
       setStatus('failed');
@@ -94,21 +50,14 @@ function CheckoutCallbackContent() {
       }
 
       if (data.status === 'completed') {
-        // =====================================================================
-        // Payment confirmed by webhook!
-        // =====================================================================
         if (data.requires_login) {
-          // User's auth session was lost during redirect
-          // Show message to log in (their payment is safe)
           setStatus('session_lost');
           setUserEmail(data.user_email || null);
           setMessage('Payment confirmed! Please log in to access your account.');
         } else {
-          // User is still authenticated - complete onboarding
           setStatus('completing');
           setMessage('Payment confirmed! Setting up your account...');
 
-          // Call complete onboarding endpoint
           try {
             const completeRes = await fetch('/api/onboarding/complete', {
               method: 'POST',
@@ -118,12 +67,10 @@ function CheckoutCallbackContent() {
             if (completeRes.ok) {
               setStatus('success');
               setMessage('Welcome! Redirecting to your dashboard...');
-              // Small delay to show success message
               setTimeout(() => {
                 router.replace('/dashboard?welcome=true');
               }, 1500);
             } else {
-              // If complete fails, they might need to log in
               const errorData = await completeRes.json();
               if (completeRes.status === 401) {
                 setStatus('session_lost');
@@ -141,12 +88,13 @@ function CheckoutCallbackContent() {
           }
         }
       } else if (data.status === 'pending') {
-        // Still waiting for webhook - keep polling
         setPollCount((prev) => prev + 1);
 
         // Update message based on poll count
-        if (pollCount > 10) {
-          setMessage('Still verifying... This is taking longer than expected.');
+        if (pollCount > 60) {
+          setMessage('Still verifying... Taking longer than expected. Your payment is safe.');
+        } else if (pollCount > 30) {
+          setMessage('Still verifying... Please wait.');
         } else if (pollCount > 5) {
           setMessage('Waiting for payment confirmation...');
         }
@@ -159,51 +107,42 @@ function CheckoutCallbackContent() {
       }
     } catch (err) {
       console.error('Error checking status:', err);
-      // Don't immediately fail - could be a temporary network issue
       setPollCount((prev) => prev + 1);
-      if (pollCount > 15) {
+      if (pollCount > 45) {
         setStatus('failed');
         setMessage('Unable to verify payment. Please check your email or contact support.');
       }
     }
   }, [callbackToken, pollCount, router]);
 
-  // =========================================================================
-  // Polling effect
-  // =========================================================================
+  // Polling with backoff: 2s for first 30 polls, 4s for next 30, 6s for final 30
   useEffect(() => {
     if (status !== 'verifying') return;
 
-    // Initial check
     checkStatus();
 
-    // Poll every 2 seconds for up to 60 seconds
-    const pollInterval = setInterval(() => {
-      if (pollCount < 30) {
-        // 30 polls * 2 seconds = 60 seconds max
+    const getInterval = () => {
+      if (pollCount < 30) return 2000;
+      if (pollCount < 60) return 4000;
+      return 6000;
+    };
+
+    const timeoutId = setTimeout(() => {
+      if (pollCount < 90) {
         checkStatus();
       } else {
-        clearInterval(pollInterval);
         setStatus('failed');
-        setMessage('Verification timed out. Your payment may still have succeeded - please check your email or contact support.');
+        setMessage('Verification timed out. Your payment is safe — please check your email or contact support.');
       }
-    }, 2000);
+    }, getInterval());
 
-    return () => clearInterval(pollInterval);
+    return () => clearTimeout(timeoutId);
   }, [status, checkStatus, pollCount]);
 
-  // =========================================================================
-  // Handle login redirect
-  // =========================================================================
   const handleLoginRedirect = () => {
-    // Redirect to login with return URL to dashboard
-    // The user's onboarding will be marked complete by the checkout status check
     router.push('/login?next=/dashboard&welcome=true');
   };
 
-  // =========================================================================
-  // Render
-  // =========================================================================
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="max-w-md w-full shadow-xl border-border/50">
@@ -319,11 +258,6 @@ function CheckoutCallbackContent() {
     </div>
   );
 }
-
-// =============================================================================
-// EXPORT WITH SUSPENSE
-// =============================================================================
-// Wrap in Suspense for useSearchParams()
 
 export default function CheckoutCallbackPage() {
   return (
