@@ -494,9 +494,8 @@ export const DodoWebhookEvents = {
   PAYMENT_REFUNDED: 'payment.refunded',
 
   // Subscription events
-  SUBSCRIPTION_CREATED: 'subscription.created',
-  SUBSCRIPTION_UPDATED: 'subscription.updated',
   SUBSCRIPTION_ACTIVE: 'subscription.active',
+  SUBSCRIPTION_UPDATED: 'subscription.updated',
   SUBSCRIPTION_CANCELLED: 'subscription.cancelled',
   SUBSCRIPTION_EXPIRED: 'subscription.expired',
   SUBSCRIPTION_TRIAL_ENDING: 'subscription.trial_ending',

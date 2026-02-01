@@ -1,6 +1,6 @@
 // Dodo Payments webhook handler for wallet-based billing.
 // Security: signature verification, timestamp validation, idempotent processing.
-// subscription.created marks checkout completed (fires immediately, even with trial).
+// subscription.active marks checkout completed (fires immediately, even with trial).
 // payment.succeeded resets wallet credits (fires after trial or on renewal).
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -137,10 +137,6 @@ export async function POST(request: NextRequest) {
 
       case DodoWebhookEvents.PAYMENT_FAILED:
         processingResult = await handlePaymentFailed(data);
-        break;
-
-      case DodoWebhookEvents.SUBSCRIPTION_CREATED:
-        processingResult = await handleSubscriptionCreated(data);
         break;
 
       case DodoWebhookEvents.SUBSCRIPTION_ACTIVE:
@@ -343,11 +339,10 @@ async function handlePaymentFailed(
 }
 
 /**
- * Handles new subscription creation.
- * Fires immediately even with trial — this is the trigger for checkout completion.
- * Wallet credits are set later by handlePaymentSucceeded (after trial or immediately).
+ * Handles subscription activation — primary trigger for checkout completion.
+ * Fires immediately even with trial. Sets up subscription record, user plan, and completes checkout.
  */
-async function handleSubscriptionCreated(
+async function handleSubscriptionActive(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
   const supabase = createAdminClient();
@@ -355,7 +350,7 @@ async function handleSubscriptionCreated(
   const metadata = (data as Record<string, unknown>).metadata as Record<string, string> | undefined;
 
   try {
-    console.log('[Dodo Webhook] Subscription created:', {
+    console.log('[Dodo Webhook] Subscription active:', {
       subscription_id,
       product_id,
       status,
@@ -416,7 +411,7 @@ async function handleSubscriptionCreated(
         });
     }
 
-    // Set user plan fields (replaces activateUserPlan which created duplicate subscriptions)
+    // Set user plan fields
     await supabase
       .from('users')
       .update({
@@ -471,82 +466,10 @@ async function handleSubscriptionCreated(
       console.log('[Dodo Webhook] Checkout session completed:', pendingSession.session_id);
     }
 
-    // Complete onboarding (idempotent — safe to call multiple times)
+    // Complete onboarding (idempotent)
     try {
       await completeOnboarding(user.email, supabase);
       console.log('[Dodo Webhook] Onboarding completed for:', user.email);
-    } catch (err) {
-      console.error('[Dodo Webhook] Failed to complete onboarding:', err);
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error('[Dodo Webhook] Error handling subscription.created:', error);
-    return { success: false, message: String(error) };
-  }
-}
-
-/**
- * Handles subscription activation.
- * Safety net: if subscription.created missed the checkout completion, this catches it.
- */
-async function handleSubscriptionActive(
-  data: DodoWebhookPayload['data']
-): Promise<{ success: boolean; message?: string }> {
-  const supabase = createAdminClient();
-  const { customer_id, subscription_id } = data;
-
-  try {
-    console.log('[Dodo Webhook] Subscription active:', { subscription_id });
-
-    // Update subscription status to active
-    if (subscription_id) {
-      await supabase
-        .from('subscriptions')
-        .update({
-          status: 'active',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('dodo_subscription_id', subscription_id);
-    }
-
-    const { data: user } = await supabase
-      .from('users')
-      .select('id, email')
-      .eq('dodo_customer_id', customer_id)
-      .single();
-
-    if (!user) {
-      return { success: false, message: 'User not found' };
-    }
-
-    // Safety net: complete any pending checkout session for this user
-    const { data: pendingSession } = await supabase
-      .from('checkout_sessions')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (pendingSession) {
-      await supabase
-        .from('checkout_sessions')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          dodo_subscription_id: subscription_id || null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', pendingSession.id);
-
-      console.log('[Dodo Webhook] Safety net: checkout session completed via subscription.active');
-    }
-
-    // Idempotent — safe if subscription.created already called this
-    try {
-      await completeOnboarding(user.email, supabase);
     } catch (err) {
       console.error('[Dodo Webhook] Failed to complete onboarding:', err);
     }
