@@ -2,9 +2,9 @@
 // Use ONLY in server-side code that runs without user auth context:
 // webhooks, checkout status polling, and other server-to-server flows.
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-let adminClient: ReturnType<typeof createClient> | null = null;
+let adminClient: SupabaseClient | null = null;
 
 export function createAdminClient() {
   if (adminClient) return adminClient;
