@@ -28,16 +28,18 @@ import { completeOnboarding } from '@/lib/data-store';
 export const runtime = 'nodejs';
 
 // Per-instance IP rate limiter (no external dependencies).
-// Rejects IPs sending >100 requests/minute before any DB or crypto work.
+// 200 req/min per IP — generous enough for Dodo retry bursts, blocks abuse.
 // Vercel's infrastructure handles cross-instance DDoS.
 const ipRequests = new Map<string, { count: number; resetAt: number }>();
 let lastCleanup = Date.now();
+const RATE_LIMIT = 200;
+const WINDOW_MS = 60_000;
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
 
   // Lazy cleanup: purge expired entries every 60s
-  if (now - lastCleanup > 60_000) {
+  if (now - lastCleanup > WINDOW_MS) {
     for (const [key, entry] of ipRequests) {
       if (now > entry.resetAt) ipRequests.delete(key);
     }
@@ -46,12 +48,16 @@ function isRateLimited(ip: string): boolean {
 
   const entry = ipRequests.get(ip);
   if (!entry || now > entry.resetAt) {
-    ipRequests.set(ip, { count: 1, resetAt: now + 60_000 });
+    ipRequests.set(ip, { count: 1, resetAt: now + WINDOW_MS });
     return false;
   }
 
   entry.count++;
-  return entry.count > 100;
+  if (entry.count > RATE_LIMIT) {
+    console.warn('[Dodo Webhook] Rate limited IP:', ip, 'count:', entry.count);
+    return true;
+  }
+  return false;
 }
 
 /** POST /api/webhooks/dodo — processes Dodo payment/subscription events */
