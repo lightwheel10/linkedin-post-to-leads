@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { completeOnboarding } from '@/lib/data-store';
+import { getDodoClient } from '@/lib/dodo';
 
 export async function GET(request: NextRequest) {
   try {
@@ -90,7 +91,36 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Still pending — webhook hasn't confirmed yet
+    // Still pending — webhook hasn't confirmed yet. Check Dodo's API directly
+    // as a fallback since webhook delivery can be delayed by minutes.
+    if (checkoutSession.session_id) {
+      try {
+        const dodoSession = await getDodoClient().checkoutSessions.retrieve(checkoutSession.session_id);
+
+        if (dodoSession.payment_status === 'succeeded') {
+          await supabase
+            .from('checkout_sessions')
+            .update({ status: 'completed', completed_at: now.toISOString(), updated_at: now.toISOString() })
+            .eq('id', checkoutSession.id);
+
+          if (isAuthenticated && userEmail === checkoutSession.user_email) {
+            try { await completeOnboarding(userEmail, supabase); } catch {}
+          }
+
+          return NextResponse.json({
+            success: true,
+            status: 'completed',
+            user_email: checkoutSession.user_email,
+            plan_id: checkoutSession.plan_id,
+            requires_login: !isAuthenticated || userEmail !== checkoutSession.user_email,
+            message: 'Trial activated!'
+          });
+        }
+      } catch (err) {
+        console.error('[Checkout Status] Dodo API fallback failed:', err);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       status: 'pending',
