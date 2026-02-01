@@ -60,6 +60,9 @@ docs/POSTHOG_SETUP.md
 .claude/
 settings.local.json
 
+# Serena
+.serena/
+
 # Test files
 test-linkedin-post-search.ts
 test-output-linkedin-posts.json
