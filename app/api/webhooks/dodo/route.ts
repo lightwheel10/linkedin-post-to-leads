@@ -27,9 +27,48 @@ import { completeOnboarding } from '@/lib/data-store';
 // Raw body needed for signature verification
 export const runtime = 'nodejs';
 
+// Per-instance IP rate limiter (no external dependencies).
+// Rejects IPs sending >100 requests/minute before any DB or crypto work.
+// Vercel's infrastructure handles cross-instance DDoS.
+const ipRequests = new Map<string, { count: number; resetAt: number }>();
+let lastCleanup = Date.now();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+
+  // Lazy cleanup: purge expired entries every 60s
+  if (now - lastCleanup > 60_000) {
+    for (const [key, entry] of ipRequests) {
+      if (now > entry.resetAt) ipRequests.delete(key);
+    }
+    lastCleanup = now;
+  }
+
+  const entry = ipRequests.get(ip);
+  if (!entry || now > entry.resetAt) {
+    ipRequests.set(ip, { count: 1, resetAt: now + 60_000 });
+    return false;
+  }
+
+  entry.count++;
+  return entry.count > 100;
+}
+
 /** POST /api/webhooks/dodo — processes Dodo payment/subscription events */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+
+  // Rate limit by IP — reject before any body parsing or crypto
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || 'unknown';
+
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': '60' } }
+    );
+  }
 
   try {
     // Extract headers and body
