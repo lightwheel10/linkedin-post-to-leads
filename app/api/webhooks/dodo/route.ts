@@ -230,11 +230,27 @@ async function handlePaymentSucceeded(
       return { success: false, message: 'User not found' };
     }
 
-    const planId = getPlanFromDodoProductId(product_id || '');
+    // Payment events may not include product_id — look up from subscription or user
+    let planId = product_id ? getPlanFromDodoProductId(product_id) : null;
+
+    if (!planId && subscription_id) {
+      const { data: sub } = await supabase
+        .from('subscriptions')
+        .select('plan')
+        .eq('dodo_subscription_id', subscription_id)
+        .single();
+      planId = sub?.plan || null;
+    }
+
+    if (!planId) {
+      planId = user.plan;
+    }
 
     if (!planId || !isWalletPlan(planId)) {
-      console.error('[Dodo Webhook] Invalid or unknown product:', product_id);
-      return { success: false, message: 'Unknown product' };
+      console.error('[Dodo Webhook] Cannot determine plan for payment:', {
+        product_id, subscription_id, userPlan: user.plan,
+      });
+      return { success: false, message: 'Cannot determine plan' };
     }
 
     // Reset wallet — previous balance forfeited, new balance = plan credits
@@ -353,14 +369,11 @@ async function handleSubscriptionActive(
   const supabase = createAdminClient();
   const customer_id = getCustomerId(data);
   const { subscription_id, product_id, status } = data;
-  const metadata = data.metadata;
-
   try {
     console.log('[Dodo Webhook] Subscription active:', {
       subscription_id,
       product_id,
       status,
-      has_metadata: !!metadata,
     });
 
     const planId = getPlanFromDodoProductId(product_id || '');
@@ -433,30 +446,14 @@ async function handleSubscriptionActive(
       .eq('id', user.id);
 
     // Mark checkout session as completed (webhook is sole authority)
-    // Match by callback_token from metadata first, fall back to user_id + pending
-    let pendingSession = null;
-
-    if (metadata?.callback_token) {
-      const { data: session } = await supabase
-        .from('checkout_sessions')
-        .select('id, session_id')
-        .eq('callback_token', metadata.callback_token)
-        .eq('status', 'pending')
-        .single();
-      pendingSession = session;
-    }
-
-    if (!pendingSession) {
-      const { data: session } = await supabase
-        .from('checkout_sessions')
-        .select('id, session_id')
-        .eq('user_id', user.id)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      pendingSession = session;
-    }
+    const { data: pendingSession } = await supabase
+      .from('checkout_sessions')
+      .select('id, session_id')
+      .eq('user_id', user.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
     if (pendingSession) {
       await supabase

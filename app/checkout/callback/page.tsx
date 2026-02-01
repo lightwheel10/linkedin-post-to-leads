@@ -3,7 +3,7 @@
 
 'use client';
 
-import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, CheckCircle, XCircle, AlertCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,69 +28,96 @@ function CheckoutCallbackContent() {
   const [status, setStatus] = useState<CheckoutStatus>('verifying');
   const [message, setMessage] = useState('Verifying your payment...');
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [pollCount, setPollCount] = useState(0);
+  // Poll /api/checkout/status until webhook marks session completed.
+  // Uses recursive setTimeout with local pollCount (not state) for proper 2s/4s/6s backoff.
+  useEffect(() => {
+    if (status !== 'verifying') return;
 
-  // Poll status endpoint until webhook marks checkout completed
-  const checkStatus = useCallback(async () => {
     if (!callbackToken) {
       setStatus('failed');
       setMessage('Invalid callback URL. Please try again from the pricing page.');
       return;
     }
 
-    try {
-      const res = await fetch(`/api/checkout/status?token=${callbackToken}`);
-      const data: StatusResponse = await res.json();
+    let cancelled = false;
+    let pollCount = 0;
 
-      if (!res.ok) {
-        // Session not found or other error
+    async function poll() {
+      if (cancelled) return;
+
+      if (pollCount >= 90) {
         setStatus('failed');
-        setMessage(data.message || 'Unable to verify payment. Please contact support.');
+        setMessage('Verification timed out. Your payment is safe — please check your email or contact support.');
         return;
       }
 
-      if (data.status === 'completed') {
-        if (data.requires_login) {
-          setStatus('session_lost');
-          setUserEmail(data.user_email || null);
-          setMessage('Payment confirmed! Please log in to access your account.');
-        } else {
-          setStatus('completing');
-          setMessage('Payment confirmed! Setting up your account...');
+      try {
+        const res = await fetch(`/api/checkout/status?token=${callbackToken}`);
+        const data: StatusResponse = await res.json();
 
-          try {
-            const completeRes = await fetch('/api/onboarding/complete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-            });
+        if (cancelled) return;
 
-            if (completeRes.ok) {
-              setStatus('success');
-              setMessage('Welcome! Redirecting to your dashboard...');
-              setTimeout(() => {
-                router.replace('/dashboard?welcome=true');
-              }, 1500);
-            } else {
-              const errorData = await completeRes.json();
-              if (completeRes.status === 401) {
-                setStatus('session_lost');
-                setUserEmail(data.user_email || null);
-                setMessage('Payment confirmed! Please log in to access your account.');
-              } else {
-                throw new Error(errorData.error || 'Failed to complete setup');
-              }
-            }
-          } catch (err: any) {
-            console.error('Failed to complete onboarding:', err);
+        if (!res.ok) {
+          setStatus('failed');
+          setMessage(data.message || 'Unable to verify payment. Please contact support.');
+          return;
+        }
+
+        if (data.status === 'completed') {
+          if (data.requires_login) {
             setStatus('session_lost');
             setUserEmail(data.user_email || null);
-            setMessage('Payment confirmed! Please log in to complete setup.');
-          }
-        }
-      } else if (data.status === 'pending') {
-        setPollCount((prev) => prev + 1);
+            setMessage('Payment confirmed! Please log in to access your account.');
+          } else {
+            setStatus('completing');
+            setMessage('Payment confirmed! Setting up your account...');
 
-        // Update message based on poll count
+            try {
+              const completeRes = await fetch('/api/onboarding/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+              });
+
+              if (completeRes.ok) {
+                setStatus('success');
+                setMessage('Welcome! Redirecting to your dashboard...');
+                setTimeout(() => {
+                  router.replace('/dashboard?welcome=true');
+                }, 1500);
+              } else {
+                const errorData = await completeRes.json();
+                if (completeRes.status === 401) {
+                  setStatus('session_lost');
+                  setUserEmail(data.user_email || null);
+                  setMessage('Payment confirmed! Please log in to access your account.');
+                } else {
+                  throw new Error(errorData.error || 'Failed to complete setup');
+                }
+              }
+            } catch (err: any) {
+              console.error('Failed to complete onboarding:', err);
+              setStatus('session_lost');
+              setUserEmail(data.user_email || null);
+              setMessage('Payment confirmed! Please log in to complete setup.');
+            }
+          }
+          return;
+        }
+
+        if (data.status === 'failed') {
+          setStatus('failed');
+          setMessage(data.message || 'Payment failed. Please try again.');
+          return;
+        }
+
+        if (data.status === 'expired') {
+          setStatus('expired');
+          setMessage('This checkout session has expired. Please try again.');
+          return;
+        }
+
+        // Still pending — schedule next poll with backoff
+        pollCount++;
         if (pollCount > 60) {
           setMessage('Still verifying... Taking longer than expected. Your payment is safe.');
         } else if (pollCount > 30) {
@@ -98,46 +125,31 @@ function CheckoutCallbackContent() {
         } else if (pollCount > 5) {
           setMessage('Waiting for payment confirmation...');
         }
-      } else if (data.status === 'failed') {
-        setStatus('failed');
-        setMessage(data.message || 'Payment failed. Please try again.');
-      } else if (data.status === 'expired') {
-        setStatus('expired');
-        setMessage('This checkout session has expired. Please try again.');
-      }
-    } catch (err) {
-      console.error('Error checking status:', err);
-      setPollCount((prev) => prev + 1);
-      if (pollCount > 45) {
-        setStatus('failed');
-        setMessage('Unable to verify payment. Please check your email or contact support.');
+
+        const interval = pollCount < 30 ? 2000 : pollCount < 60 ? 4000 : 6000;
+        setTimeout(poll, interval);
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Error checking status:', err);
+        pollCount++;
+
+        if (pollCount > 45) {
+          setStatus('failed');
+          setMessage('Unable to verify payment. Please check your email or contact support.');
+          return;
+        }
+
+        setTimeout(poll, 2000);
       }
     }
-  }, [callbackToken, pollCount, router]);
 
-  // Polling with backoff: 2s for first 30 polls, 4s for next 30, 6s for final 30
-  useEffect(() => {
-    if (status !== 'verifying') return;
+    const initialDelay = setTimeout(poll, 500);
 
-    checkStatus();
-
-    const getInterval = () => {
-      if (pollCount < 30) return 2000;
-      if (pollCount < 60) return 4000;
-      return 6000;
+    return () => {
+      cancelled = true;
+      clearTimeout(initialDelay);
     };
-
-    const timeoutId = setTimeout(() => {
-      if (pollCount < 90) {
-        checkStatus();
-      } else {
-        setStatus('failed');
-        setMessage('Verification timed out. Your payment is safe — please check your email or contact support.');
-      }
-    }, getInterval());
-
-    return () => clearTimeout(timeoutId);
-  }, [status, checkStatus, pollCount]);
+  }, [status, callbackToken, router]);
 
   const handleLoginRedirect = () => {
     router.push('/login?next=/dashboard&welcome=true');
