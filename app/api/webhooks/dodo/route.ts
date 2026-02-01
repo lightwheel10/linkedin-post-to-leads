@@ -12,6 +12,7 @@ import {
   DodoWebhookEvents,
   mapDodoSubscriptionStatus,
   getPlanFromDodoProductId,
+  getCustomerId,
 } from '@/lib/dodo';
 import {
   resetWalletCredits,
@@ -206,7 +207,8 @@ async function handlePaymentSucceeded(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
   const supabase = createAdminClient();
-  const { customer_id, subscription_id, product_id, payment_id } = data;
+  const customer_id = getCustomerId(data);
+  const { subscription_id, product_id, payment_id } = data;
 
   try {
     console.log('[Dodo Webhook] Payment succeeded:', {
@@ -295,7 +297,8 @@ async function handlePaymentFailed(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
   const supabase = createAdminClient();
-  const { customer_id, subscription_id } = data;
+  const customer_id = getCustomerId(data);
+  const { subscription_id } = data;
 
   try {
     console.log('[Dodo Webhook] Payment failed:', { subscription_id });
@@ -346,8 +349,9 @@ async function handleSubscriptionActive(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
   const supabase = createAdminClient();
-  const { customer_id, subscription_id, product_id, status } = data;
-  const metadata = (data as Record<string, unknown>).metadata as Record<string, string> | undefined;
+  const customer_id = getCustomerId(data);
+  const { subscription_id, product_id, status } = data;
+  const metadata = data.metadata;
 
   try {
     console.log('[Dodo Webhook] Subscription active:', {
@@ -486,7 +490,8 @@ async function handleSubscriptionUpdated(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
   const supabase = createAdminClient();
-  const { customer_id, subscription_id, product_id, status } = data;
+  const customer_id = getCustomerId(data);
+  const { subscription_id, product_id, status } = data;
 
   try {
     console.log('[Dodo Webhook] Subscription updated:', {
@@ -544,7 +549,8 @@ async function handleSubscriptionCancelled(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
   const supabase = createAdminClient();
-  const { customer_id, subscription_id } = data;
+  const customer_id = getCustomerId(data);
+  const { subscription_id } = data;
 
   try {
     console.log('[Dodo Webhook] Subscription cancelled:', { subscription_id });
@@ -587,7 +593,8 @@ async function handleSubscriptionExpired(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
   const supabase = createAdminClient();
-  const { customer_id, subscription_id } = data;
+  const customer_id = getCustomerId(data);
+  const { subscription_id } = data;
 
   try {
     console.log('[Dodo Webhook] Subscription expired:', { subscription_id });
@@ -673,7 +680,8 @@ async function handleTrialEnding(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
   const supabase = createAdminClient();
-  const { customer_id, subscription_id } = data;
+  const customer_id = getCustomerId(data);
+  const { subscription_id } = data;
 
   try {
     console.log('[Dodo Webhook] Trial ending soon:', { subscription_id });

@@ -517,13 +517,19 @@ export interface DodoWebhookPayload {
   event_id: string;
   created_at: string;
   data: {
-    customer_id?: string;
+    customer?: { customer_id?: string; email?: string; name?: string };
     subscription_id?: string;
     payment_id?: string;
     product_id?: string;
     status?: string;
+    metadata?: Record<string, string>;
     [key: string]: unknown;
   };
+}
+
+/** Extract customer_id from Dodo webhook data (nested under data.customer) */
+export function getCustomerId(data: DodoWebhookPayload['data']): string | undefined {
+  return data.customer?.customer_id;
 }
 
 // =============================================================================
