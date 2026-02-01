@@ -5,7 +5,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, CheckCircle, XCircle, AlertCircle, LogIn } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -26,7 +26,7 @@ function CheckoutCallbackContent() {
   const callbackToken = searchParams.get('token');
 
   const [status, setStatus] = useState<CheckoutStatus>('verifying');
-  const [message, setMessage] = useState('Verifying your payment...');
+  const [message, setMessage] = useState('Setting up your free trial...');
   const [userEmail, setUserEmail] = useState<string | null>(null);
   // Poll /api/checkout/status until webhook marks session completed.
   // Uses recursive setTimeout with local pollCount (not state) for proper 2s/4s/6s backoff.
@@ -47,7 +47,7 @@ function CheckoutCallbackContent() {
 
       if (pollCount >= 90) {
         setStatus('failed');
-        setMessage('Verification timed out. Your payment is safe — please check your email or contact support.');
+        setMessage('Taking longer than expected. Don\'t worry — please check your email or contact support.');
         return;
       }
 
@@ -59,7 +59,7 @@ function CheckoutCallbackContent() {
 
         if (!res.ok) {
           setStatus('failed');
-          setMessage(data.message || 'Unable to verify payment. Please contact support.');
+          setMessage(data.message || 'Something went wrong. Please contact support.');
           return;
         }
 
@@ -67,10 +67,10 @@ function CheckoutCallbackContent() {
           if (data.requires_login) {
             setStatus('session_lost');
             setUserEmail(data.user_email || null);
-            setMessage('Payment confirmed! Please log in to access your account.');
+            setMessage('Your free trial is ready! Please log in to get started.');
           } else {
             setStatus('completing');
-            setMessage('Payment confirmed! Setting up your account...');
+            setMessage('Almost there! Setting up your account...');
 
             try {
               const completeRes = await fetch('/api/onboarding/complete', {
@@ -89,7 +89,7 @@ function CheckoutCallbackContent() {
                 if (completeRes.status === 401) {
                   setStatus('session_lost');
                   setUserEmail(data.user_email || null);
-                  setMessage('Payment confirmed! Please log in to access your account.');
+                  setMessage('Your free trial is ready! Please log in to get started.');
                 } else {
                   throw new Error(errorData.error || 'Failed to complete setup');
                 }
@@ -98,7 +98,7 @@ function CheckoutCallbackContent() {
               console.error('Failed to complete onboarding:', err);
               setStatus('session_lost');
               setUserEmail(data.user_email || null);
-              setMessage('Payment confirmed! Please log in to complete setup.');
+              setMessage('Your free trial is ready! Please log in to complete setup.');
             }
           }
           return;
@@ -106,7 +106,7 @@ function CheckoutCallbackContent() {
 
         if (data.status === 'failed') {
           setStatus('failed');
-          setMessage(data.message || 'Payment failed. Please try again.');
+          setMessage(data.message || 'Something went wrong. Please try again.');
           return;
         }
 
@@ -119,11 +119,11 @@ function CheckoutCallbackContent() {
         // Still pending — schedule next poll with backoff
         pollCount++;
         if (pollCount > 60) {
-          setMessage('Still verifying... Taking longer than expected. Your payment is safe.');
+          setMessage('Still working on it... Taking longer than expected.');
         } else if (pollCount > 30) {
-          setMessage('Still verifying... Please wait.');
+          setMessage('Still setting up... Please wait.');
         } else if (pollCount > 5) {
-          setMessage('Waiting for payment confirmation...');
+          setMessage('Activating your free trial...');
         }
 
         const interval = pollCount < 30 ? 2000 : pollCount < 60 ? 4000 : 6000;
@@ -135,7 +135,7 @@ function CheckoutCallbackContent() {
 
         if (pollCount > 45) {
           setStatus('failed');
-          setMessage('Unable to verify payment. Please check your email or contact support.');
+          setMessage('Something went wrong. Please check your email or contact support.');
           return;
         }
 
@@ -177,8 +177,8 @@ function CheckoutCallbackContent() {
               </div>
             )}
             {status === 'session_lost' && (
-              <div className="w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center">
-                <AlertCircle className="w-8 h-8 text-amber-500" />
+              <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-green-500" />
               </div>
             )}
             {(status === 'failed' || status === 'expired') && (
@@ -189,11 +189,11 @@ function CheckoutCallbackContent() {
           </div>
 
           <CardTitle className="text-xl">
-            {status === 'verifying' && 'Verifying Payment'}
+            {status === 'verifying' && 'Activating Your Trial'}
             {status === 'completing' && 'Setting Up Account'}
             {status === 'success' && 'Welcome!'}
-            {status === 'session_lost' && 'Payment Confirmed!'}
-            {status === 'failed' && 'Payment Issue'}
+            {status === 'session_lost' && 'Trial Activated!'}
+            {status === 'failed' && 'Something Went Wrong'}
             {status === 'expired' && 'Session Expired'}
           </CardTitle>
           <CardDescription className="text-base mt-2">
@@ -206,7 +206,7 @@ function CheckoutCallbackContent() {
           {status === 'session_lost' && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground text-center">
-                Your payment was successful and your account is ready.
+                Your free trial is active and your account is ready.
                 {userEmail && (
                   <span className="block mt-1 font-medium text-foreground">
                     Email: {userEmail}

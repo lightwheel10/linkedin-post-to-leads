@@ -1,4 +1,4 @@
-// Checkout status polling endpoint — checks if webhook has confirmed payment.
+// Checkout status polling endpoint — checks if webhook has confirmed trial activation.
 // Intentionally unprotected (auth cookies may be lost after Dodo redirect).
 // Uses admin client to bypass RLS — no user auth context available here.
 
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
         user_email: checkoutSession.user_email,
         plan_id: checkoutSession.plan_id,
         requires_login: !isAuthenticated || userEmail !== checkoutSession.user_email,
-        message: 'Payment confirmed!'
+        message: 'Trial activated!'
       });
     }
 
@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: false,
         status: 'failed',
-        message: 'Payment failed. Please try again with a different payment method.'
+        message: 'Something went wrong. Please try again.'
       });
     }
 
@@ -94,13 +94,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       status: 'pending',
-      message: 'Waiting for payment confirmation...'
+      message: 'Activating your free trial...'
     });
 
   } catch (error) {
     console.error('[Checkout Status] Error:', error);
     return NextResponse.json(
-      { success: false, status: 'failed', message: 'An error occurred while checking payment status.' },
+      { success: false, status: 'failed', message: 'An error occurred. Please try again.' },
       { status: 500 }
     );
   }
