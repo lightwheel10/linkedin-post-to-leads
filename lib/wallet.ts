@@ -255,62 +255,12 @@ export const CREDIT_COSTS = {
 // =============================================================================
 // CREDIT PACKS (One-time purchases)
 // =============================================================================
-//
-// Users can buy credit packs when they run out of monthly plan credits.
-// Unlike plan credits, purchased credits PERSIST across billing cycles —
-// they are never forfeited on monthly reset.
-//
-// IMPORTANT: Create matching one-time payment products in Dodo dashboard.
-// Set the product IDs in .env as DODO_PRODUCT_CREDIT_10, etc.
-//
-// The $50 pack includes a $5 bonus to incentivize larger purchases.
+// Re-exported from lib/credit-packs.ts (which is safe for client components).
+// The types and config are in a separate file because wallet.ts imports
+// server-only Supabase modules that can't be bundled into client components.
 // =============================================================================
-
-export type CreditPackId = 'credit_10' | 'credit_25' | 'credit_50';
-
-export interface CreditPack {
-  id: CreditPackId;
-  /** Display name shown in UI */
-  name: string;
-  /** Price user pays in cents */
-  priceInCents: number;
-  /** Total credits received in cents (includes bonus if any) */
-  creditsInCents: number;
-  /** Bonus credits in cents (0 if no bonus) */
-  bonusInCents: number;
-}
-
-export const CREDIT_PACKS: Record<CreditPackId, CreditPack> = {
-  credit_10: {
-    id: 'credit_10',
-    name: 'Starter',
-    priceInCents: 1000,      // $10.00
-    creditsInCents: 1000,    // $10.00
-    bonusInCents: 0,
-  },
-  credit_25: {
-    id: 'credit_25',
-    name: 'Popular',
-    priceInCents: 2500,      // $25.00
-    creditsInCents: 2500,    // $25.00
-    bonusInCents: 0,
-  },
-  credit_50: {
-    id: 'credit_50',
-    name: 'Power',
-    priceInCents: 5000,      // $50.00
-    creditsInCents: 5500,    // $55.00 ($5 bonus)
-    bonusInCents: 500,       // $5.00
-  },
-};
-
-/**
- * Validates a credit pack ID.
- * Used to guard against invalid pack IDs in API routes and webhooks.
- */
-export function isValidCreditPack(packId: string): packId is CreditPackId {
-  return packId in CREDIT_PACKS;
-}
+export { CREDIT_PACKS, isValidCreditPack } from '@/lib/credit-packs';
+export type { CreditPackId, CreditPack } from '@/lib/credit-packs';
 
 // =============================================================================
 // HELPER FUNCTIONS

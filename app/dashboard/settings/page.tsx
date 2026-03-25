@@ -27,7 +27,9 @@ import {
   Sparkles,
   Wallet,
 } from "lucide-react";
-import { CREDIT_PACKS, type CreditPackId } from "@/lib/wallet";
+// Import from credit-packs.ts (not wallet.ts) because wallet.ts imports
+// server-only Supabase modules that can't be used in client components.
+import { CREDIT_PACKS, type CreditPackId } from "@/lib/credit-packs";
 
 interface UserSettings {
   icp_keywords: string[];
