@@ -13,14 +13,19 @@ import {
   mapDodoSubscriptionStatus,
   getPlanFromDodoProductId,
   getCustomerId,
+  getCreditPackFromProductId,
+  isCreditPackProduct,
 } from '@/lib/dodo';
 import {
   resetWalletCredits,
   clearWalletBalance,
+  addPurchasedCredits,
   WalletPlanId,
   isWalletPlan,
+  isValidCreditPack,
   formatCredits,
   WALLET_PLANS,
+  CREDIT_PACKS,
 } from '@/lib/wallet';
 import { completeOnboarding } from '@/lib/data-store';
 
@@ -260,6 +265,104 @@ async function handlePaymentSucceeded(
       subscription_id,
       product_id,
     });
+
+    // -----------------------------------------------------------------------
+    // CREDIT PACK CHECK — must run BEFORE subscription plan logic.
+    // One-time credit pack payments should NOT trigger subscription updates,
+    // onboarding completion, or wallet resets.
+    //
+    // We check both product_id and metadata.type as fallbacks, since
+    // one-time payment webhooks may structure data differently than
+    // subscription payments.
+    // -----------------------------------------------------------------------
+    const isTopUpPayment = (product_id && isCreditPackProduct(product_id))
+      || (data.metadata?.type === 'topup' && data.metadata?.pack_id);
+
+    if (isTopUpPayment) {
+      const creditPackId = (product_id && getCreditPackFromProductId(product_id))
+        || data.metadata?.pack_id as string | undefined;
+
+      if (!creditPackId || !isValidCreditPack(creditPackId)) {
+        console.error('[Dodo Webhook] Invalid credit pack in payment:', { product_id, metadata: data.metadata });
+        return { success: false, message: 'Invalid credit pack product' };
+      }
+
+      const pack = CREDIT_PACKS[creditPackId];
+
+      // Find user by customer_id
+      const { data: packUser, error: packUserError } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('dodo_customer_id', customer_id)
+        .single();
+
+      if (packUserError || !packUser) {
+        console.error('[Dodo Webhook] User not found for credit pack payment:', customer_id);
+        return { success: false, message: 'User not found for credit pack' };
+      }
+
+      // Add purchased credits atomically via RPC
+      const addResult = await addPurchasedCredits(
+        packUser.id,
+        pack.creditsInCents,
+        creditPackId,
+        { payment_id, dodo_product_id: product_id },
+        supabase  // Pass admin client from webhook context (bypasses RLS)
+      );
+
+      if (!addResult.success) {
+        console.error('[Dodo Webhook] Failed to add purchased credits:', addResult.error);
+        return { success: false, message: addResult.error };
+      }
+
+      // Mark any pending topup checkout session as completed.
+      // The checkout callback page polls /api/checkout/status which checks this.
+      const { data: pendingTopup } = await supabase
+        .from('checkout_sessions')
+        .select('id')
+        .eq('user_id', packUser.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (pendingTopup) {
+        await supabase
+          .from('checkout_sessions')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', pendingTopup.id);
+      }
+
+      console.log('[Dodo Webhook] Credit pack applied:', {
+        userId: packUser.id,
+        packId: creditPackId,
+        credits: formatCredits(pack.creditsInCents),
+        newBalance: formatCredits(addResult.newBalance),
+      });
+
+      // Log for analytics
+      await supabase.from('usage_logs').insert({
+        user_id: packUser.id,
+        action: 'credit_pack_purchased',
+        metadata: {
+          pack_id: creditPackId,
+          credits_added: pack.creditsInCents,
+          payment_id,
+          new_balance: addResult.newBalance,
+        },
+        created_at: new Date().toISOString(),
+      });
+
+      // Return early — do NOT fall through to subscription logic
+      return { success: true, message: `Credit pack ${creditPackId} applied: +${formatCredits(pack.creditsInCents)}` };
+    }
+    // -----------------------------------------------------------------------
+    // END credit pack handling — subscription logic continues below
+    // -----------------------------------------------------------------------
 
     const { data: user, error: userError } = await supabase
       .from('users')

@@ -24,9 +24,13 @@ function CheckoutCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackToken = searchParams.get('token');
+  // Distinguish top-up purchases from subscription checkouts.
+  // Top-up: skip onboarding, redirect to settings. Subscription: normal flow.
+  const checkoutType = searchParams.get('type');
+  const isTopUp = checkoutType === 'topup';
 
   const [status, setStatus] = useState<CheckoutStatus>('verifying');
-  const [message, setMessage] = useState('Setting up your free trial...');
+  const [message, setMessage] = useState(isTopUp ? 'Processing your credit purchase...' : 'Setting up your free trial...');
   const [userEmail, setUserEmail] = useState<string | null>(null);
   // Poll /api/checkout/status until webhook marks session completed.
   // Uses recursive setTimeout with local pollCount (not state) for proper 2s/4s/6s backoff.
@@ -70,35 +74,42 @@ function CheckoutCallbackContent() {
             setMessage('Your free trial is ready! Please log in to get started.');
           } else {
             setStatus('completing');
-            setMessage('Almost there! Setting up your account...');
+            setMessage(isTopUp ? 'Adding credits to your wallet...' : 'Almost there! Setting up your account...');
 
             try {
-              const completeRes = await fetch('/api/onboarding/complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-              });
+              if (!isTopUp) {
+                // Only call onboarding complete for subscription checkouts.
+                // Top-up purchases don't need onboarding — user already has an account.
+                const completeRes = await fetch('/api/onboarding/complete', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                });
 
-              if (completeRes.ok) {
-                setStatus('success');
-                setMessage('Welcome! Redirecting to your dashboard...');
-                setTimeout(() => {
-                  router.replace('/dashboard?welcome=true');
-                }, 1500);
-              } else {
-                const errorData = await completeRes.json();
-                if (completeRes.status === 401) {
-                  setStatus('session_lost');
-                  setUserEmail(data.user_email || null);
-                  setMessage('Your free trial is ready! Please log in to get started.');
-                } else {
+                if (!completeRes.ok) {
+                  const errorData = await completeRes.json();
+                  if (completeRes.status === 401) {
+                    setStatus('session_lost');
+                    setUserEmail(data.user_email || null);
+                    setMessage('Your free trial is ready! Please log in to get started.');
+                    return;
+                  }
                   throw new Error(errorData.error || 'Failed to complete setup');
                 }
               }
+
+              setStatus('success');
+              setMessage(isTopUp ? 'Credits added! Redirecting...' : 'Welcome! Redirecting to your dashboard...');
+              setTimeout(() => {
+                router.replace(isTopUp ? '/dashboard/settings?tab=billing&topup=success' : '/dashboard?welcome=true');
+              }, 1500);
             } catch (err: any) {
-              console.error('Failed to complete onboarding:', err);
+              console.error('Failed to complete:', err);
               setStatus('session_lost');
               setUserEmail(data.user_email || null);
-              setMessage('Your free trial is ready! Please log in to complete setup.');
+              setMessage(isTopUp
+                ? 'Credits have been added! Please log in to continue.'
+                : 'Your free trial is ready! Please log in to complete setup.'
+              );
             }
           }
           return;
@@ -189,10 +200,10 @@ function CheckoutCallbackContent() {
           </div>
 
           <CardTitle className="text-xl">
-            {status === 'verifying' && 'Activating Your Trial'}
-            {status === 'completing' && 'Setting Up Account'}
-            {status === 'success' && 'Welcome!'}
-            {status === 'session_lost' && 'Trial Activated!'}
+            {status === 'verifying' && (isTopUp ? 'Processing Purchase' : 'Activating Your Trial')}
+            {status === 'completing' && (isTopUp ? 'Adding Credits' : 'Setting Up Account')}
+            {status === 'success' && (isTopUp ? 'Credits Added!' : 'Welcome!')}
+            {status === 'session_lost' && (isTopUp ? 'Credits Added!' : 'Trial Activated!')}
             {status === 'failed' && 'Something Went Wrong'}
             {status === 'expired' && 'Session Expired'}
           </CardTitle>
