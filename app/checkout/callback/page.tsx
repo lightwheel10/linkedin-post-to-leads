@@ -9,11 +9,11 @@ import { Loader2, CheckCircle, XCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-type CheckoutStatus = 'verifying' | 'completing' | 'success' | 'failed' | 'session_lost' | 'expired';
+type CheckoutStatus = 'verifying' | 'processing' | 'completing' | 'success' | 'failed' | 'session_lost' | 'expired';
 
 interface StatusResponse {
   success: boolean;
-  status: 'pending' | 'completed' | 'failed' | 'expired';
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'expired';
   message?: string;
   user_email?: string;
   plan_id?: string;
@@ -43,8 +43,23 @@ function CheckoutCallbackContent() {
       return;
     }
 
+    const verifiedCallbackToken = callbackToken;
     let cancelled = false;
     let pollCount = 0;
+    let processingPollCount = 0;
+
+    function buildStatusUrl() {
+      const params = new URLSearchParams({ token: verifiedCallbackToken });
+
+      ['subscription_id', 'payment_id', 'status'].forEach((key) => {
+        const value = searchParams.get(key);
+        if (value) params.set(key, value);
+      });
+
+      if (checkoutType) params.set('type', checkoutType);
+
+      return `/api/checkout/status?${params.toString()}`;
+    }
 
     async function poll() {
       if (cancelled) return;
@@ -56,7 +71,7 @@ function CheckoutCallbackContent() {
       }
 
       try {
-        const res = await fetch(`/api/checkout/status?token=${callbackToken}`);
+        const res = await fetch(buildStatusUrl());
         const data: StatusResponse = await res.json();
 
         if (cancelled) return;
@@ -121,6 +136,33 @@ function CheckoutCallbackContent() {
           return;
         }
 
+        if (data.status === 'processing') {
+          processingPollCount++;
+
+          if (processingPollCount >= 2) {
+            setStatus('processing');
+            setMessage(isTopUp
+              ? 'Your credit purchase is still verifying. Redirecting...'
+              : 'Payment verification is still processing. Redirecting...'
+            );
+
+            setTimeout(() => {
+              router.replace(isTopUp
+                ? '/dashboard/settings?tab=billing&topup=pending'
+                : '/dashboard?checkout=pending'
+              );
+            }, 1500);
+            return;
+          }
+
+          setMessage(isTopUp
+            ? 'Dodo is still verifying your purchase...'
+            : 'Dodo is still verifying your payment...'
+          );
+          setTimeout(poll, 3000);
+          return;
+        }
+
         if (data.status === 'expired') {
           setStatus('expired');
           setMessage('This checkout session has expired. Please try again.');
@@ -160,7 +202,7 @@ function CheckoutCallbackContent() {
       cancelled = true;
       clearTimeout(initialDelay);
     };
-  }, [status, callbackToken, router]);
+  }, [status, callbackToken, router, searchParams, checkoutType, isTopUp]);
 
   const handleLoginRedirect = () => {
     router.push('/login?next=/dashboard&welcome=true');
@@ -177,7 +219,7 @@ function CheckoutCallbackContent() {
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
               </div>
             )}
-            {status === 'completing' && (
+            {(status === 'processing' || status === 'completing') && (
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
               </div>
@@ -201,6 +243,7 @@ function CheckoutCallbackContent() {
 
           <CardTitle className="text-xl">
             {status === 'verifying' && (isTopUp ? 'Processing Purchase' : 'Activating Your Trial')}
+            {status === 'processing' && 'Verification Pending'}
             {status === 'completing' && (isTopUp ? 'Adding Credits' : 'Setting Up Account')}
             {status === 'success' && (isTopUp ? 'Credits Added!' : 'Welcome!')}
             {status === 'session_lost' && (isTopUp ? 'Credits Added!' : 'Trial Activated!')}
@@ -257,7 +300,7 @@ function CheckoutCallbackContent() {
           )}
 
           {/* Verifying - show progress indicator */}
-          {status === 'verifying' && (
+          {(status === 'verifying' || status === 'processing') && (
             <div className="space-y-3">
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <div className="flex gap-1">
@@ -272,7 +315,9 @@ function CheckoutCallbackContent() {
                 <span>Please wait...</span>
               </div>
               <p className="text-xs text-center text-muted-foreground">
-                This usually takes just a few seconds.
+                {status === 'processing'
+                  ? 'You can continue while Dodo finishes verification.'
+                  : 'This usually takes just a few seconds.'}
               </p>
             </div>
           )}

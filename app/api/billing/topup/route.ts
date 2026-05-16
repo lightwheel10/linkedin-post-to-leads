@@ -173,6 +173,9 @@ export async function POST(request: NextRequest) {
         product_cart: [{ product_id: productId, quantity: 1 }],
         customer: { customer_id: dodoCustomerId },
         return_url: returnUrl,
+        feature_flags: {
+          redirect_immediately: true,
+        },
         // Metadata is passed through to webhooks — used for identifying
         // this payment as a credit pack purchase (not a subscription)
         metadata: {
@@ -192,11 +195,6 @@ export async function POST(request: NextRequest) {
     await supabase.from('usage_logs').insert({
       user_id: user.id,
       action: 'topup_checkout_initiated',
-      metadata: {
-        pack_id: packId,
-        session_id: checkoutSession.session_id,
-        credits: pack.creditsInCents,
-      },
       created_at: new Date().toISOString(),
     });
 
@@ -214,8 +212,8 @@ export async function POST(request: NextRequest) {
         user_id: user.id,
         user_email: userEmail,
         plan_id: packId,  // Reusing plan_id column for pack_id
+        billing_period: 'one_time',
         status: 'pending',
-        metadata: { type: 'topup', pack_id: packId },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),

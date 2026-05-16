@@ -540,6 +540,7 @@ export function centsToDollars(cents: number): number {
 export const DodoWebhookEvents = {
   // Payment events
   PAYMENT_SUCCEEDED: 'payment.succeeded',
+  PAYMENT_PROCESSING: 'payment.processing',
   PAYMENT_FAILED: 'payment.failed',
   PAYMENT_REFUNDED: 'payment.refunded',
 
@@ -548,6 +549,8 @@ export const DodoWebhookEvents = {
   SUBSCRIPTION_UPDATED: 'subscription.updated',
   SUBSCRIPTION_CANCELLED: 'subscription.cancelled',
   SUBSCRIPTION_EXPIRED: 'subscription.expired',
+  SUBSCRIPTION_FAILED: 'subscription.failed',
+  SUBSCRIPTION_ON_HOLD: 'subscription.on_hold',
   SUBSCRIPTION_TRIAL_ENDING: 'subscription.trial_ending',
   SUBSCRIPTION_RENEWED: 'subscription.renewed',
 
@@ -602,6 +605,9 @@ export function mapDodoSubscriptionStatus(
     'expired': 'expired',
     'past_due': 'past_due',
     'unpaid': 'past_due',
+    'failed': 'past_due',
+    'on_hold': 'past_due',
+    'pending': 'past_due',
   };
 
   return statusMap[dodoStatus.toLowerCase()] || 'active';

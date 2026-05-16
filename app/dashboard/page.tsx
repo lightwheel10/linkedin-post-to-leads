@@ -13,6 +13,7 @@ import { StatsCards } from "@/components/dashboard/stats-cards";
 // MIGRATION: Using shared auth utility instead of local jose implementation
 import { getAuthenticatedUser } from "@/lib/auth";
 import { getOrCreateUser, getUserStats, getAnalyses, getUserBillingInfo } from "@/lib/data-store";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   ArrowRight,
   Search,
@@ -33,9 +34,43 @@ export default async function DashboardPage() {
   const stats = await getUserStats(user.id);
   const recentAnalyses = await getAnalyses(user.id);
   const billing = await getUserBillingInfo(user.id);
+  const adminSupabase = createAdminClient();
+  const { data: pendingCheckout } = await adminSupabase
+    .from("checkout_sessions")
+    .select("callback_token, plan_id")
+    .eq("user_id", user.id)
+    .eq("status", "pending")
+    .in("plan_id", ["pro", "growth", "scale"])
+    .gt("expires_at", new Date().toISOString())
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   return (
     <div className="space-y-5">
+      {pendingCheckout && user.plan === "free" && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="rounded-md bg-amber-500/15 p-1.5 mt-0.5">
+                <AlertTriangle className="h-4 w-4 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Payment verification is still processing</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Your trial will unlock automatically after Dodo confirms the payment. Free limits are available for now.
+                </p>
+              </div>
+            </div>
+            <Link href={`/checkout/callback?token=${pendingCheckout.callback_token}`}>
+              <Button variant="outline" size="sm" className="h-8 text-xs">
+                Check Status
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Welcome Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <div>
