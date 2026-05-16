@@ -13,16 +13,21 @@ import {
   mapDodoSubscriptionStatus,
   getPlanFromDodoProductId,
   getCustomerId,
+  getCreditPackFromProductId,
+  isCreditPackProduct,
 } from '@/lib/dodo';
 import {
   resetWalletCredits,
   clearWalletBalance,
+  addPurchasedCredits,
   WalletPlanId,
   isWalletPlan,
+  isValidCreditPack,
   formatCredits,
   WALLET_PLANS,
+  CREDIT_PACKS,
 } from '@/lib/wallet';
-import { completeOnboarding } from '@/lib/data-store';
+import { syncActiveDodoSubscription } from '@/lib/dodo-subscription-sync';
 
 // Raw body needed for signature verification
 export const runtime = 'nodejs';
@@ -180,6 +185,10 @@ export async function POST(request: NextRequest) {
         processingResult = await handlePaymentSucceeded(data);
         break;
 
+      case DodoWebhookEvents.PAYMENT_PROCESSING:
+        processingResult = await handlePaymentProcessing(data);
+        break;
+
       case DodoWebhookEvents.PAYMENT_FAILED:
         processingResult = await handlePaymentFailed(data);
         break;
@@ -198,6 +207,11 @@ export async function POST(request: NextRequest) {
 
       case DodoWebhookEvents.SUBSCRIPTION_EXPIRED:
         processingResult = await handleSubscriptionExpired(data);
+        break;
+
+      case DodoWebhookEvents.SUBSCRIPTION_FAILED:
+      case DodoWebhookEvents.SUBSCRIPTION_ON_HOLD:
+        processingResult = await handleSubscriptionUnavailable(data);
         break;
 
       case DodoWebhookEvents.SUBSCRIPTION_RENEWED:
@@ -261,9 +275,107 @@ async function handlePaymentSucceeded(
       product_id,
     });
 
+    // -----------------------------------------------------------------------
+    // CREDIT PACK CHECK — must run BEFORE subscription plan logic.
+    // One-time credit pack payments should NOT trigger subscription updates,
+    // onboarding completion, or wallet resets.
+    //
+    // We check both product_id and metadata.type as fallbacks, since
+    // one-time payment webhooks may structure data differently than
+    // subscription payments.
+    // -----------------------------------------------------------------------
+    const isTopUpPayment = (product_id && isCreditPackProduct(product_id))
+      || (data.metadata?.type === 'topup' && data.metadata?.pack_id);
+
+    if (isTopUpPayment) {
+      const creditPackId = (product_id && getCreditPackFromProductId(product_id))
+        || data.metadata?.pack_id as string | undefined;
+
+      if (!creditPackId || !isValidCreditPack(creditPackId)) {
+        console.error('[Dodo Webhook] Invalid credit pack in payment:', { product_id, metadata: data.metadata });
+        return { success: false, message: 'Invalid credit pack product' };
+      }
+
+      const pack = CREDIT_PACKS[creditPackId];
+
+      // Find user by customer_id
+      const { data: packUser, error: packUserError } = await supabase
+        .from('users')
+        .select('id, email')
+        .eq('dodo_customer_id', customer_id)
+        .single();
+
+      if (packUserError || !packUser) {
+        console.error('[Dodo Webhook] User not found for credit pack payment:', customer_id);
+        return { success: false, message: 'User not found for credit pack' };
+      }
+
+      // Add purchased credits atomically via RPC
+      const addResult = await addPurchasedCredits(
+        packUser.id,
+        pack.creditsInCents,
+        creditPackId,
+        { payment_id, dodo_product_id: product_id },
+        supabase  // Pass admin client from webhook context (bypasses RLS)
+      );
+
+      if (!addResult.success) {
+        console.error('[Dodo Webhook] Failed to add purchased credits:', addResult.error);
+        return { success: false, message: addResult.error };
+      }
+
+      // Mark any pending topup checkout session as completed.
+      // The checkout callback page polls /api/checkout/status which checks this.
+      const { data: pendingTopup } = await supabase
+        .from('checkout_sessions')
+        .select('id')
+        .eq('user_id', packUser.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (pendingTopup) {
+        await supabase
+          .from('checkout_sessions')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', pendingTopup.id);
+      }
+
+      console.log('[Dodo Webhook] Credit pack applied:', {
+        userId: packUser.id,
+        packId: creditPackId,
+        credits: formatCredits(pack.creditsInCents),
+        newBalance: formatCredits(addResult.newBalance),
+      });
+
+      // Log for analytics
+      await supabase.from('usage_logs').insert({
+        user_id: packUser.id,
+        action: 'credit_pack_purchased',
+        metadata: {
+          pack_id: creditPackId,
+          credits_added: pack.creditsInCents,
+          payment_id,
+          new_balance: addResult.newBalance,
+        },
+        created_at: new Date().toISOString(),
+      });
+
+      // Return early — do NOT fall through to subscription logic
+      return { success: true, message: `Credit pack ${creditPackId} applied: +${formatCredits(pack.creditsInCents)}` };
+    }
+    // -----------------------------------------------------------------------
+    // END credit pack handling — subscription logic continues below
+    // -----------------------------------------------------------------------
+
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('id, email, wallet_balance, plan')
+      .select('id, email, wallet_balance, plan, selected_plan, trial_ends_at')
       .eq('dodo_customer_id', customer_id)
       .single();
 
@@ -284,15 +396,21 @@ async function handlePaymentSucceeded(
       planId = sub?.plan || null;
     }
 
+    const isTrialCurrentlyActive = !!user.trial_ends_at && new Date(user.trial_ends_at) > new Date();
+
+    if (isTrialCurrentlyActive) {
+      return { success: true, message: 'Trial payment acknowledged; credits already allocated on subscription activation' };
+    }
+
     if (!planId) {
-      planId = user.plan;
+      planId = user.plan !== 'free' ? user.plan : user.selected_plan;
     }
 
     if (!planId || !isWalletPlan(planId)) {
-      console.error('[Dodo Webhook] Cannot determine plan for payment:', {
+      console.warn('[Dodo Webhook] Payment arrived before subscription activation:', {
         product_id, subscription_id, userPlan: user.plan,
       });
-      return { success: false, message: 'Cannot determine plan' };
+      return { success: true, message: 'Waiting for subscription activation to allocate credits' };
     }
 
     // Reset wallet — previous balance forfeited, new balance = plan credits
@@ -352,6 +470,35 @@ async function handlePaymentSucceeded(
   }
 }
 
+/** Handles payment.processing - Dodo is still verifying the payment. */
+async function handlePaymentProcessing(
+  data: DodoWebhookPayload['data']
+): Promise<{ success: boolean; message?: string }> {
+  const supabase = createAdminClient();
+  const customer_id = getCustomerId(data);
+
+  try {
+    const { data: user } = await supabase
+      .from('users')
+      .select('id')
+      .eq('dodo_customer_id', customer_id)
+      .maybeSingle();
+
+    if (user) {
+      await supabase
+        .from('checkout_sessions')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .eq('status', 'pending');
+    }
+
+    return { success: true, message: 'Payment is still processing' };
+  } catch (error) {
+    console.error('[Dodo Webhook] Error handling payment.processing:', error);
+    return { success: false, message: String(error) };
+  }
+}
+
 /** Handles payment.failed — marks subscription past_due, keeps wallet credits. */
 async function handlePaymentFailed(
   data: DodoWebhookPayload['data']
@@ -378,9 +525,18 @@ async function handlePaymentFailed(
       .from('users')
       .select('id, email')
       .eq('dodo_customer_id', customer_id)
-      .single();
+      .maybeSingle();
 
     if (user) {
+      await supabase
+        .from('checkout_sessions')
+        .update({
+          status: 'failed',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id)
+        .eq('status', 'pending');
+
       // Log the failure
       await supabase.from('usage_logs').insert({
         user_id: user.id,
@@ -409,7 +565,6 @@ async function handleSubscriptionActive(
   data: DodoWebhookPayload['data']
 ): Promise<{ success: boolean; message?: string }> {
   const supabase = createAdminClient();
-  const customer_id = getCustomerId(data);
   const { subscription_id, product_id, status } = data;
   try {
     console.log('[Dodo Webhook] Subscription active:', {
@@ -418,108 +573,10 @@ async function handleSubscriptionActive(
       status,
     });
 
-    const planId = getPlanFromDodoProductId(product_id || '');
-    if (!planId) {
-      console.warn('[Dodo Webhook] Unknown product_id:', product_id);
-      return { success: true, message: 'Unknown product' };
-    }
-
-    const { data: user } = await supabase
-      .from('users')
-      .select('id, email')
-      .eq('dodo_customer_id', customer_id)
-      .single();
-
-    if (!user) {
-      console.warn('[Dodo Webhook] User not found for customer:', customer_id);
-      return { success: false, message: 'User not found' };
-    }
-
-    // Upsert subscription record
-    const now = new Date();
-    const periodEnd = new Date(now);
-    periodEnd.setMonth(periodEnd.getMonth() + 1);
-    const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    const { data: existingSub } = await supabase
-      .from('subscriptions')
-      .select('id')
-      .eq('dodo_subscription_id', subscription_id)
-      .single();
-
-    const subscriptionData = {
-      user_id: user.id,
-      plan: planId,
-      period: 'monthly',
-      status: mapDodoSubscriptionStatus(status || 'active'),
-      dodo_subscription_id: subscription_id,
-      current_period_start: now.toISOString(),
-      current_period_end: periodEnd.toISOString(),
-      updated_at: now.toISOString(),
-    };
-
-    if (existingSub) {
-      await supabase
-        .from('subscriptions')
-        .update(subscriptionData)
-        .eq('id', existingSub.id);
-    } else {
-      await supabase
-        .from('subscriptions')
-        .insert({
-          ...subscriptionData,
-          created_at: now.toISOString(),
-        });
-    }
-
-    // Set user plan fields
-    await supabase
-      .from('users')
-      .update({
-        plan: planId,
-        plan_started_at: now.toISOString(),
-        plan_expires_at: periodEnd.toISOString(),
-        trial_ends_at: trialEnd.toISOString(),
-        analyses_used: 0,
-        enrichments_used: 0,
-        usage_reset_at: now.toISOString(),
-        updated_at: now.toISOString(),
-      })
-      .eq('id', user.id);
-
-    // Mark checkout session as completed (webhook is sole authority)
-    const { data: pendingSession } = await supabase
-      .from('checkout_sessions')
-      .select('id, session_id')
-      .eq('user_id', user.id)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (pendingSession) {
-      await supabase
-        .from('checkout_sessions')
-        .update({
-          status: 'completed',
-          completed_at: now.toISOString(),
-          dodo_subscription_id: subscription_id || null,
-          updated_at: now.toISOString(),
-        })
-        .eq('id', pendingSession.id);
-
-      console.log('[Dodo Webhook] Checkout session completed:', pendingSession.session_id);
-    }
-
-    // Complete onboarding (idempotent)
-    try {
-      await completeOnboarding(user.email, supabase);
-      console.log('[Dodo Webhook] Onboarding completed for:', user.email);
-    } catch (err) {
-      console.error('[Dodo Webhook] Failed to complete onboarding:', err);
-    }
-
-    return { success: true };
+    return await syncActiveDodoSubscription({
+      subscription: data,
+      fallbackPlanId: product_id ? getPlanFromDodoProductId(product_id) : null,
+    }, supabase);
   } catch (error) {
     console.error('[Dodo Webhook] Error handling subscription.active:', error);
     return { success: false, message: String(error) };
@@ -625,6 +682,47 @@ async function handleSubscriptionCancelled(
     return { success: true };
   } catch (error) {
     console.error('[Dodo Webhook] Error handling subscription.cancelled:', error);
+    return { success: false, message: String(error) };
+  }
+}
+
+/** Handles subscription.failed/on_hold during checkout verification. */
+async function handleSubscriptionUnavailable(
+  data: DodoWebhookPayload['data']
+): Promise<{ success: boolean; message?: string }> {
+  const supabase = createAdminClient();
+  const customer_id = getCustomerId(data);
+  const { subscription_id, status } = data;
+
+  try {
+    await supabase
+      .from('subscriptions')
+      .update({
+        status: mapDodoSubscriptionStatus(status || 'failed'),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('dodo_subscription_id', subscription_id);
+
+    const { data: user } = await supabase
+      .from('users')
+      .select('id')
+      .eq('dodo_customer_id', customer_id)
+      .maybeSingle();
+
+    if (user) {
+      await supabase
+        .from('checkout_sessions')
+        .update({
+          status: 'failed',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id)
+        .eq('status', 'pending');
+    }
+
+    return { success: true, message: `Subscription is ${status || 'unavailable'}` };
+  } catch (error) {
+    console.error('[Dodo Webhook] Error handling subscription unavailable:', error);
     return { success: false, message: String(error) };
   }
 }

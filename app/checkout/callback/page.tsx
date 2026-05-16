@@ -9,11 +9,11 @@ import { Loader2, CheckCircle, XCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-type CheckoutStatus = 'verifying' | 'completing' | 'success' | 'failed' | 'session_lost' | 'expired';
+type CheckoutStatus = 'verifying' | 'processing' | 'completing' | 'success' | 'failed' | 'session_lost' | 'expired';
 
 interface StatusResponse {
   success: boolean;
-  status: 'pending' | 'completed' | 'failed' | 'expired';
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'expired';
   message?: string;
   user_email?: string;
   plan_id?: string;
@@ -24,9 +24,13 @@ function CheckoutCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackToken = searchParams.get('token');
+  // Distinguish top-up purchases from subscription checkouts.
+  // Top-up: skip onboarding, redirect to settings. Subscription: normal flow.
+  const checkoutType = searchParams.get('type');
+  const isTopUp = checkoutType === 'topup';
 
   const [status, setStatus] = useState<CheckoutStatus>('verifying');
-  const [message, setMessage] = useState('Setting up your free trial...');
+  const [message, setMessage] = useState(isTopUp ? 'Processing your credit purchase...' : 'Setting up your free trial...');
   const [userEmail, setUserEmail] = useState<string | null>(null);
   // Poll /api/checkout/status until webhook marks session completed.
   // Uses recursive setTimeout with local pollCount (not state) for proper 2s/4s/6s backoff.
@@ -39,8 +43,23 @@ function CheckoutCallbackContent() {
       return;
     }
 
+    const verifiedCallbackToken = callbackToken;
     let cancelled = false;
     let pollCount = 0;
+    let processingPollCount = 0;
+
+    function buildStatusUrl() {
+      const params = new URLSearchParams({ token: verifiedCallbackToken });
+
+      ['subscription_id', 'payment_id', 'status'].forEach((key) => {
+        const value = searchParams.get(key);
+        if (value) params.set(key, value);
+      });
+
+      if (checkoutType) params.set('type', checkoutType);
+
+      return `/api/checkout/status?${params.toString()}`;
+    }
 
     async function poll() {
       if (cancelled) return;
@@ -52,7 +71,7 @@ function CheckoutCallbackContent() {
       }
 
       try {
-        const res = await fetch(`/api/checkout/status?token=${callbackToken}`);
+        const res = await fetch(buildStatusUrl());
         const data: StatusResponse = await res.json();
 
         if (cancelled) return;
@@ -70,35 +89,42 @@ function CheckoutCallbackContent() {
             setMessage('Your free trial is ready! Please log in to get started.');
           } else {
             setStatus('completing');
-            setMessage('Almost there! Setting up your account...');
+            setMessage(isTopUp ? 'Adding credits to your wallet...' : 'Almost there! Setting up your account...');
 
             try {
-              const completeRes = await fetch('/api/onboarding/complete', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-              });
+              if (!isTopUp) {
+                // Only call onboarding complete for subscription checkouts.
+                // Top-up purchases don't need onboarding — user already has an account.
+                const completeRes = await fetch('/api/onboarding/complete', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                });
 
-              if (completeRes.ok) {
-                setStatus('success');
-                setMessage('Welcome! Redirecting to your dashboard...');
-                setTimeout(() => {
-                  router.replace('/dashboard?welcome=true');
-                }, 1500);
-              } else {
-                const errorData = await completeRes.json();
-                if (completeRes.status === 401) {
-                  setStatus('session_lost');
-                  setUserEmail(data.user_email || null);
-                  setMessage('Your free trial is ready! Please log in to get started.');
-                } else {
+                if (!completeRes.ok) {
+                  const errorData = await completeRes.json();
+                  if (completeRes.status === 401) {
+                    setStatus('session_lost');
+                    setUserEmail(data.user_email || null);
+                    setMessage('Your free trial is ready! Please log in to get started.');
+                    return;
+                  }
                   throw new Error(errorData.error || 'Failed to complete setup');
                 }
               }
+
+              setStatus('success');
+              setMessage(isTopUp ? 'Credits added! Redirecting...' : 'Welcome! Redirecting to your dashboard...');
+              setTimeout(() => {
+                router.replace(isTopUp ? '/dashboard/settings?tab=billing&topup=success' : '/dashboard?welcome=true');
+              }, 1500);
             } catch (err: any) {
-              console.error('Failed to complete onboarding:', err);
+              console.error('Failed to complete:', err);
               setStatus('session_lost');
               setUserEmail(data.user_email || null);
-              setMessage('Your free trial is ready! Please log in to complete setup.');
+              setMessage(isTopUp
+                ? 'Credits have been added! Please log in to continue.'
+                : 'Your free trial is ready! Please log in to complete setup.'
+              );
             }
           }
           return;
@@ -107,6 +133,33 @@ function CheckoutCallbackContent() {
         if (data.status === 'failed') {
           setStatus('failed');
           setMessage(data.message || 'Something went wrong. Please try again.');
+          return;
+        }
+
+        if (data.status === 'processing') {
+          processingPollCount++;
+
+          if (processingPollCount >= 2) {
+            setStatus('processing');
+            setMessage(isTopUp
+              ? 'Your credit purchase is still verifying. Redirecting...'
+              : 'Payment verification is still processing. Redirecting...'
+            );
+
+            setTimeout(() => {
+              router.replace(isTopUp
+                ? '/dashboard/settings?tab=billing&topup=pending'
+                : '/dashboard?checkout=pending'
+              );
+            }, 1500);
+            return;
+          }
+
+          setMessage(isTopUp
+            ? 'Dodo is still verifying your purchase...'
+            : 'Dodo is still verifying your payment...'
+          );
+          setTimeout(poll, 3000);
           return;
         }
 
@@ -149,7 +202,7 @@ function CheckoutCallbackContent() {
       cancelled = true;
       clearTimeout(initialDelay);
     };
-  }, [status, callbackToken, router]);
+  }, [status, callbackToken, router, searchParams, checkoutType, isTopUp]);
 
   const handleLoginRedirect = () => {
     router.push('/login?next=/dashboard&welcome=true');
@@ -166,7 +219,7 @@ function CheckoutCallbackContent() {
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
               </div>
             )}
-            {status === 'completing' && (
+            {(status === 'processing' || status === 'completing') && (
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <Loader2 className="w-8 h-8 text-primary animate-spin" />
               </div>
@@ -189,10 +242,11 @@ function CheckoutCallbackContent() {
           </div>
 
           <CardTitle className="text-xl">
-            {status === 'verifying' && 'Activating Your Trial'}
-            {status === 'completing' && 'Setting Up Account'}
-            {status === 'success' && 'Welcome!'}
-            {status === 'session_lost' && 'Trial Activated!'}
+            {status === 'verifying' && (isTopUp ? 'Processing Purchase' : 'Activating Your Trial')}
+            {status === 'processing' && 'Verification Pending'}
+            {status === 'completing' && (isTopUp ? 'Adding Credits' : 'Setting Up Account')}
+            {status === 'success' && (isTopUp ? 'Credits Added!' : 'Welcome!')}
+            {status === 'session_lost' && (isTopUp ? 'Credits Added!' : 'Trial Activated!')}
             {status === 'failed' && 'Something Went Wrong'}
             {status === 'expired' && 'Session Expired'}
           </CardTitle>
@@ -246,7 +300,7 @@ function CheckoutCallbackContent() {
           )}
 
           {/* Verifying - show progress indicator */}
-          {status === 'verifying' && (
+          {(status === 'verifying' || status === 'processing') && (
             <div className="space-y-3">
               <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <div className="flex gap-1">
@@ -261,7 +315,9 @@ function CheckoutCallbackContent() {
                 <span>Please wait...</span>
               </div>
               <p className="text-xs text-center text-muted-foreground">
-                This usually takes just a few seconds.
+                {status === 'processing'
+                  ? 'You can continue while Dodo finishes verification.'
+                  : 'This usually takes just a few seconds.'}
               </p>
             </div>
           )}

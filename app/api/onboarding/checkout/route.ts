@@ -226,6 +226,9 @@ export async function POST(request: NextRequest) {
         },
         // Use our callback token in the return URL
         return_url: returnUrl,
+        feature_flags: {
+          redirect_immediately: true,
+        },
         metadata: {
           user_id: user.id,
           plan_id: planId,

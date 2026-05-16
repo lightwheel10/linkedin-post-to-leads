@@ -48,6 +48,8 @@ export interface UsageInfo {
 export interface UsageCheckResult {
   allowed: boolean;
   reason?: string;
+  /** When true, the UI should offer a "Buy Credits" action alongside the error */
+  topUpAvailable?: boolean;
   usage: UsageInfo;
 }
 
@@ -199,7 +201,8 @@ export async function canAnalyze(userId: string): Promise<UsageCheckResult> {
 
       return {
         allowed: false,
-        reason: `Insufficient credits. You have $${(currentBalance / 100).toFixed(2)} but may need up to $${(estimatedMaxCost / 100).toFixed(2)} for a full analysis. Please top up or wait for your next billing cycle.`,
+        reason: `Insufficient credits. You have $${(currentBalance / 100).toFixed(2)} but may need up to $${(estimatedMaxCost / 100).toFixed(2)} for a full analysis.`,
+        topUpAvailable: true,
         usage,
       };
     }
@@ -251,6 +254,7 @@ export async function canEnrich(userId: string): Promise<UsageCheckResult> {
       return {
         allowed: false,
         reason: 'Insufficient wallet credits for enrichment.',
+        topUpAvailable: true,
         usage,
       };
     }

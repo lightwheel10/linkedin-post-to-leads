@@ -232,6 +232,9 @@ export async function POST(request: NextRequest) {
         },
         // Redirect URL after checkout (success or cancel)
         return_url: successUrl || defaultSuccessUrl,
+        feature_flags: {
+          redirect_immediately: true,
+        },
         // Metadata for tracking (passed through to webhooks)
         metadata: {
           user_id: user.id,

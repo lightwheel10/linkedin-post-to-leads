@@ -208,6 +208,68 @@ export function isValidWalletPlan(planId: string): boolean {
 }
 
 // =============================================================================
+// CREDIT PACK PRODUCT IDS (One-time payments)
+// =============================================================================
+//
+// Maps credit pack IDs to Dodo one-time payment product IDs.
+// These are separate from subscription products — they charge once and
+// add credits to the user's wallet that persist across billing cycles.
+//
+// SETUP INSTRUCTIONS:
+// 1. Create one-time payment products in Dodo dashboard (NOT subscriptions)
+// 2. Copy the product IDs (format: prd_xxxxx)
+// 3. Add to .env as DODO_PRODUCT_CREDIT_10, DODO_PRODUCT_CREDIT_25, etc.
+//
+// IMPORTANT: The webhook handler uses these to distinguish credit pack
+// payments from subscription payments. If a payment.succeeded event
+// has a product_id matching one of these, it's a credit pack purchase
+// and should NOT trigger subscription/onboarding logic.
+// =============================================================================
+
+export const DODO_CREDIT_PACK_IDS: Record<string, string> = {
+  credit_10: process.env.DODO_PRODUCT_CREDIT_10 || 'prd_credit_10_placeholder',
+  credit_25: process.env.DODO_PRODUCT_CREDIT_25 || 'prd_credit_25_placeholder',
+  credit_50: process.env.DODO_PRODUCT_CREDIT_50 || 'prd_credit_50_placeholder',
+};
+
+/**
+ * Gets the Dodo product ID for a credit pack.
+ * @throws Error if packId is invalid
+ */
+export function getCreditPackProductId(packId: string): string {
+  const productId = DODO_CREDIT_PACK_IDS[packId];
+  if (!productId) {
+    throw new Error(
+      `Invalid credit pack ID: ${packId}. Valid packs: ${Object.keys(DODO_CREDIT_PACK_IDS).join(', ')}`
+    );
+  }
+  return productId;
+}
+
+/**
+ * Reverse lookup: Gets the credit pack ID from a Dodo product ID.
+ * Used in webhook processing to identify credit pack payments.
+ *
+ * @returns The pack ID (e.g., 'credit_25'), or null if not a credit pack product
+ */
+export function getCreditPackFromProductId(dodoProductId: string): string | null {
+  for (const [packId, productId] of Object.entries(DODO_CREDIT_PACK_IDS)) {
+    if (productId === dodoProductId) {
+      return packId;
+    }
+  }
+  return null;
+}
+
+/**
+ * Checks if a Dodo product ID is a credit pack (not a subscription).
+ * Used in the webhook handler to route payment events correctly.
+ */
+export function isCreditPackProduct(dodoProductId: string): boolean {
+  return getCreditPackFromProductId(dodoProductId) !== null;
+}
+
+// =============================================================================
 // WEBHOOK VERIFICATION
 // =============================================================================
 
@@ -478,6 +540,7 @@ export function centsToDollars(cents: number): number {
 export const DodoWebhookEvents = {
   // Payment events
   PAYMENT_SUCCEEDED: 'payment.succeeded',
+  PAYMENT_PROCESSING: 'payment.processing',
   PAYMENT_FAILED: 'payment.failed',
   PAYMENT_REFUNDED: 'payment.refunded',
 
@@ -486,6 +549,8 @@ export const DodoWebhookEvents = {
   SUBSCRIPTION_UPDATED: 'subscription.updated',
   SUBSCRIPTION_CANCELLED: 'subscription.cancelled',
   SUBSCRIPTION_EXPIRED: 'subscription.expired',
+  SUBSCRIPTION_FAILED: 'subscription.failed',
+  SUBSCRIPTION_ON_HOLD: 'subscription.on_hold',
   SUBSCRIPTION_TRIAL_ENDING: 'subscription.trial_ending',
   SUBSCRIPTION_RENEWED: 'subscription.renewed',
 
@@ -540,6 +605,9 @@ export function mapDodoSubscriptionStatus(
     'expired': 'expired',
     'past_due': 'past_due',
     'unpaid': 'past_due',
+    'failed': 'past_due',
+    'on_hold': 'past_due',
+    'pending': 'past_due',
   };
 
   return statusMap[dodoStatus.toLowerCase()] || 'active';

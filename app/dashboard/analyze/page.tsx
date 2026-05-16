@@ -288,7 +288,12 @@ export default function AnalyzePage() {
     analysesLimit: number;
   } | null>(null);
 
-  // Fetch current usage on mount
+  // Wallet balance for low-credit banner
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [showTopUpDialog, setShowTopUpDialog] = useState(false);
+  const [topUpLoading, setTopUpLoading] = useState<string | null>(null);
+
+  // Fetch current usage and wallet balance on mount
   useEffect(() => {
     fetch('/api/billing')
       .then(res => res.json())
@@ -301,7 +306,34 @@ export default function AnalyzePage() {
         }
       })
       .catch(() => {});
+
+    // Fetch wallet balance for low-credit banner
+    fetch('/api/billing/wallet')
+      .then(res => res.json())
+      .then(data => {
+        if (data.balance) {
+          setWalletBalance(data.balance.current ?? null);
+        }
+      })
+      .catch(() => {});
   }, []);
+
+  // Redirect to Dodo checkout for credit pack purchase
+  const handleBuyCredits = async (packId: string) => {
+    setTopUpLoading(packId);
+    try {
+      const res = await fetch('/api/billing/topup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
+    } catch {}
+    setTopUpLoading(null);
+  };
 
   const handleAnalyze = async () => {
     if (!url) return;
@@ -600,6 +632,65 @@ export default function AnalyzePage() {
           </div>
         )}
       </div>
+
+      {/* Low Balance Banner — shown when wallet credits are running low */}
+      {walletBalance !== null && walletBalance < 500 && walletBalance >= 0 && (
+        <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+          <div className="flex items-center gap-2 text-sm">
+            <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
+            <span className="text-amber-600 dark:text-amber-400">
+              Low credits (${(walletBalance / 100).toFixed(2)} remaining). You may not have enough for a full analysis.
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowTopUpDialog(true)}
+            className="shrink-0 ml-3"
+          >
+            Buy Credits
+          </Button>
+        </div>
+      )}
+
+      {/* Top-Up Dialog */}
+      {showTopUpDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowTopUpDialog(false)}>
+          <div className="bg-card border rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-1">Buy Credits</h3>
+            <p className="text-sm text-muted-foreground mb-4">Purchased credits don't expire with your billing cycle.</p>
+            <div className="space-y-2">
+              {([
+                { id: 'credit_10' as const, name: 'Starter', price: '$10', credits: '$10.00' },
+                { id: 'credit_25' as const, name: 'Popular', price: '$25', credits: '$25.00' },
+                { id: 'credit_50' as const, name: 'Power', price: '$50', credits: '$55.00', bonus: '+$5 bonus' },
+              ]).map((pack) => (
+                <button
+                  key={pack.id}
+                  onClick={() => handleBuyCredits(pack.id)}
+                  disabled={topUpLoading !== null}
+                  className="w-full flex items-center justify-between p-3 rounded-lg border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                >
+                  <div>
+                    <span className="font-semibold">{pack.name}</span>
+                    <span className="text-muted-foreground ml-2 text-sm">{pack.credits} credits</span>
+                    {'bonus' in pack && <span className="text-primary text-xs ml-1">{pack.bonus}</span>}
+                  </div>
+                  <div className="font-bold">
+                    {topUpLoading === pack.id ? <Loader2 className="w-4 h-4 animate-spin" /> : pack.price}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowTopUpDialog(false)}
+              className="w-full mt-3 text-sm text-muted-foreground hover:text-foreground text-center py-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Container */}
       <div className="relative bg-card/30 border border-border/50 rounded-xl p-4 md:p-6 backdrop-blur-sm min-h-[450px] flex flex-col">

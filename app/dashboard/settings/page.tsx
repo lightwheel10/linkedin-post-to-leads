@@ -25,7 +25,11 @@ import {
   Download,
   ChevronRight,
   Sparkles,
+  Wallet,
 } from "lucide-react";
+// Import from credit-packs.ts (not wallet.ts) because wallet.ts imports
+// server-only Supabase modules that can't be used in client components.
+import { CREDIT_PACKS, type CreditPackId } from "@/lib/credit-packs";
 
 interface UserSettings {
   icp_keywords: string[];
@@ -174,6 +178,9 @@ export default function SettingsPage() {
   const [showPlanModal, setShowPlanModal] = useState(false);
   const [modalBillingPeriod, setModalBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
 
+  // Credit top-up state
+  const [topUpLoading, setTopUpLoading] = useState<string | null>(null);
+
   // Form state
   const [icpKeywords, setIcpKeywords] = useState<string[]>([]);
   const [excludeKeywords, setExcludeKeywords] = useState<string[]>([]);
@@ -251,6 +258,33 @@ export default function SettingsPage() {
       setError("Failed to save settings. Please try again.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Credit top-up: redirects to Dodo one-time payment checkout
+  const handleBuyCredits = async (packId: string) => {
+    setTopUpLoading(packId);
+    setError(null);
+    try {
+      const res = await fetch('/api/billing/topup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packId }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Failed to create checkout');
+        return;
+      }
+
+      // Redirect to Dodo hosted checkout
+      window.location.href = data.checkoutUrl;
+    } catch (e) {
+      setError('Failed to start checkout. Please try again.');
+    } finally {
+      setTopUpLoading(null);
     }
   };
 
@@ -630,6 +664,42 @@ export default function SettingsPage() {
                         )}
                       </div>
                     </div>
+
+                    {/* Credit Packs — only shown for paid plan users */}
+                    {billing.plan !== 'free' && (
+                      <div className="p-6 rounded-xl border border-border/50 bg-card">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Wallet className="w-5 h-5 text-primary" />
+                          <h3 className="font-semibold">Buy Credits</h3>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Need more credits? Purchase a pack — they don't expire with your billing cycle.
+                        </p>
+
+                        <div className="grid grid-cols-3 gap-3">
+                          {(Object.values(CREDIT_PACKS) as typeof CREDIT_PACKS[CreditPackId][]).map((pack) => (
+                            <button
+                              key={pack.id}
+                              onClick={() => handleBuyCredits(pack.id)}
+                              disabled={topUpLoading !== null}
+                              className={cn(
+                                "p-4 rounded-lg border text-left transition-all hover:border-primary/50 hover:bg-primary/5",
+                                topUpLoading === pack.id ? "opacity-50 cursor-wait" : "cursor-pointer"
+                              )}
+                            >
+                              <div className="text-lg font-bold">${(pack.priceInCents / 100).toFixed(0)}</div>
+                              <div className="text-sm text-muted-foreground">${(pack.creditsInCents / 100).toFixed(2)} credits</div>
+                              {pack.bonusInCents > 0 && (
+                                <div className="text-xs text-primary font-medium mt-1">+${(pack.bonusInCents / 100).toFixed(0)} bonus</div>
+                              )}
+                              {topUpLoading === pack.id && (
+                                <Loader2 className="w-4 h-4 animate-spin mt-2" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Cancel Subscription */}
                     {billing.plan !== 'free' && (

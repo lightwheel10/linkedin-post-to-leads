@@ -106,10 +106,12 @@ export async function GET(request: NextRequest) {
       ? WALLET_PLANS[walletStatus.plan as WalletPlanId]
       : null;
 
-    // Calculate how much has been spent this period
-    // (allocation - current balance)
+    // Calculate how much PLAN credits have been spent this period.
+    // We subtract purchased credits from the balance first, since purchased
+    // credits are not part of the plan allocation.
     const totalAllocation = planConfig?.totalCredits || 0;
-    const spent = Math.max(0, totalAllocation - walletStatus.balanceInCents);
+    const planBalance = Math.max(0, walletStatus.balanceInCents - walletStatus.purchasedCreditsInCents);
+    const spent = Math.max(0, totalAllocation - planBalance);
     const percentUsed = totalAllocation > 0
       ? Math.round((spent / totalAllocation) * 100)
       : 0;
@@ -133,6 +135,9 @@ export async function GET(request: NextRequest) {
         formatted: walletStatus.balanceFormatted,
         plan: walletStatus.plan,
         planName: planConfig?.name || 'Free',
+        // Purchased credits that persist across billing cycles
+        purchasedCredits: walletStatus.purchasedCreditsInCents,
+        purchasedCreditsFormatted: formatCredits(walletStatus.purchasedCreditsInCents),
       },
       allocation: planConfig
         ? {
