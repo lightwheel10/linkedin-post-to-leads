@@ -44,7 +44,7 @@ import {
   withDodoErrorHandling,
   DodoError,
 } from '@/lib/dodo';
-import { WALLET_PLANS, formatCredits } from '@/lib/wallet';
+import { WALLET_PLANS, formatCredits, TRIAL_PERIOD_DAYS, TRIAL_WALLET_CREDITS_IN_CENTS } from '@/lib/wallet';
 
 // =============================================================================
 // TYPES
@@ -60,7 +60,7 @@ interface CheckoutRequest {
   successUrl?: string;
   /** Optional URL to redirect if user cancels */
   cancelUrl?: string;
-  /** Optional: Number of trial days (defaults to 7 for new subscriptions) */
+  /** Deprecated: trial length is now server controlled. */
   trialDays?: number;
 }
 
@@ -123,7 +123,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { planId, successUrl, cancelUrl, trialDays = 7 } = body;
+    const { planId, successUrl, cancelUrl } = body;
+    // Trial cap - 2026-05-17 19:05 IST, paras: clients cannot request longer trials or larger trial wallets.
+    const trialDays = TRIAL_PERIOD_DAYS;
 
     // -------------------------------------------------------------------------
     // Validate planId is a valid wallet plan
@@ -244,7 +246,7 @@ export async function POST(request: NextRequest) {
         // Subscription settings - 7-day free trial
         // This allows users to try the service before being charged
         subscription_data: {
-          trial_period_days: trialDays,
+          trial_period_days: TRIAL_PERIOD_DAYS,
         },
       }),
       'creating checkout session'
@@ -255,7 +257,8 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       planId,
       trialDays,
-      credits: formatCredits(planConfig.totalCredits),
+      trialCredits: formatCredits(TRIAL_WALLET_CREDITS_IN_CENTS),
+      paidCreditsAfterTrial: formatCredits(planConfig.totalCredits),
     });
 
     // =========================================================================
@@ -267,7 +270,8 @@ export async function POST(request: NextRequest) {
       metadata: {
         plan_id: planId,
         session_id: checkoutSession.session_id,
-        credits_to_receive: planConfig.totalCredits,
+        credits_to_receive: TRIAL_WALLET_CREDITS_IN_CENTS,
+        paid_credits_after_trial: planConfig.totalCredits,
       },
       created_at: new Date().toISOString(),
     });
@@ -283,6 +287,8 @@ export async function POST(request: NextRequest) {
         name: planConfig.name,
         price: formatCredits(planConfig.priceInCents) + '/mo',
         credits: formatCredits(planConfig.totalCredits),
+        trialCredits: formatCredits(TRIAL_WALLET_CREDITS_IN_CENTS),
+        trialDays,
         breakdown: {
           base: formatCredits(planConfig.baseCredits),
           bonus: formatCredits(planConfig.bonusCredits),

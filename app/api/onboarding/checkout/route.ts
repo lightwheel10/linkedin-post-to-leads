@@ -53,7 +53,7 @@ import {
   withDodoErrorHandling,
   DodoError,
 } from '@/lib/dodo';
-import { WALLET_PLANS, formatCredits } from '@/lib/wallet';
+import { WALLET_PLANS, formatCredits, TRIAL_PERIOD_DAYS, TRIAL_WALLET_CREDITS_IN_CENTS } from '@/lib/wallet';
 
 // =============================================================================
 // TYPES
@@ -237,9 +237,9 @@ export async function POST(request: NextRequest) {
           callback_token: callbackToken, // Include for traceability
           source: 'onboarding',
         },
-        // 7-day free trial - user won't be charged until trial ends
+        // Trial cap - 2026-05-17 19:05 IST, paras: checkout always uses our 7-day trial rule.
         subscription_data: {
-          trial_period_days: 7,
+          trial_period_days: TRIAL_PERIOD_DAYS,
         },
       }),
       'creating onboarding checkout session'
@@ -250,7 +250,8 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       planId,
       billingPeriod,
-      trialDays: 7,
+      trialDays: TRIAL_PERIOD_DAYS,
+      trialCredits: formatCredits(TRIAL_WALLET_CREDITS_IN_CENTS),
       returnUrl,
     });
 
@@ -295,7 +296,8 @@ export async function POST(request: NextRequest) {
         plan_id: planId,
         billing_period: billingPeriod,
         session_id: checkoutSession.session_id,
-        credits_to_receive: planConfig.totalCredits,
+        credits_to_receive: TRIAL_WALLET_CREDITS_IN_CENTS,
+        paid_credits_after_trial: planConfig.totalCredits,
         return_url: returnUrl, // Log the new return URL for debugging
       },
       created_at: new Date().toISOString(),
@@ -313,7 +315,8 @@ export async function POST(request: NextRequest) {
         name: planConfig.name,
         price: formatCredits(planConfig.priceInCents) + '/mo',
         credits: formatCredits(planConfig.totalCredits),
-        trialDays: 7,
+        trialCredits: formatCredits(TRIAL_WALLET_CREDITS_IN_CENTS),
+        trialDays: TRIAL_PERIOD_DAYS,
       },
     });
   } catch (error) {

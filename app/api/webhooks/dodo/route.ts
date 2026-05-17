@@ -435,11 +435,11 @@ async function handlePaymentSucceeded(
       forfeited: formatCredits(previousBalance),
     });
 
-    if (subscription_id) {
-      const now = new Date();
-      const periodEnd = new Date(now);
-      periodEnd.setMonth(periodEnd.getMonth() + 1); // Monthly billing
+    const now = new Date();
+    const periodEnd = new Date(now);
+    periodEnd.setMonth(periodEnd.getMonth() + 1); // Monthly billing
 
+    if (subscription_id) {
       await supabase
         .from('subscriptions')
         .update({
@@ -451,6 +451,18 @@ async function handlePaymentSucceeded(
         })
         .eq('dodo_subscription_id', subscription_id);
     }
+
+    // Trial-to-paid transition - 2026-05-17 19:05 IST, paras: paid confirmation unlocks full plan credits and clears trial state.
+    await supabase
+      .from('users')
+      .update({
+        plan: planId,
+        plan_started_at: now.toISOString(),
+        plan_expires_at: periodEnd.toISOString(),
+        trial_ends_at: null,
+        updated_at: now.toISOString(),
+      })
+      .eq('id', user.id);
 
     // Log the payment for analytics
     await supabase.from('usage_logs').insert({
