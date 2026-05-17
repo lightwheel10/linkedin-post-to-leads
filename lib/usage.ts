@@ -89,6 +89,34 @@ function getDefaultUsageInfo(): UsageInfo {
   };
 }
 
+async function hasPaidBillingAccess(userId: string): Promise<{ allowed: boolean; reason?: string }> {
+  const supabase = await createClient();
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('status, current_period_end')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!subscription) {
+    return { allowed: false, reason: 'Billing is not active. Please update your plan to continue.' };
+  }
+
+  const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end) : null;
+
+  if ((subscription.status === 'active' || subscription.status === 'trialing') && (!periodEnd || periodEnd > new Date())) {
+    return { allowed: true };
+  }
+
+  if (subscription.status === 'cancelled' && periodEnd && periodEnd > new Date()) {
+    return { allowed: true };
+  }
+
+  // Billing hardening - 2026-05-17 14:06 IST, paras: past-due/failed subscriptions cannot spend wallet balance.
+  return { allowed: false, reason: 'Billing is not active. Please update your payment method to continue.' };
+}
+
 // =============================================================================
 // CORE FUNCTIONS
 // =============================================================================
@@ -184,6 +212,15 @@ export async function canAnalyze(userId: string): Promise<UsageCheckResult> {
   // SECURITY FIX (2nd Jan 2026): Previously only checked base cost (1 cent).
   // Now we estimate the maximum possible cost based on plan scraping limits.
   if (usage.plan !== 'free' && isWalletPlan(usage.plan)) {
+    const access = await hasPaidBillingAccess(userId);
+    if (!access.allowed) {
+      return {
+        allowed: false,
+        reason: access.reason,
+        usage,
+      };
+    }
+
     const planConfig = WALLET_PLANS[usage.plan as keyof typeof WALLET_PLANS];
 
     // Calculate estimated max cost based on plan's scraping limits
@@ -247,6 +284,15 @@ export async function canEnrich(userId: string): Promise<UsageCheckResult> {
 
   // For paid plans, check wallet balance
   if (usage.plan !== 'free') {
+    const access = await hasPaidBillingAccess(userId);
+    if (!access.allowed) {
+      return {
+        allowed: false,
+        reason: access.reason,
+        usage,
+      };
+    }
+
     const enrichmentCost = CREDIT_COSTS.profileEnrichment;
     const hasCredits = await hasEnoughCredits(userId, enrichmentCost);
 
@@ -310,6 +356,11 @@ export async function incrementAnalysisUsage(
       return { success: false, error: result?.error_message || 'Usage limit reached' };
     }
   } else {
+    const access = await hasPaidBillingAccess(userId);
+    if (!access.allowed) {
+      return { success: false, error: access.reason || 'Billing is not active' };
+    }
+
     // For paid users, deduct from wallet using atomic operation
     const cost = CREDIT_COSTS.postAnalysisBase +
       (metadata.reactionsScraped * CREDIT_COSTS.perReaction) +
@@ -395,6 +446,11 @@ export async function incrementEnrichmentUsage(
       return { success: false, error: result?.error_message || 'Usage limit reached' };
     }
   } else {
+    const access = await hasPaidBillingAccess(userId);
+    if (!access.allowed) {
+      return { success: false, error: access.reason || 'Billing is not active' };
+    }
+
     // For paid users, deduct from wallet using atomic operation
     const cost = CREDIT_COSTS.profileEnrichment;
 

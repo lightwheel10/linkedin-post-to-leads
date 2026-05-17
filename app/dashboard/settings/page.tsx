@@ -21,7 +21,6 @@ import {
   Clock,
   Calendar,
   Crown,
-  AlertTriangle,
   Download,
   ChevronRight,
   Sparkles,
@@ -57,6 +56,16 @@ interface BillingInfo {
   analysesLimit: number;
   enrichmentsUsed: number;
   enrichmentsLimit: number;
+  walletBalance: number;
+  walletFormatted: string;
+  walletAllocation: number;
+  walletAllocationFormatted: string;
+  walletSpent: number;
+  walletSpentFormatted: string;
+  walletPercentUsed: number;
+  purchasedCredits: number;
+  purchasedCreditsFormatted: string;
+  walletDaysRemaining: number;
   // Card info (masked)
   cardLastFour: string | null;
   cardBrand: string | null;
@@ -231,6 +240,13 @@ export default function SettingsPage() {
     fetchBilling();
   }, []);
 
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab") as SettingsTab | null;
+    if (tab && TABS.some((item) => item.id === tab)) {
+      setActiveTab(tab);
+    }
+  }, []);
+
   const handleSave = async () => {
     setSaving(true);
     setError(null);
@@ -324,20 +340,6 @@ export default function SettingsPage() {
     setExcludeKeywords(excludeKeywords.filter((k) => k !== keyword));
   };
 
-  const getUsageColor = (used: number, limit: number) => {
-    const percentage = (used / limit) * 100;
-    if (percentage >= 100) return "bg-red-500";
-    if (percentage >= 80) return "bg-amber-500";
-    return "bg-primary";
-  };
-
-  const getUsageTextColor = (used: number, limit: number) => {
-    const percentage = (used / limit) * 100;
-    if (percentage >= 100) return "text-red-500";
-    if (percentage >= 80) return "text-amber-500";
-    return "text-foreground";
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -358,6 +360,9 @@ export default function SettingsPage() {
     }
     return `$${plan.monthlyPrice}/month`;
   };
+
+  const hasPlanWallet = billing ? billing.walletAllocation > 0 : false;
+  const hasWalletCredits = billing ? billing.walletBalance > 0 : false;
 
   return (
     <>
@@ -542,45 +547,54 @@ export default function SettingsPage() {
                       )}
                     </div>
 
-                    {/* Usage This Month */}
+                    {/* Wallet Balance */}
                     <div className="space-y-3">
-                      <label className="text-sm font-medium">Usage This Month</label>
-                      <div className="grid grid-cols-2 gap-4">
+                      <label className="text-sm font-medium">
+                        Wallet Balance
+                      </label>
+                      <div className="grid grid-cols-3 gap-4">
                         <div className="p-4 rounded-lg border border-border/50 bg-card/30">
-                          <div className={cn("text-2xl font-bold", getUsageTextColor(billing.analysesUsed, billing.analysesLimit))}>
-                            {billing.analysesUsed} / {billing.analysesLimit}
-                          </div>
-                          <div className="text-sm text-muted-foreground">Post Analyses</div>
-                          <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
-                            <div 
-                              className={cn("h-full rounded-full transition-all", getUsageColor(billing.analysesUsed, billing.analysesLimit))}
-                              style={{ width: `${Math.min((billing.analysesUsed / billing.analysesLimit) * 100, 100)}%` }} 
-                            />
-                          </div>
-                          {billing.analysesUsed >= billing.analysesLimit && (
-                            <div className="flex items-center gap-1.5 mt-2 text-xs text-red-500">
-                              <AlertTriangle className="w-3 h-3" />
-                              Limit reached
+                          <div className="text-2xl font-bold">{billing.walletFormatted}</div>
+                          <div className="text-sm text-muted-foreground">Available balance</div>
+                          {hasPlanWallet ? (
+                            <>
+                              <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+                                <div
+                                  className={cn(
+                                    "h-full rounded-full transition-all",
+                                    billing.walletPercentUsed >= 95 ? "bg-red-500" :
+                                      billing.walletPercentUsed >= 80 ? "bg-amber-500" : "bg-primary"
+                                  )}
+                                  style={{ width: `${billing.walletPercentUsed}%` }}
+                                />
+                              </div>
+                              <div className="mt-2 text-xs text-muted-foreground">
+                                {billing.walletSpentFormatted} used from {billing.walletAllocationFormatted}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="mt-2 text-xs text-muted-foreground">
+                              {hasWalletCredits ? 'Purchased credits available' : 'Start a trial to unlock credits'}
                             </div>
                           )}
                         </div>
                         <div className="p-4 rounded-lg border border-border/50 bg-card/30">
-                          <div className={cn("text-2xl font-bold", getUsageTextColor(billing.enrichmentsUsed, billing.enrichmentsLimit))}>
-                            {billing.enrichmentsUsed} / {billing.enrichmentsLimit}
+                          <div className="text-2xl font-bold">{billing.walletAllocationFormatted}</div>
+                          <div className="text-sm text-muted-foreground">Plan credits</div>
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            {hasPlanWallet
+                              ? billing.walletDaysRemaining > 0
+                                ? `Resets in ${billing.walletDaysRemaining} days`
+                                : 'Reset date unavailable'
+                              : 'Trial plans include wallet credits.'}
                           </div>
-                          <div className="text-sm text-muted-foreground">Profile Enrichments</div>
-                          <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
-                            <div 
-                              className={cn("h-full rounded-full transition-all", getUsageColor(billing.enrichmentsUsed, billing.enrichmentsLimit))}
-                              style={{ width: `${Math.min((billing.enrichmentsUsed / billing.enrichmentsLimit) * 100, 100)}%` }} 
-                            />
+                        </div>
+                        <div className="p-4 rounded-lg border border-border/50 bg-card/30">
+                          <div className="text-2xl font-bold">{billing.purchasedCreditsFormatted}</div>
+                          <div className="text-sm text-muted-foreground">Top-up credits</div>
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            These do not expire with the billing cycle.
                           </div>
-                          {billing.enrichmentsUsed >= billing.enrichmentsLimit && (
-                            <div className="flex items-center gap-1.5 mt-2 text-xs text-red-500">
-                              <AlertTriangle className="w-3 h-3" />
-                              Limit reached
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>

@@ -148,6 +148,12 @@ export interface WalletTransaction {
   createdAt: string;
 }
 
+interface WalletResetOptions {
+  onlyIfNeverReset?: boolean;
+  idempotencyKey?: string;
+  source?: string;
+}
+
 // =============================================================================
 // PLAN CONFIGURATION
 // =============================================================================
@@ -629,7 +635,8 @@ export async function addPurchasedCredits(
 export async function resetWalletCredits(
   userId: string,
   planId: WalletPlanId,
-  client?: SupabaseClient
+  client?: SupabaseClient,
+  options: WalletResetOptions = {}
 ): Promise<WalletOperationResult> {
   const config = getPlanWalletConfig(planId);
   if (!config) {
@@ -641,6 +648,20 @@ export async function resetWalletCredits(
   }
 
   const supabase = client ?? await createClient();
+
+  if (options.idempotencyKey) {
+    const { data: existingReset } = await supabase
+      .from('wallet_transactions')
+      .select('balance_after')
+      .eq('user_id', userId)
+      .eq('type', 'credit')
+      .contains('metadata', { idempotencyKey: options.idempotencyKey })
+      .maybeSingle();
+
+    if (existingReset) {
+      return { success: true, newBalance: existingReset.balance_after };
+    }
+  }
 
   // Get current balance and purchased credits for reset calculation.
   // Purchased credits survive the reset — only plan credits are forfeited.
@@ -657,8 +678,8 @@ export async function resetWalletCredits(
   // New balance = fresh plan allocation + any remaining purchased credits
   const newBalance = config.totalCredits + purchasedCredits;
 
-  // Update balance and reset timestamp
-  const { error: updateError } = await supabase
+  // Billing hardening - 2026-05-17 14:06 IST, paras: initial allocation must be atomic across webhook/polling races.
+  let updateQuery = supabase
     .from('users')
     .update({
       wallet_balance: newBalance,
@@ -668,6 +689,14 @@ export async function resetWalletCredits(
     })
     .eq('id', userId);
 
+  if (options.onlyIfNeverReset) {
+    updateQuery = updateQuery.is('wallet_reset_at', null);
+  }
+
+  const { data: updatedUser, error: updateError } = await updateQuery
+    .select('wallet_balance')
+    .maybeSingle();
+
   if (updateError) {
     console.error('[Wallet] Failed to reset credits:', updateError);
     return {
@@ -675,6 +704,15 @@ export async function resetWalletCredits(
       newBalance: previousBalance,
       error: 'Failed to reset credits'
     };
+  }
+
+  if (options.onlyIfNeverReset && !updatedUser) {
+    const { data: currentUser } = await supabase
+      .from('users')
+      .select('wallet_balance')
+      .eq('id', userId)
+      .maybeSingle();
+    return { success: true, newBalance: currentUser?.wallet_balance || previousBalance };
   }
 
   // Log the forfeiture (if any credits were lost)
@@ -699,7 +737,7 @@ export async function resetWalletCredits(
   // Log the credit (new billing cycle allocation)
   await supabase.from('wallet_transactions').insert({
     user_id: userId,
-    amount: newBalance,
+    amount: config.totalCredits,
     balance_after: newBalance,
     type: 'credit',
     reason: `Billing cycle credit allocation for ${config.name} plan`,
@@ -709,6 +747,9 @@ export async function resetWalletCredits(
       baseCredits: config.baseCredits,
       bonusCredits: config.bonusCredits,
       totalCredits: config.totalCredits,
+      purchasedCreditsPreserved: purchasedCredits,
+      idempotencyKey: options.idempotencyKey,
+      source: options.source,
     },
     created_at: new Date().toISOString(),
   });

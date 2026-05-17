@@ -59,6 +59,12 @@ interface CommentsFetchResult {
     error?: string;
 }
 
+interface UsageTrackingResult {
+    success: boolean;
+    usage?: UsageInfo;
+    error?: string;
+}
+
 interface AnalysisResult {
     success: boolean;
     data?: {
@@ -103,7 +109,7 @@ export async function fetchPostDetails(url: string): Promise<PostFetchResult> {
         if (!usageCheck.allowed) {
             return {
                 success: false,
-                error: usageCheck.reason || "You've reached your analysis limit for this month.",
+                error: usageCheck.reason || "Start a trial or add wallet credits to analyze posts.",
                 usage: usageCheck.usage,
                 limitReached: true
             };
@@ -282,26 +288,30 @@ export async function trackAnalysisUsage(
     postUrl: string, 
     reactorsCount: number, 
     commentersCount: number = 0
-): Promise<UsageInfo | null> {
+): Promise<UsageTrackingResult> {
     try {
         const userEmail = await getAuthenticatedUser();
-        if (!userEmail) return null;
+        if (!userEmail) return { success: false, error: "Please log in to track usage" };
 
         const user = await getOrCreateUser(userEmail);
         
-        await incrementAnalysisUsage(user.id, {
+        const usageResult = await incrementAnalysisUsage(user.id, {
             postUrl,
             reactionsScraped: reactorsCount,
             commentsScraped: commentersCount,
             leadsFound: reactorsCount + commentersCount
         });
 
+        if (!usageResult.success) {
+            return { success: false, error: usageResult.error || "Failed to deduct wallet credits" };
+        }
+
         const updatedUsage = await canAnalyze(user.id);
-        return updatedUsage.usage || null;
+        return { success: true, usage: updatedUsage.usage };
 
     } catch (error) {
         console.error("Failed to track usage:", error);
-        return null;
+        return { success: false, error: "Failed to track usage" };
     }
 }
 
@@ -332,6 +342,12 @@ export async function analyzePost(url: string): Promise<AnalysisResult> {
 
     // Step 3: Track usage
     const usage = await trackAnalysisUsage(url, reactionsResult.reactors.length);
+    if (!usage.success) {
+        return {
+            success: false,
+            error: usage.error || 'Failed to deduct wallet credits'
+        };
+    }
 
     return {
         success: true,
@@ -340,7 +356,7 @@ export async function analyzePost(url: string): Promise<AnalysisResult> {
             reactors: reactionsResult.reactors,
             totalReactors: postResult.post.totalReactions
         },
-        usage: usage || undefined
+        usage: usage.usage
     };
 }
 

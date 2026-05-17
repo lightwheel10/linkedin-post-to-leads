@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { type SupabaseClient } from '@supabase/supabase-js';
+import { WALLET_PLANS, formatCredits, getWalletStatus, isWalletPlan, type WalletPlanId } from '@/lib/wallet';
 
 // Data Store — Supabase PostgreSQL storage layer.
 // Uses the cookie-based server client by default (preserves RLS).
@@ -61,6 +62,7 @@ export interface User {
   // =============================================================================
   wallet_balance: number; // Current wallet balance in cents
   wallet_reset_at: string | null; // When wallet was last reset (billing cycle)
+  purchased_credits: number; // Top-up credits that survive billing resets
 }
 
 export interface UserSettings {
@@ -169,7 +171,8 @@ export async function createUser(email: string): Promise<User> {
     // Wallet Credit System
     // New users start with 0 balance until they subscribe to a paid plan
     wallet_balance: 0,
-    wallet_reset_at: null
+    wallet_reset_at: null,
+    purchased_credits: 0
   };
 
   const { error } = await supabase.from('users').insert(user);
@@ -363,6 +366,23 @@ export async function getUserSubscription(userId: string): Promise<Subscription 
 }
 
 /**
+ * Get the latest subscription, including cancelled or past-due records.
+ */
+export async function getLatestUserSubscription(userId: string): Promise<Subscription | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as Subscription;
+}
+
+/**
  * Update subscription status
  */
 export async function updateSubscriptionStatus(
@@ -417,6 +437,18 @@ export async function getUserBillingInfo(userId: string): Promise<{
   analysesLimit: number;
   enrichmentsUsed: number;
   enrichmentsLimit: number;
+  walletBalance: number;
+  walletFormatted: string;
+  walletAllocation: number;
+  walletAllocationFormatted: string;
+  walletSpent: number;
+  walletSpentFormatted: string;
+  walletPercentUsed: number;
+  purchasedCredits: number;
+  purchasedCreditsFormatted: string;
+  walletLastResetAt: string | null;
+  walletNextResetAt: string | null;
+  walletDaysRemaining: number;
   // Card info (masked)
   cardLastFour: string | null;
   cardBrand: string | null;
@@ -425,13 +457,13 @@ export async function getUserBillingInfo(userId: string): Promise<{
   const supabase = await createClient();
   const { data: user, error } = await supabase
     .from('users')
-    .select('plan, billing_period, trial_ends_at, plan_expires_at, analyses_used, enrichments_used, card_last_four, card_brand, card_expiry')
+    .select('plan, billing_period, trial_ends_at, plan_expires_at, analyses_used, enrichments_used, card_last_four, card_brand, card_expiry, wallet_balance, wallet_reset_at, purchased_credits')
     .eq('id', userId)
     .single();
 
   if (error || !user) return null;
 
-  const subscription = await getUserSubscription(userId);
+  const subscription = await getLatestUserSubscription(userId);
 
   // Import plan limits dynamically to avoid circular deps
   const { getPlanLimits } = await import('./plans');
@@ -441,9 +473,24 @@ export async function getUserBillingInfo(userId: string): Promise<{
   const trialEnd = user.trial_ends_at ? new Date(user.trial_ends_at) : null;
   const isTrialing = trialEnd ? trialEnd > now : false;
   const trialDaysRemaining = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
+  const planId = user.plan || 'free';
+  const walletStatus = await getWalletStatus(userId);
+  const planConfig = isWalletPlan(planId) ? WALLET_PLANS[planId as WalletPlanId] : null;
+  const walletBalance = walletStatus?.balanceInCents ?? user.wallet_balance ?? 0;
+  const purchasedCredits = walletStatus?.purchasedCreditsInCents ?? user.purchased_credits ?? 0;
+  const walletAllocation = planConfig?.totalCredits || 0;
+  const planBalance = Math.max(0, walletBalance - purchasedCredits);
+  const walletSpent = Math.min(walletAllocation, Math.max(0, walletAllocation - planBalance));
+  const walletPercentUsed = walletAllocation > 0
+    ? Math.min(100, Math.round((walletSpent / walletAllocation) * 100))
+    : 0;
+  const walletNextResetAt = walletStatus?.nextResetAt || subscription?.current_period_end || user.plan_expires_at || null;
+  const walletDaysRemaining = walletNextResetAt
+    ? Math.max(0, Math.ceil((new Date(walletNextResetAt).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+    : 0;
 
   return {
-    plan: user.plan || 'free',
+    plan: planId,
     planName: limits.name,
     period: user.billing_period || 'monthly',
     status: subscription?.status || 'free',
@@ -454,6 +501,19 @@ export async function getUserBillingInfo(userId: string): Promise<{
     analysesLimit: user.plan === 'free' ? 5 : 999, // Free: 5, Paid: wallet-based (unlimited)
     enrichmentsUsed: user.enrichments_used || 0,
     enrichmentsLimit: user.plan === 'free' ? 10 : 999, // Free: 10, Paid: wallet-based (unlimited)
+    // Wallet UI audit - 2026-05-17 14:06 IST, paras: paid users should see dollar balance, not legacy usage counters.
+    walletBalance,
+    walletFormatted: formatCredits(walletBalance),
+    walletAllocation,
+    walletAllocationFormatted: formatCredits(walletAllocation),
+    walletSpent,
+    walletSpentFormatted: formatCredits(walletSpent),
+    walletPercentUsed,
+    purchasedCredits,
+    purchasedCreditsFormatted: formatCredits(purchasedCredits),
+    walletLastResetAt: walletStatus?.lastResetAt || user.wallet_reset_at,
+    walletNextResetAt,
+    walletDaysRemaining,
     // Card info (masked - never store full card numbers)
     cardLastFour: user.card_last_four || null,
     cardBrand: user.card_brand || null,

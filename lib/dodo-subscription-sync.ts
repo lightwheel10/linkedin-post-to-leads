@@ -180,7 +180,11 @@ export async function syncActiveDodoSubscription(
   // status check and webhook from both restoring credits if they arrive close
   // together.
   if (!existingSub || !user.wallet_reset_at) {
-    const walletResult = await resetWalletCredits(user.id, planId as WalletPlanId, supabase);
+    const walletResult = await resetWalletCredits(user.id, planId as WalletPlanId, supabase, {
+      onlyIfNeverReset: true,
+      idempotencyKey: `initial:${subscriptionId}`,
+      source: 'subscription_activation',
+    });
     if (!walletResult.success) {
       return { success: false, message: walletResult.error || 'Failed to allocate trial credits' };
     }

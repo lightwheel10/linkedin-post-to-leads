@@ -417,7 +417,10 @@ async function handlePaymentSucceeded(
     const previousBalance = user.wallet_balance || 0;
     const planConfig = WALLET_PLANS[planId];
 
-    const walletResult = await resetWalletCredits(user.id, planId, supabase);
+    const walletResult = await resetWalletCredits(user.id, planId, supabase, {
+      idempotencyKey: payment_id ? `payment:${payment_id}` : undefined,
+      source: 'payment_succeeded',
+    });
 
     if (!walletResult.success) {
       console.error('[Dodo Webhook] Failed to reset wallet:', walletResult.error);
