@@ -1,7 +1,13 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { completeOnboarding } from '@/lib/data-store';
 import { getPlanFromDodoProductId, mapDodoSubscriptionStatus } from '@/lib/dodo';
-import { isWalletPlan, resetWalletCredits, type WalletPlanId } from '@/lib/wallet';
+import {
+  isWalletPlan,
+  resetTrialWalletCredits,
+  resetWalletCredits,
+  TRIAL_PERIOD_DAYS,
+  type WalletPlanId,
+} from '@/lib/wallet';
 
 type DodoCustomerLike = {
   customer_id?: string | null;
@@ -111,12 +117,17 @@ export async function syncActiveDodoSubscription(
   }
 
   const now = new Date();
-  const trialDays = typeof subscription.trial_period_days === 'number'
+  const requestedTrialDays = typeof subscription.trial_period_days === 'number'
     ? subscription.trial_period_days
-    : 7;
+    : TRIAL_PERIOD_DAYS;
+  const trialDays = requestedTrialDays > 0 ? Math.min(requestedTrialDays, TRIAL_PERIOD_DAYS) : 0;
   const periodStart = parseDate(subscription.previous_billing_date) || now;
-  const fallbackPeriodEnd = trialDays > 0 ? addDays(now, trialDays) : addMonth(now);
-  const periodEnd = parseDate(subscription.next_billing_date) || fallbackPeriodEnd;
+  const cappedTrialEnd = trialDays > 0 ? addDays(periodStart, trialDays) : null;
+  const dodoPeriodEnd = parseDate(subscription.next_billing_date);
+  // Trial cap - 2026-05-17 19:05 IST, paras: local trial access never exceeds our 7-day product rule.
+  const periodEnd = cappedTrialEnd
+    ? (dodoPeriodEnd && dodoPeriodEnd < cappedTrialEnd ? dodoPeriodEnd : cappedTrialEnd)
+    : dodoPeriodEnd || addMonth(now);
   const trialEnd = trialDays > 0 ? periodEnd : null;
 
   const { data: existingSub } = await supabase
@@ -176,17 +187,19 @@ export async function syncActiveDodoSubscription(
     return { success: false, message: `Failed to update user plan: ${userUpdateError.message}` };
   }
 
-  // Allocate trial credits once per subscription. This prevents the direct
-  // status check and webhook from both restoring credits if they arrive close
-  // together.
+  // Allocate initial credits once per subscription. Trial gets the capped wallet;
+  // full plan credits are only granted by payment.succeeded after real billing.
   if (!existingSub || !user.wallet_reset_at) {
-    const walletResult = await resetWalletCredits(user.id, planId as WalletPlanId, supabase, {
+    const walletOptions = {
       onlyIfNeverReset: true,
-      idempotencyKey: `initial:${subscriptionId}`,
-      source: 'subscription_activation',
-    });
+      idempotencyKey: trialEnd ? `trial:${subscriptionId}` : `initial:${subscriptionId}`,
+      source: trialEnd ? 'trial_activation' : 'subscription_activation',
+    };
+    const walletResult = trialEnd
+      ? await resetTrialWalletCredits(user.id, planId as WalletPlanId, supabase, walletOptions)
+      : await resetWalletCredits(user.id, planId as WalletPlanId, supabase, walletOptions);
     if (!walletResult.success) {
-      return { success: false, message: walletResult.error || 'Failed to allocate trial credits' };
+      return { success: false, message: walletResult.error || 'Failed to allocate initial credits' };
     }
   }
 

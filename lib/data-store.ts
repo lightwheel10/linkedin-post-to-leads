@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { type SupabaseClient } from '@supabase/supabase-js';
-import { WALLET_PLANS, formatCredits, getWalletStatus, isWalletPlan, type WalletPlanId } from '@/lib/wallet';
+import { WALLET_PLANS, formatCredits, getWalletStatus, isWalletPlan, TRIAL_WALLET_CREDITS_IN_CENTS, type WalletPlanId } from '@/lib/wallet';
 
 // Data Store — Supabase PostgreSQL storage layer.
 // Uses the cookie-based server client by default (preserves RLS).
@@ -478,7 +478,8 @@ export async function getUserBillingInfo(userId: string): Promise<{
   const planConfig = isWalletPlan(planId) ? WALLET_PLANS[planId as WalletPlanId] : null;
   const walletBalance = walletStatus?.balanceInCents ?? user.wallet_balance ?? 0;
   const purchasedCredits = walletStatus?.purchasedCreditsInCents ?? user.purchased_credits ?? 0;
-  const walletAllocation = planConfig?.totalCredits || 0;
+  // Trial cap - 2026-05-17 19:05 IST, paras: trial UI should show the $20 trial wallet, not full paid plan credits.
+  const walletAllocation = isTrialing ? TRIAL_WALLET_CREDITS_IN_CENTS : planConfig?.totalCredits || 0;
   const planBalance = Math.max(0, walletBalance - purchasedCredits);
   const walletSpent = Math.min(walletAllocation, Math.max(0, walletAllocation - planBalance));
   const walletPercentUsed = walletAllocation > 0
@@ -498,10 +499,10 @@ export async function getUserBillingInfo(userId: string): Promise<{
     trialDaysRemaining,
     currentPeriodEnd: user.plan_expires_at,
     analysesUsed: user.analyses_used || 0,
-    analysesLimit: user.plan === 'free' ? 5 : 999, // Free: 5, Paid: wallet-based (unlimited)
+    analysesLimit: 0, // Wallet-only model: no hidden free analysis counters.
     enrichmentsUsed: user.enrichments_used || 0,
-    enrichmentsLimit: user.plan === 'free' ? 10 : 999, // Free: 10, Paid: wallet-based (unlimited)
-    // Wallet UI audit - 2026-05-17 14:06 IST, paras: paid users should see dollar balance, not legacy usage counters.
+    enrichmentsLimit: 0, // Wallet-only model: no hidden free enrichment counters.
+    // Wallet UI audit - 2026-05-17 14:06 IST, paras: users should see dollar balance, not legacy usage counters.
     walletBalance,
     walletFormatted: formatCredits(walletBalance),
     walletAllocation,

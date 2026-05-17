@@ -37,7 +37,7 @@
 // IMPORTANT NOTES:
 // ================
 // - All credit amounts are stored in CENTS (integer) to avoid float precision issues
-// - Wallet balance can go negative if an action is in progress when balance is low
+// - Wallet balance should not go negative; atomic RPC rejects insufficient balance
 // - Always check hasEnoughCredits() BEFORE starting an action
 // - Credits are deducted AFTER successful action completion (not before)
 //
@@ -54,7 +54,8 @@ import { type SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Plan IDs that support wallet credits.
- * 'free' plan does not have wallet credits - they get limited free actions instead.
+ * Free has no plan allocation. Trial users receive a capped trial wallet through pro/growth/scale,
+ * while free users can only spend purchased/remaining wallet balance if present.
  */
 export type WalletPlanId = 'pro' | 'growth' | 'scale';
 
@@ -152,6 +153,8 @@ interface WalletResetOptions {
   onlyIfNeverReset?: boolean;
   idempotencyKey?: string;
   source?: string;
+  allocationAmountInCents?: number;
+  allocationReason?: string;
 }
 
 // =============================================================================
@@ -163,6 +166,10 @@ interface WalletResetOptions {
 //
 // IMPORTANT: All amounts are in CENTS to avoid floating point issues.
 // =============================================================================
+
+// Trial economics cap - 2026-05-17 19:05 IST, paras: trials get max $20 for max 7 days; full plan credits wait for paid confirmation.
+export const TRIAL_PERIOD_DAYS = 7;
+export const TRIAL_WALLET_CREDITS_IN_CENTS = 2000;
 
 export const WALLET_PLANS: Record<WalletPlanId, PlanWalletConfig> = {
   pro: {
@@ -427,13 +434,7 @@ export async function hasEnoughCredits(
   const status = await getWalletStatus(userId);
   if (!status) return false;
 
-  // Free users don't use wallet credits - they have limited free actions
-  if (status.plan === 'free') {
-    // Free tier uses the old action-count system, not wallet
-    // Return true here and let the action handler check free limits
-    return true;
-  }
-
+  // Wallet-only usage - 2026-05-17 19:05 IST, paras: trials receive capped wallet credits; no hidden free counters.
   return status.balanceInCents >= requiredCredits;
 }
 
@@ -673,10 +674,11 @@ export async function resetWalletCredits(
 
   const previousBalance = user?.wallet_balance || 0;
   const purchasedCredits = user?.purchased_credits || 0;
+  const allocationAmount = options.allocationAmountInCents ?? config.totalCredits;
   // Only plan credits are forfeited, not purchased credits
   const forfeitedAmount = Math.max(0, previousBalance - purchasedCredits);
   // New balance = fresh plan allocation + any remaining purchased credits
-  const newBalance = config.totalCredits + purchasedCredits;
+  const newBalance = allocationAmount + purchasedCredits;
 
   // Billing hardening - 2026-05-17 14:06 IST, paras: initial allocation must be atomic across webhook/polling races.
   let updateQuery = supabase
@@ -737,16 +739,17 @@ export async function resetWalletCredits(
   // Log the credit (new billing cycle allocation)
   await supabase.from('wallet_transactions').insert({
     user_id: userId,
-    amount: config.totalCredits,
+    amount: allocationAmount,
     balance_after: newBalance,
     type: 'credit',
-    reason: `Billing cycle credit allocation for ${config.name} plan`,
+    reason: options.allocationReason || `Billing cycle credit allocation for ${config.name} plan`,
     action_type: null,
     metadata: {
       planId,
       baseCredits: config.baseCredits,
       bonusCredits: config.bonusCredits,
-      totalCredits: config.totalCredits,
+      totalCredits: allocationAmount,
+      paidPlanCredits: config.totalCredits,
       purchasedCreditsPreserved: purchasedCredits,
       idempotencyKey: options.idempotencyKey,
       source: options.source,
@@ -762,6 +765,24 @@ export async function resetWalletCredits(
   });
 
   return { success: true, newBalance };
+}
+
+/**
+ * Allocates the capped trial wallet instead of full paid plan credits.
+ */
+export async function resetTrialWalletCredits(
+  userId: string,
+  planId: WalletPlanId,
+  client?: SupabaseClient,
+  options: WalletResetOptions = {}
+): Promise<WalletOperationResult> {
+  const config = getPlanWalletConfig(planId);
+  return resetWalletCredits(userId, planId, client, {
+    ...options,
+    source: options.source || 'trial_activation',
+    allocationAmountInCents: TRIAL_WALLET_CREDITS_IN_CENTS,
+    allocationReason: options.allocationReason || `Trial wallet allocation for ${config?.name || planId} plan`,
+  });
 }
 
 /**

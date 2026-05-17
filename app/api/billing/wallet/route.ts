@@ -27,6 +27,7 @@ import {
   getWalletTransactions,
   WALLET_PLANS,
   formatCredits,
+  TRIAL_WALLET_CREDITS_IN_CENTS,
   WalletPlanId,
 } from '@/lib/wallet';
 
@@ -105,11 +106,13 @@ export async function GET(request: NextRequest) {
     const planConfig = walletStatus.plan !== 'free'
       ? WALLET_PLANS[walletStatus.plan as WalletPlanId]
       : null;
+    const isTrialing = !!user.trial_ends_at && new Date(user.trial_ends_at) > new Date();
 
     // Calculate how much PLAN credits have been spent this period.
     // We subtract purchased credits from the balance first, since purchased
     // credits are not part of the plan allocation.
-    const totalAllocation = planConfig?.totalCredits || 0;
+    // Trial cap - 2026-05-17 19:05 IST, paras: trial allocation is $20 until first successful paid charge.
+    const totalAllocation = isTrialing ? TRIAL_WALLET_CREDITS_IN_CENTS : planConfig?.totalCredits || 0;
     const planBalance = Math.max(0, walletStatus.balanceInCents - walletStatus.purchasedCreditsInCents);
     const spent = Math.max(0, totalAllocation - planBalance);
     const percentUsed = totalAllocation > 0
@@ -141,12 +144,15 @@ export async function GET(request: NextRequest) {
       },
       allocation: planConfig
         ? {
-            total: planConfig.totalCredits,
-            totalFormatted: formatCredits(planConfig.totalCredits),
-            base: planConfig.baseCredits,
-            baseFormatted: formatCredits(planConfig.baseCredits),
-            bonus: planConfig.bonusCredits,
-            bonusFormatted: formatCredits(planConfig.bonusCredits),
+            total: totalAllocation,
+            totalFormatted: formatCredits(totalAllocation),
+            base: isTrialing ? totalAllocation : planConfig.baseCredits,
+            baseFormatted: formatCredits(isTrialing ? totalAllocation : planConfig.baseCredits),
+            bonus: isTrialing ? 0 : planConfig.bonusCredits,
+            bonusFormatted: formatCredits(isTrialing ? 0 : planConfig.bonusCredits),
+            paidPlanTotal: planConfig.totalCredits,
+            paidPlanTotalFormatted: formatCredits(planConfig.totalCredits),
+            isTrialAllocation: isTrialing,
           }
         : null,
       usage: {
