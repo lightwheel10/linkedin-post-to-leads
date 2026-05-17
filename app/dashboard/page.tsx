@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StatsCards } from "@/components/dashboard/stats-cards";
+import { PaymentVerificationBanner } from "@/components/dashboard/payment-verification-banner";
 // MIGRATION: Using shared auth utility instead of local jose implementation
 import { getAuthenticatedUser } from "@/lib/auth";
 import { getOrCreateUser, getUserStats, getAnalyses, getUserBillingInfo } from "@/lib/data-store";
@@ -49,26 +50,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-5">
       {pendingCheckout && user.plan === "free" && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <div className="rounded-md bg-amber-500/15 p-1.5 mt-0.5">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Payment verification is still processing</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Your trial will unlock automatically after Dodo confirms the payment. Free limits are available for now.
-                </p>
-              </div>
-            </div>
-            <Link href={`/checkout/callback?token=${pendingCheckout.callback_token}`}>
-              <Button variant="outline" size="sm" className="h-8 text-xs">
-                Check Status
-              </Button>
-            </Link>
-          </div>
-        </div>
+        <PaymentVerificationBanner callbackToken={pendingCheckout.callback_token} />
       )}
 
       {/* Welcome Header */}
