@@ -16,7 +16,6 @@ import {
   ChevronUp,
   User,
   Zap,
-  Users,
   AlertTriangle,
   Crown,
   Wallet
@@ -109,20 +108,6 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
     fetchUsage();
   }, [pathname]);
 
-  const getUsageColor = (used: number, limit: number) => {
-    const percentage = (used / limit) * 100;
-    if (percentage >= 100) return 'text-red-500';
-    if (percentage >= 80) return 'text-amber-500';
-    return 'text-primary';
-  };
-
-  const getProgressColor = (used: number, limit: number) => {
-    const percentage = (used / limit) * 100;
-    if (percentage >= 100) return 'bg-red-500';
-    if (percentage >= 80) return 'bg-amber-500';
-    return 'bg-primary';
-  };
-
   const getPlanColor = (plan: string) => {
     switch (plan) {
       case 'scale': return 'text-amber-500';
@@ -184,6 +169,20 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
     .slice(0, 2)
     .map(s => s[0]?.toUpperCase())
     .join('') || 'U';
+
+  // Sidebar wallet display - 2026-05-18 11:48 IST, paras: keep users on wallet balance, not legacy free-limit counters.
+  const hasPlanWallet = usage ? usage.walletAllocation > 0 : false;
+  const hasWalletCredits = usage ? usage.walletBalance > 0 : false;
+  const emptyWalletCta = usage?.plan === 'free' && !usage.isTrialing ? 'Start Trial' : 'Add Credits';
+  const walletDetail = !usage
+    ? ''
+    : hasPlanWallet
+      ? `${usage.walletSpentFormatted} used from ${usage.walletAllocationFormatted}`
+      : hasWalletCredits
+        ? 'Purchased credits available'
+        : usage.plan === 'free' && !usage.isTrialing
+          ? 'Start a trial to unlock credits'
+          : 'Add credits to keep using tools';
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-44 border-r border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex flex-col">
@@ -264,7 +263,7 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
             )}
           </div>
 
-          {usage && usage.plan !== 'free' ? (
+          {usage ? (
             <>
               <div className="relative z-10 space-y-1.5">
                 <div className="flex items-center justify-between">
@@ -279,23 +278,24 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
                     {usage?.walletFormatted || '$0.00'}
                   </span>
                 </div>
-                <div className="h-1 rounded-full bg-muted/50 overflow-hidden">
-                  <div
-                    className={cn(
-                      "h-full rounded-full transition-all",
-                      usage && usage.walletPercentUsed >= 95 ? "bg-red-500" :
-                        usage && usage.walletPercentUsed >= 80 ? "bg-amber-500" : "bg-primary"
-                    )}
-                    style={{ width: `${usage?.walletPercentUsed || 0}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-[9px] text-muted-foreground">
-                  <span>{usage?.walletSpentFormatted || '$0.00'} used</span>
-                  <span>{usage?.walletAllocationFormatted || '$0.00'} cycle</span>
+                {hasPlanWallet && (
+                  <div className="h-1 rounded-full bg-muted/50 overflow-hidden">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all",
+                        usage.walletPercentUsed >= 95 ? "bg-red-500" :
+                          usage.walletPercentUsed >= 80 ? "bg-amber-500" : "bg-primary"
+                      )}
+                      style={{ width: `${usage.walletPercentUsed}%` }}
+                    />
+                  </div>
+                )}
+                <div className="text-[9px] text-muted-foreground">
+                  {walletDetail}
                 </div>
               </div>
 
-              {usage && usage.walletBalance < 500 && (
+              {usage.walletBalance > 0 && usage.walletBalance < 500 && (
                 <Link
                   href="/dashboard/settings?tab=billing"
                   className="relative z-10 flex items-center gap-1.5 p-1.5 rounded bg-amber-500/10 border border-amber-500/20"
@@ -304,62 +304,14 @@ export function Sidebar({ userEmail, crmLeadsCount = 0, initialUsage }: SidebarP
                   <span className="text-[9px] text-amber-500">Low balance</span>
                 </Link>
               )}
-            </>
-          ) : usage ? (
-            <>
-              {/* Free users still use fixed trial counters; paid users use wallet balance. */}
-              {usage && (
-                <div className="relative z-10 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Search className="h-2.5 w-2.5 text-muted-foreground" />
-                      <span className="text-[9px] text-muted-foreground">Analyses</span>
-                    </div>
-                    <span className={cn("text-[10px] font-medium", getUsageColor(usage.analysesUsed, usage.analysesLimit))}>
-                      {usage.analysesUsed}/{usage.analysesLimit}
-                    </span>
-                  </div>
-                  <div className="h-1 rounded-full bg-muted/50 overflow-hidden">
-                    <div
-                      className={cn("h-full rounded-full transition-all", getProgressColor(usage.analysesUsed, usage.analysesLimit))}
-                      style={{ width: `${Math.min((usage.analysesUsed / usage.analysesLimit) * 100, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              )}
 
-              {usage && (
-                <div className="relative z-10 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1">
-                      <Users className="h-2.5 w-2.5 text-muted-foreground" />
-                      <span className="text-[9px] text-muted-foreground">Enrichments</span>
-                    </div>
-                    <span className={cn("text-[10px] font-medium", getUsageColor(usage.enrichmentsUsed, usage.enrichmentsLimit))}>
-                      {usage.enrichmentsUsed}/{usage.enrichmentsLimit}
-                    </span>
-                  </div>
-                  <div className="h-1 rounded-full bg-muted/50 overflow-hidden">
-                    <div
-                      className={cn("h-full rounded-full transition-all", getProgressColor(usage.enrichmentsUsed, usage.enrichmentsLimit))}
-                      style={{ width: `${Math.min((usage.enrichmentsUsed / usage.enrichmentsLimit) * 100, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {usage && (usage.analysesUsed >= usage.analysesLimit || usage.enrichmentsUsed >= usage.enrichmentsLimit) ? (
-                <div className="relative z-10 flex items-center gap-1.5 p-1.5 rounded bg-red-500/10 border border-red-500/20">
-                  <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />
-                  <span className="text-[9px] text-red-500">Limit reached</span>
-                </div>
-              ) : (
+              {usage.walletBalance <= 0 && (
                 <Link
                   href="/dashboard/settings?tab=billing"
                   className="relative z-10 flex items-center justify-center gap-1 rounded-md bg-primary hover:bg-primary/90 px-2 py-1.5 text-[10px] font-medium text-primary-foreground transition-all shadow-lg shadow-primary/30 hover:scale-[1.02]"
                 >
                   <Sparkles className="h-2.5 w-2.5" />
-                  Upgrade
+                  {emptyWalletCta}
                 </Link>
               )}
             </>
