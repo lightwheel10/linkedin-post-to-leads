@@ -217,11 +217,20 @@ export async function syncActiveDodoSubscription(
   }
 
   if (!pendingCheckoutId) {
-    const { data: latestPending } = await supabase
+    let pendingQuery = supabase
       .from('checkout_sessions')
       .select('id')
       .eq('user_id', user.id)
       .eq('status', 'pending')
+      .eq('plan_id', planId);
+
+    const checkoutBillingPeriod = fallbackBillingPeriod || subscription.metadata?.billing_period || null;
+    if (checkoutBillingPeriod) {
+      pendingQuery = pendingQuery.eq('billing_period', checkoutBillingPeriod);
+    }
+
+    // Checkout scoping - 2026-05-18 14:08 IST, paras: if Dodo omits the callback token, only complete a matching pending plan checkout.
+    const { data: latestPending } = await pendingQuery
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();

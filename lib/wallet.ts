@@ -848,9 +848,34 @@ export async function clearWalletBalance(
   const previousBalance = user?.wallet_balance || 0;
   const purchasedCredits = user?.purchased_credits || 0;
 
-  // If only purchased credits remain (or less), nothing to clear
+  const endedState = {
+    plan: 'free',
+    trial_ends_at: null,
+    plan_expires_at: null,
+    updated_at: new Date().toISOString(),
+  };
+
+  // Expiry cleanup - 2026-05-18 14:05 IST, paras: subscription expiry must clear plan/trial dates even when only purchased credits remain.
   if (previousBalance <= purchasedCredits) {
-    return { success: true, newBalance: purchasedCredits };
+    const preservedBalance = Math.min(previousBalance, purchasedCredits);
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        wallet_balance: preservedBalance,
+        ...endedState,
+      })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('[Wallet] Failed to clear expired plan state:', updateError);
+      return {
+        success: false,
+        newBalance: previousBalance,
+        error: 'Failed to clear expired plan state'
+      };
+    }
+
+    return { success: true, newBalance: preservedBalance };
   }
 
   // Preserve purchased credits — only forfeit the plan portion.
@@ -862,8 +887,7 @@ export async function clearWalletBalance(
     .from('users')
     .update({
       wallet_balance: newBalance,
-      plan: 'free',
-      updated_at: new Date().toISOString(),
+      ...endedState,
     })
     .eq('id', userId);
 
