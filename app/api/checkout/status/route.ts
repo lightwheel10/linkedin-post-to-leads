@@ -15,6 +15,7 @@ type CheckoutStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'expir
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing']);
 const FAILED_SUBSCRIPTION_STATUSES = new Set(['failed', 'cancelled', 'expired', 'on_hold']);
 const FAILED_PAYMENT_STATUSES = new Set(['failed', 'cancelled', 'requires_payment_method']);
+const SUCCEEDED_PAYMENT_STATUSES = new Set(['succeeded']);
 const PROCESSING_PAYMENT_STATUSES = new Set([
   'processing',
   'requires_confirmation',
@@ -193,6 +194,7 @@ export async function GET(request: NextRequest) {
     }
 
     const client = getDodoClient();
+    let dodoCheckoutPaymentSucceeded = false;
 
     // First try the exact subscription id Dodo appends to subscription return URLs.
     // The id from the URL is only a hint; we verify it with Dodo before trusting it.
@@ -257,6 +259,13 @@ export async function GET(request: NextRequest) {
           userEmail,
         });
       }
+
+      if (paymentStatus && SUCCEEDED_PAYMENT_STATUSES.has(paymentStatus)) {
+        dodoCheckoutPaymentSucceeded = true;
+
+        // Dodo redirect gap - 2026-05-18 13:01 IST, paras: a verified checkout can be paid before the subscription/webhook row is visible.
+        await allowPendingDashboardAccess(supabase, checkoutSession);
+      }
     } catch (error) {
       console.error('[Checkout Status] Dodo checkout session check failed:', error);
     }
@@ -310,6 +319,18 @@ export async function GET(request: NextRequest) {
       }
     } catch (error) {
       console.error('[Checkout Status] Dodo subscription list check failed:', error);
+    }
+
+    if (dodoCheckoutPaymentSucceeded) {
+      return statusResponse({
+        status: 'processing',
+        message: isSubscriptionCheckout(checkoutSession.plan_id)
+          ? 'Payment confirmed by Dodo. Finishing trial setup...'
+          : 'Payment confirmed by Dodo. Updating your wallet...',
+        checkoutSession,
+        isAuthenticated,
+        userEmail,
+      });
     }
 
     return statusResponse({
