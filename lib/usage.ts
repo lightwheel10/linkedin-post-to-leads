@@ -13,17 +13,17 @@
 //    - Previously only checked if user had 1 cent (base cost)
 //    - Now estimates max cost based on plan limits before allowing operation
 //
-// 2. Free user limits now use atomic database operations
-//    - Previously used read-then-write which allowed race condition bypasses
-//    - Now uses increment_free_user_usage RPC with row-level locking
+// 2. Usage now depends on wallet credits only
+//    - Trial users receive a capped trial wallet after activation
+//    - Non-trial free users do not get hidden fixed counters
 //
 // 3. deductCredits return value is now properly checked
 //    - Previously ignored failures which could lead to silent billing issues
 // =============================================================================
 
 import { createClient } from '@/lib/supabase/server';
-import { getPlanLimits, getUsagePercentage, isUsageWarning, isUsageLimitReached } from './plans';
-import { hasEnoughCredits, deductCredits, getWalletStatus, CREDIT_COSTS, WALLET_PLANS, isWalletPlan } from './wallet';
+import { getPlanLimits } from './plans';
+import { hasEnoughCredits, deductCredits, getWalletStatus, CREDIT_COSTS, WALLET_PLANS, isWalletPlan, type WalletStatus } from './wallet';
 
 // =============================================================================
 // TYPES
@@ -48,7 +48,7 @@ export interface UsageInfo {
 export interface UsageCheckResult {
   allowed: boolean;
   reason?: string;
-  /** When true, the UI should offer a "Buy Credits" action alongside the error */
+  /** When true, the UI should offer a billing action alongside the error */
   topUpAvailable?: boolean;
   usage: UsageInfo;
 }
@@ -81,15 +81,15 @@ function getDefaultUsageInfo(): UsageInfo {
     isTrialing: false,
     trialEndsAt: null,
     analysesUsed: 0,
-    analysesLimit: 999,
+    analysesLimit: 0,
     analysesPercentage: 0,
     enrichmentsUsed: 0,
-    enrichmentsLimit: 999,
+    enrichmentsLimit: 0,
     enrichmentsPercentage: 0,
   };
 }
 
-async function hasPaidBillingAccess(userId: string): Promise<{ allowed: boolean; reason?: string }> {
+async function hasWalletBillingAccess(userId: string, walletStatus: WalletStatus | null): Promise<{ allowed: boolean; reason?: string }> {
   const supabase = await createClient();
   const { data: subscription } = await supabase
     .from('subscriptions')
@@ -99,22 +99,29 @@ async function hasPaidBillingAccess(userId: string): Promise<{ allowed: boolean;
     .limit(1)
     .maybeSingle();
 
-  if (!subscription) {
-    return { allowed: false, reason: 'Billing is not active. Please update your plan to continue.' };
-  }
+  const periodEnd = subscription?.current_period_end ? new Date(subscription.current_period_end) : null;
+  const walletBalance = walletStatus?.balanceInCents || 0;
+  const purchasedCredits = walletStatus?.purchasedCreditsInCents || 0;
 
-  const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end) : null;
-
-  if ((subscription.status === 'active' || subscription.status === 'trialing') && (!periodEnd || periodEnd > new Date())) {
+  if (subscription && (subscription.status === 'active' || subscription.status === 'trialing') && (!periodEnd || periodEnd > new Date())) {
     return { allowed: true };
   }
 
-  if (subscription.status === 'cancelled' && periodEnd && periodEnd > new Date()) {
+  if (subscription && subscription.status === 'cancelled' && periodEnd && periodEnd > new Date()) {
     return { allowed: true };
   }
 
-  // Billing hardening - 2026-05-17 14:06 IST, paras: past-due/failed subscriptions cannot spend wallet balance.
-  return { allowed: false, reason: 'Billing is not active. Please update your payment method to continue.' };
+  if (walletBalance > 0 && walletBalance <= purchasedCredits) {
+    return { allowed: true };
+  }
+
+  if (walletBalance > purchasedCredits) {
+    // Billing hardening - 2026-05-17 14:06 IST, paras: failed billing cannot spend leftover plan credits.
+    return { allowed: false, reason: 'Billing is not active. Start a trial or add credits to continue.' };
+  }
+
+  // Billing hardening - 2026-05-17 19:05 IST, paras: trial users get capped wallet credits; non-trial users need balance.
+  return { allowed: false, reason: 'Your wallet is empty. Start a trial or add credits to continue.' };
 }
 
 // =============================================================================
@@ -148,12 +155,12 @@ export async function getUsageInfo(userId: string): Promise<UsageInfo | null> {
     walletFormatted: walletStatus?.balanceFormatted || '$0.00',
     isTrialing: plan !== 'free' && user.trial_ends_at && new Date(user.trial_ends_at) > new Date(),
     trialEndsAt: user.trial_ends_at,
-    // Legacy fields - wallet-based plans have unlimited counts
+    // Legacy counters are kept for older callers, but wallet credits decide access.
     analysesUsed: 0,
-    analysesLimit: 999,
+    analysesLimit: 0,
     analysesPercentage: 0,
     enrichmentsUsed: 0,
-    enrichmentsLimit: 999,
+    enrichmentsLimit: 0,
     enrichmentsPercentage: 0,
   };
 }
@@ -186,63 +193,33 @@ export async function canAnalyze(userId: string): Promise<UsageCheckResult> {
     };
   }
 
-  // Free users can do limited analyses
-  if (usage.plan === 'free') {
-    // Check against the count-based limits for free users
-    const supabase = await createClient();
-    const { data: user } = await supabase
-      .from('users')
-      .select('analyses_used')
-      .eq('id', userId)
-      .single();
-
-    const analysesUsed = user?.analyses_used || 0;
-
-    // Free users are limited to 5 analyses
-    if (analysesUsed >= 5) {
-      return {
-        allowed: false,
-        reason: 'Free users are limited to 5 analyses. Upgrade to continue.',
-        usage,
-      };
-    }
+  const walletStatus = await getWalletStatus(userId);
+  const access = await hasWalletBillingAccess(userId, walletStatus);
+  if (!access.allowed) {
+    return {
+      allowed: false,
+      reason: access.reason,
+      topUpAvailable: true,
+      usage,
+    };
   }
 
-  // For paid plans, check wallet balance for ESTIMATED MAX COST
-  // SECURITY FIX (2nd Jan 2026): Previously only checked base cost (1 cent).
-  // Now we estimate the maximum possible cost based on plan scraping limits.
-  if (usage.plan !== 'free' && isWalletPlan(usage.plan)) {
-    const access = await hasPaidBillingAccess(userId);
-    if (!access.allowed) {
-      return {
-        allowed: false,
-        reason: access.reason,
-        usage,
-      };
-    }
+  const planConfig = isWalletPlan(usage.plan)
+    ? WALLET_PLANS[usage.plan as keyof typeof WALLET_PLANS]
+    : null;
+  const estimatedMaxCost = CREDIT_COSTS.postAnalysisBase +
+    ((planConfig?.reactionsPerPost ?? 100) * CREDIT_COSTS.perReaction) +
+    ((planConfig?.commentsPerPost ?? 75) * CREDIT_COSTS.perComment);
 
-    const planConfig = WALLET_PLANS[usage.plan as keyof typeof WALLET_PLANS];
+  const hasCredits = await hasEnoughCredits(userId, estimatedMaxCost);
 
-    // Calculate estimated max cost based on plan's scraping limits
-    // This is the worst-case cost if user scrapes max reactions + comments
-    const estimatedMaxCost = CREDIT_COSTS.postAnalysisBase +
-      (planConfig.reactionsPerPost * CREDIT_COSTS.perReaction) +
-      (planConfig.commentsPerPost * CREDIT_COSTS.perComment);
-
-    const hasCredits = await hasEnoughCredits(userId, estimatedMaxCost);
-
-    if (!hasCredits) {
-      // Calculate what they actually have vs what they might need
-      const walletStatus = await getWalletStatus(userId);
-      const currentBalance = walletStatus?.balanceInCents || 0;
-
-      return {
-        allowed: false,
-        reason: `Insufficient credits. You have $${(currentBalance / 100).toFixed(2)} but may need up to $${(estimatedMaxCost / 100).toFixed(2)} for a full analysis.`,
-        topUpAvailable: true,
-        usage,
-      };
-    }
+  if (!hasCredits) {
+    return {
+      allowed: false,
+      reason: `Insufficient credits. You have $${((walletStatus?.balanceInCents || usage.walletBalance) / 100).toFixed(2)} but may need up to $${(estimatedMaxCost / 100).toFixed(2)} for a full analysis.`,
+      topUpAvailable: true,
+      usage,
+    };
   }
 
   return { allowed: true, usage };
@@ -262,48 +239,27 @@ export async function canEnrich(userId: string): Promise<UsageCheckResult> {
     };
   }
 
-  // Free users can do limited enrichments
-  if (usage.plan === 'free') {
-    const supabase = await createClient();
-    const { data: user } = await supabase
-      .from('users')
-      .select('enrichments_used')
-      .eq('id', userId)
-      .single();
-
-    const enrichmentsUsed = user?.enrichments_used || 0;
-
-    if (enrichmentsUsed >= 10) {
-      return {
-        allowed: false,
-        reason: 'Free users are limited to 10 enrichments. Upgrade to continue.',
-        usage,
-      };
-    }
+  const walletStatus = await getWalletStatus(userId);
+  const access = await hasWalletBillingAccess(userId, walletStatus);
+  if (!access.allowed) {
+    return {
+      allowed: false,
+      reason: access.reason,
+      topUpAvailable: true,
+      usage,
+    };
   }
 
-  // For paid plans, check wallet balance
-  if (usage.plan !== 'free') {
-    const access = await hasPaidBillingAccess(userId);
-    if (!access.allowed) {
-      return {
-        allowed: false,
-        reason: access.reason,
-        usage,
-      };
-    }
+  const enrichmentCost = CREDIT_COSTS.profileEnrichment;
+  const hasCredits = await hasEnoughCredits(userId, enrichmentCost);
 
-    const enrichmentCost = CREDIT_COSTS.profileEnrichment;
-    const hasCredits = await hasEnoughCredits(userId, enrichmentCost);
-
-    if (!hasCredits) {
-      return {
-        allowed: false,
-        reason: 'Insufficient wallet credits for enrichment.',
-        topUpAvailable: true,
-        usage,
-      };
-    }
+  if (!hasCredits) {
+    return {
+      allowed: false,
+      reason: 'Insufficient wallet credits for enrichment.',
+      topUpAvailable: true,
+      usage,
+    };
   }
 
   return { allowed: true, usage };
@@ -314,8 +270,8 @@ export async function canEnrich(userId: string): Promise<UsageCheckResult> {
  *
  * SECURITY FIX - 2nd January 2026
  * ================================
- * 1. Free user increment now uses atomic RPC function to prevent race conditions
- * 2. deductCredits return value is now checked and errors are propagated
+ * 1. Wallet deduction uses atomic RPC to prevent race conditions
+ * 2. deductCredits return value is checked and errors are propagated
  */
 export async function incrementAnalysisUsage(
   userId: string,
@@ -323,63 +279,27 @@ export async function incrementAnalysisUsage(
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  // Get user's plan
-  const { data: user } = await supabase
-    .from('users')
-    .select('plan')
-    .eq('id', userId)
-    .single();
+  const walletStatus = await getWalletStatus(userId);
+  const access = await hasWalletBillingAccess(userId, walletStatus);
+  if (!access.allowed) {
+    return { success: false, error: access.reason || 'Wallet is empty' };
+  }
 
-  const plan = user?.plan || 'free';
+  const cost = CREDIT_COSTS.postAnalysisBase +
+    (metadata.reactionsScraped * CREDIT_COSTS.perReaction) +
+    (metadata.commentsScraped * CREDIT_COSTS.perComment);
 
-  // For free users, use atomic increment to prevent race conditions
-  // SECURITY FIX (2nd Jan 2026): Previously used read-then-write which allowed
-  // parallel requests to bypass limits. Now uses database-level locking.
-  if (plan === 'free') {
-    const { data: incrementResult, error: incrementError } = await supabase.rpc(
-      'increment_free_user_usage',
-      {
-        p_user_id: userId,
-        p_usage_type: 'analyses',
-        p_limit: 5, // Free user limit
-      }
-    );
+  const reason = `Post analysis: ${metadata.reactionsScraped} reactions, ${metadata.commentsScraped} comments`;
 
-    if (incrementError) {
-      console.error('[Usage] RPC error incrementing free user analyses:', incrementError);
-      return { success: false, error: 'Failed to track usage' };
-    }
+  const deductResult = await deductCredits(userId, cost, 'post_analysis', reason, {
+    postUrl: metadata.postUrl,
+    reactionsScraped: metadata.reactionsScraped,
+    commentsScraped: metadata.commentsScraped,
+  });
 
-    const result = incrementResult?.[0];
-    if (!result?.success) {
-      console.warn('[Usage] Free user analysis limit reached:', result?.error_message);
-      return { success: false, error: result?.error_message || 'Usage limit reached' };
-    }
-  } else {
-    const access = await hasPaidBillingAccess(userId);
-    if (!access.allowed) {
-      return { success: false, error: access.reason || 'Billing is not active' };
-    }
-
-    // For paid users, deduct from wallet using atomic operation
-    const cost = CREDIT_COSTS.postAnalysisBase +
-      (metadata.reactionsScraped * CREDIT_COSTS.perReaction) +
-      (metadata.commentsScraped * CREDIT_COSTS.perComment);
-
-    const reason = `Post analysis: ${metadata.reactionsScraped} reactions, ${metadata.commentsScraped} comments`;
-
-    // SECURITY FIX (2nd Jan 2026): Now checking deductCredits result
-    // Previously ignored failures which could lead to silent billing issues
-    const deductResult = await deductCredits(userId, cost, 'post_analysis', reason, {
-      postUrl: metadata.postUrl,
-      reactionsScraped: metadata.reactionsScraped,
-      commentsScraped: metadata.commentsScraped,
-    });
-
-    if (!deductResult.success) {
-      console.error('[Usage] Failed to deduct credits for analysis:', deductResult.error);
-      return { success: false, error: deductResult.error || 'Failed to deduct credits' };
-    }
+  if (!deductResult.success) {
+    console.error('[Usage] Failed to deduct credits for analysis:', deductResult.error);
+    return { success: false, error: deductResult.error || 'Failed to deduct credits' };
   }
 
   // Log the usage event (non-critical - don't fail if this errors)
@@ -405,63 +325,26 @@ export async function incrementAnalysisUsage(
  *
  * SECURITY FIX - 2nd January 2026
  * ================================
- * 1. Free user increment now uses atomic RPC function to prevent race conditions
- * 2. deductCredits return value is now checked and errors are propagated
+ * 1. Wallet deduction uses atomic RPC to prevent race conditions
+ * 2. deductCredits return value is checked and errors are propagated
  */
 export async function incrementEnrichmentUsage(
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  // Get user's plan
-  const { data: user } = await supabase
-    .from('users')
-    .select('plan')
-    .eq('id', userId)
-    .single();
+  const walletStatus = await getWalletStatus(userId);
+  const access = await hasWalletBillingAccess(userId, walletStatus);
+  if (!access.allowed) {
+    return { success: false, error: access.reason || 'Wallet is empty' };
+  }
 
-  const plan = user?.plan || 'free';
+  const cost = CREDIT_COSTS.profileEnrichment;
+  const deductResult = await deductCredits(userId, cost, 'profile_enrichment', 'Profile enrichment');
 
-  // For free users, use atomic increment to prevent race conditions
-  // SECURITY FIX (2nd Jan 2026): Previously used read-then-write which allowed
-  // parallel requests to bypass limits. Now uses database-level locking.
-  if (plan === 'free') {
-    const { data: incrementResult, error: incrementError } = await supabase.rpc(
-      'increment_free_user_usage',
-      {
-        p_user_id: userId,
-        p_usage_type: 'enrichments',
-        p_limit: 10, // Free user limit
-      }
-    );
-
-    if (incrementError) {
-      console.error('[Usage] RPC error incrementing free user enrichments:', incrementError);
-      return { success: false, error: 'Failed to track usage' };
-    }
-
-    const result = incrementResult?.[0];
-    if (!result?.success) {
-      console.warn('[Usage] Free user enrichment limit reached:', result?.error_message);
-      return { success: false, error: result?.error_message || 'Usage limit reached' };
-    }
-  } else {
-    const access = await hasPaidBillingAccess(userId);
-    if (!access.allowed) {
-      return { success: false, error: access.reason || 'Billing is not active' };
-    }
-
-    // For paid users, deduct from wallet using atomic operation
-    const cost = CREDIT_COSTS.profileEnrichment;
-
-    // SECURITY FIX (2nd Jan 2026): Now checking deductCredits result
-    // Previously ignored failures which could lead to silent billing issues
-    const deductResult = await deductCredits(userId, cost, 'profile_enrichment', 'Profile enrichment');
-
-    if (!deductResult.success) {
-      console.error('[Usage] Failed to deduct credits for enrichment:', deductResult.error);
-      return { success: false, error: deductResult.error || 'Failed to deduct credits' };
-    }
+  if (!deductResult.success) {
+    console.error('[Usage] Failed to deduct credits for enrichment:', deductResult.error);
+    return { success: false, error: deductResult.error || 'Failed to deduct credits' };
   }
 
   // Log the usage event (non-critical - don't fail if this errors)

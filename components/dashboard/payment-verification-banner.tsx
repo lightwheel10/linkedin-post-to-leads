@@ -130,7 +130,7 @@ export function PaymentVerificationBanner({ callbackToken }: PaymentVerification
             </p>
             {!isDone && !isFailed && (
               <p className="text-[11px] text-muted-foreground mt-1">
-                Your trial will unlock automatically after Dodo confirms the payment. Free limits are available for now.
+                Your trial wallet will unlock automatically after Dodo confirms the payment.
               </p>
             )}
           </div>

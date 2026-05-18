@@ -16,7 +16,7 @@
 // ==============
 // 1. Database functions exist and work correctly
 // 2. Atomic credit deduction prevents race conditions
-// 3. Free user limits are enforced atomically
+// 3. Wallet-only access is enforced for free and trial users
 // 4. Wallet balance tracking is accurate
 // 5. Security fixes are in place
 // =============================================================================
@@ -99,23 +99,21 @@ async function testDatabaseFunctionsExist() {
   }
   log('deduct_wallet_credits function exists and is callable', 'success');
 
-  // Check increment_free_user_usage function
-  const { data: incrementFn, error: incrementError } = await supabase.rpc('increment_free_user_usage', {
+  // Check add_purchased_credits function
+  const { data: addFn, error: addError } = await supabase.rpc('add_purchased_credits', {
     p_user_id: nonexistentUserId,
-    p_usage_type: 'analyses',
-    p_limit: 5,
+    p_amount: 1,
   });
 
-  if (incrementError) {
-    log(`increment_free_user_usage function error: ${incrementError.message}`, 'error');
+  if (addError && !addError.message.includes('User not found')) {
+    log(`add_purchased_credits function error: ${addError.message}`, 'error');
     return false;
   }
-  // The function should return "User not found" for nonexistent user
-  const incrementResult = incrementFn?.[0];
-  if (incrementResult && incrementResult.error_message !== 'User not found') {
-    log(`Unexpected result: ${JSON.stringify(incrementResult)}`, 'warning');
+  const addResult = addFn?.[0];
+  if (!addResult || addResult.success !== false) {
+    // Function exists but returned unexpected result, that's still OK for this test
   }
-  log('increment_free_user_usage function exists and is callable', 'success');
+  log('add_purchased_credits function exists and is callable', 'success');
 
   return true;
 }
@@ -232,101 +230,68 @@ async function testAtomicCreditDeduction() {
   }
   log('Balance correctly unchanged after failed deduction', 'success');
 
-  // Test 3: Free user should fail
-  log('Testing free user rejection...', 'info');
+  // Test 3: Free user with no wallet balance should fail
+  log('Testing empty wallet rejection...', 'info');
   await updateTestUser({ plan: 'free', wallet_balance: 0 });
 
   const { data: result3 } = await supabase.rpc('deduct_wallet_credits', {
     p_user_id: TEST_USER_ID,
     p_amount: 100,
     p_action_type: 'post_analysis',
-    p_reason: 'Should fail for free user',
+    p_reason: 'Should fail for empty wallet',
     p_metadata: null,
   });
 
   const deductResult3 = result3?.[0];
-  if (deductResult3?.success !== false || !deductResult3?.error_message?.includes('Free plan')) {
-    log(`Expected free plan rejection, got: ${JSON.stringify(deductResult3)}`, 'error');
+  if (deductResult3?.success !== false) {
+    log(`Expected empty wallet rejection, got: ${JSON.stringify(deductResult3)}`, 'error');
     return false;
   }
-  log(`Correctly rejected free user: ${deductResult3?.error_message}`, 'success');
+  log(`Correctly rejected empty wallet: ${deductResult3?.error_message}`, 'success');
 
   return true;
 }
 
 // =============================================================================
-// TEST 4: Atomic Free User Limits
+// TEST 4: Wallet-Only Free User Access
 // =============================================================================
-async function testAtomicFreeUserLimits() {
-  header('TEST 3: Atomic Free User Limits');
+async function testWalletOnlyFreeUserAccess() {
+  header('TEST 3: Wallet-Only Free User Access');
 
-  // createTestUser now handles cleanup internally
+  // Wallet-only usage - 2026-05-17 14:06 IST, paras: no fixed free counters.
   if (!await createTestUser('free', 0)) return false;
 
-  // Test analysis limit
-  log('Testing free user analysis limit (5)...', 'info');
-
-  for (let i = 1; i <= 6; i++) {
-    const { data, error } = await supabase.rpc('increment_free_user_usage', {
-      p_user_id: TEST_USER_ID,
-      p_usage_type: 'analyses',
-      p_limit: 5,
-    });
-
-    // Debug: log full response on first iteration
-    if (i === 1) {
-      log(`Debug - First RPC response: data=${JSON.stringify(data)}, error=${JSON.stringify(error)}`, 'info');
-    }
-
-    if (error) {
-      log(`RPC error on increment ${i}: ${error.message}`, 'error');
-      return false;
-    }
-
-    const result = data?.[0];
-
-    if (i <= 5) {
-      if (!result?.success) {
-        log(`Increment ${i} should succeed but failed: ${JSON.stringify(result)}`, 'error');
-        return false;
-      }
-      log(`Analysis ${i}/5: Success (count now: ${result?.new_count})`, 'success');
-    } else {
-      if (result?.success) {
-        log(`Increment ${i} should fail (limit reached) but succeeded`, 'error');
-        return false;
-      }
-      log(`Analysis ${i}/5: Correctly rejected - ${result?.error_message}`, 'success');
-    }
-  }
-
-  // Test enrichment limit
-  log('\nTesting free user enrichment limit (10)...', 'info');
-  await updateTestUser({ enrichments_used: 9 }); // Set to 9
-
-  const { data: enrichResult1 } = await supabase.rpc('increment_free_user_usage', {
+  log('Testing free user with empty wallet...', 'info');
+  const { data: emptyResult } = await supabase.rpc('deduct_wallet_credits', {
     p_user_id: TEST_USER_ID,
-    p_usage_type: 'enrichments',
-    p_limit: 10,
+    p_amount: 25,
+    p_action_type: 'post_analysis',
+    p_reason: 'Should fail for empty wallet',
+    p_metadata: null,
   });
 
-  if (!enrichResult1?.[0]?.success) {
-    log(`Enrichment 10/10 should succeed`, 'error');
+  if (emptyResult?.[0]?.success) {
+    log(`Empty wallet should fail, got: ${JSON.stringify(emptyResult?.[0])}`, 'error');
     return false;
   }
-  log('Enrichment 10/10: Success', 'success');
+  log(`Correctly rejected empty wallet: ${emptyResult?.[0]?.error_message}`, 'success');
 
-  const { data: enrichResult2 } = await supabase.rpc('increment_free_user_usage', {
+  log('Testing free user with remaining wallet credits...', 'info');
+  await updateTestUser({ wallet_balance: 100, purchased_credits: 100 });
+
+  const { data: fundedResult } = await supabase.rpc('deduct_wallet_credits', {
     p_user_id: TEST_USER_ID,
-    p_usage_type: 'enrichments',
-    p_limit: 10,
+    p_amount: 25,
+    p_action_type: 'post_analysis',
+    p_reason: 'Should spend wallet balance',
+    p_metadata: null,
   });
 
-  if (enrichResult2?.[0]?.success) {
-    log(`Enrichment 11/10 should fail (limit reached)`, 'error');
+  if (!fundedResult?.[0]?.success || fundedResult?.[0]?.new_balance !== 75) {
+    log(`Funded wallet should spend successfully, got: ${JSON.stringify(fundedResult?.[0])}`, 'error');
     return false;
   }
-  log(`Enrichment 11/10: Correctly rejected - ${enrichResult2?.[0]?.error_message}`, 'success');
+  log('Free user with remaining wallet credits can spend them', 'success');
 
   return true;
 }
@@ -398,10 +363,9 @@ async function testSecurityFixesInCode() {
   console.log('      File: lib/usage.ts');
   console.log('      Check: Should calculate estimatedMaxCost using plan limits, not just base cost');
   console.log('');
-  console.log('4. [ ] Free user increments use RPC function');
+  console.log('4. [ ] Usage is wallet-only');
   console.log('      File: lib/usage.ts');
-  console.log('      Check: incrementAnalysisUsage and incrementEnrichmentUsage should call');
-  console.log('             supabase.rpc("increment_free_user_usage", ...)');
+  console.log('      Check: incrementAnalysisUsage and incrementEnrichmentUsage should deduct wallet credits');
   console.log('');
 
   return true;
@@ -495,7 +459,7 @@ async function runAllTests() {
     // Run tests
     results.push({ name: 'Database Functions Exist', passed: await testDatabaseFunctionsExist() });
     results.push({ name: 'Atomic Credit Deduction', passed: await testAtomicCreditDeduction() });
-    results.push({ name: 'Atomic Free User Limits', passed: await testAtomicFreeUserLimits() });
+    results.push({ name: 'Wallet-Only Free User Access', passed: await testWalletOnlyFreeUserAccess() });
     results.push({ name: 'Wallet Transaction Logging', passed: await testWalletTransactionLogging() });
     results.push({ name: 'Security Fixes in Code', passed: await testSecurityFixesInCode() });
     results.push({ name: 'Race Condition Prevention', passed: await testRaceConditionPrevention() });

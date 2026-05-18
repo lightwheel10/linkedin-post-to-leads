@@ -471,9 +471,10 @@ export async function getUserBillingInfo(userId: string): Promise<{
 
   const now = new Date();
   const trialEnd = user.trial_ends_at ? new Date(user.trial_ends_at) : null;
-  const isTrialing = trialEnd ? trialEnd > now : false;
-  const trialDaysRemaining = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
   const planId = user.plan || 'free';
+  // Trial display guard - 2026-05-18 14:12 IST, paras: stale trial dates on free users must not show trial wallet access.
+  const isTrialing = planId !== 'free' && trialEnd ? trialEnd > now : false;
+  const trialDaysRemaining = isTrialing && trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
   const walletStatus = await getWalletStatus(userId);
   const planConfig = isWalletPlan(planId) ? WALLET_PLANS[planId as WalletPlanId] : null;
   const walletBalance = walletStatus?.balanceInCents ?? user.wallet_balance ?? 0;

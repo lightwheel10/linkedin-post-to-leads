@@ -39,6 +39,7 @@ const ipRequests = new Map<string, { count: number; resetAt: number }>();
 let lastCleanup = Date.now();
 const RATE_LIMIT = 200;
 const WINDOW_MS = 60_000;
+type AdminSupabaseClient = ReturnType<typeof createAdminClient>;
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
@@ -63,6 +64,45 @@ function isRateLimited(ip: string): boolean {
     return true;
   }
   return false;
+}
+
+async function updateMatchingPendingCheckout(
+  supabase: AdminSupabaseClient,
+  userId: string,
+  data: DodoWebhookPayload['data'],
+  updates: Record<string, unknown>,
+  fallback?: { planId?: string | null; billingPeriod?: string | null }
+) {
+  let query = supabase
+    .from('checkout_sessions')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('status', 'pending');
+
+  const checkoutSessionId = typeof data.checkout_session_id === 'string' ? data.checkout_session_id : null;
+  const callbackToken = data.metadata?.callback_token || null;
+
+  if (checkoutSessionId) {
+    query = query.eq('session_id', checkoutSessionId);
+  } else if (callbackToken) {
+    query = query.eq('callback_token', callbackToken);
+  } else if (fallback?.billingPeriod || fallback?.planId) {
+    if (fallback.billingPeriod) query = query.eq('billing_period', fallback.billingPeriod);
+    if (fallback.planId) query = query.eq('plan_id', fallback.planId);
+  }
+
+  // Checkout scoping - 2026-05-18 13:55 IST, paras: Dodo webhooks must update the matching pending checkout, not every pending session for the user.
+  const { data: checkoutSession } = await query
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!checkoutSession) return;
+
+  await supabase
+    .from('checkout_sessions')
+    .update(updates)
+    .eq('id', checkoutSession.id);
 }
 
 /** POST /api/webhooks/dodo — processes Dodo payment/subscription events */
@@ -310,6 +350,33 @@ async function handlePaymentSucceeded(
         return { success: false, message: 'User not found for credit pack' };
       }
 
+      if (payment_id) {
+        const { data: existingTopup } = await supabase
+          .from('wallet_transactions')
+          .select('balance_after')
+          .eq('user_id', packUser.id)
+          .eq('type', 'credit')
+          .contains('metadata', { payment_id })
+          .maybeSingle();
+
+        if (existingTopup) {
+          // Topup idempotency - 2026-05-18 14:16 IST, paras: Dodo retries must not add the same credit pack twice.
+          await updateMatchingPendingCheckout(
+            supabase,
+            packUser.id,
+            data,
+            {
+              status: 'completed',
+              completed_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            { planId: creditPackId, billingPeriod: 'one_time' }
+          );
+
+          return { success: true, message: `Credit pack ${creditPackId} already applied` };
+        }
+      }
+
       // Add purchased credits atomically via RPC
       const addResult = await addPurchasedCredits(
         packUser.id,
@@ -324,27 +391,19 @@ async function handlePaymentSucceeded(
         return { success: false, message: addResult.error };
       }
 
-      // Mark any pending topup checkout session as completed.
+      // Mark the matching topup checkout session as completed.
       // The checkout callback page polls /api/checkout/status which checks this.
-      const { data: pendingTopup } = await supabase
-        .from('checkout_sessions')
-        .select('id')
-        .eq('user_id', packUser.id)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (pendingTopup) {
-        await supabase
-          .from('checkout_sessions')
-          .update({
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', pendingTopup.id);
-      }
+      await updateMatchingPendingCheckout(
+        supabase,
+        packUser.id,
+        data,
+        {
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        { planId: creditPackId, billingPeriod: 'one_time' }
+      );
 
       console.log('[Dodo Webhook] Credit pack applied:', {
         userId: packUser.id,
@@ -511,11 +570,16 @@ async function handlePaymentProcessing(
       .maybeSingle();
 
     if (user) {
-      await supabase
-        .from('checkout_sessions')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('user_id', user.id)
-        .eq('status', 'pending');
+      await updateMatchingPendingCheckout(
+        supabase,
+        user.id,
+        data,
+        { updated_at: new Date().toISOString() },
+        {
+          planId: data.metadata?.plan_id || data.metadata?.pack_id || null,
+          billingPeriod: data.metadata?.type === 'topup' ? 'one_time' : null,
+        }
+      );
     }
 
     return { success: true, message: 'Payment is still processing' };
@@ -554,14 +618,19 @@ async function handlePaymentFailed(
       .maybeSingle();
 
     if (user) {
-      await supabase
-        .from('checkout_sessions')
-        .update({
+      await updateMatchingPendingCheckout(
+        supabase,
+        user.id,
+        data,
+        {
           status: 'failed',
           updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id)
-        .eq('status', 'pending');
+        },
+        {
+          planId: data.metadata?.plan_id || data.metadata?.pack_id || null,
+          billingPeriod: data.metadata?.type === 'topup' ? 'one_time' : null,
+        }
+      );
 
       // Log the failure
       await supabase.from('usage_logs').insert({
@@ -736,14 +805,19 @@ async function handleSubscriptionUnavailable(
       .maybeSingle();
 
     if (user) {
-      await supabase
-        .from('checkout_sessions')
-        .update({
+      await updateMatchingPendingCheckout(
+        supabase,
+        user.id,
+        data,
+        {
           status: 'failed',
           updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id)
-        .eq('status', 'pending');
+        },
+        {
+          planId: data.metadata?.plan_id || null,
+          billingPeriod: null,
+        }
+      );
     }
 
     return { success: true, message: `Subscription is ${status || 'unavailable'}` };
