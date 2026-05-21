@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getOrCreateUser } from '@/lib/data-store';
-import { canEnrich, incrementEnrichmentUsage } from '@/lib/usage';
+import { canEnrich, reserveEnrichmentCredits, releaseEnrichmentReservation, settleEnrichmentUsage } from '@/lib/usage';
 
 // ============================================================================
 // LinkedIn Profile Enrichment API
@@ -26,6 +26,9 @@ const APIFY_TOKEN = process.env.APIFY_API_TOKEN;
 const LINKEDIN_SCRAPER_ACTOR_ID = "VhxlqQXRwhW8H5hNV";
 
 export async function POST(request: NextRequest) {
+  let reservationUserId: string | null = null;
+  let reservationId: string | null = null;
+
   try {
     // Check authentication first
     const userEmail = await getAuthenticatedUser();
@@ -37,19 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user = await getOrCreateUser(userEmail);
-
-    // Check usage limits
-    const usageCheck = await canEnrich(user.id);
-    if (!usageCheck.allowed) {
-      return NextResponse.json(
-        { 
-          error: usageCheck.reason || 'Start a trial or add wallet credits to enrich profiles.',
-          usage: usageCheck.usage,
-          limitReached: true
-        },
-        { status: 403 }
-      );
-    }
+    reservationUserId = user.id;
 
     if (!APIFY_TOKEN) {
       return NextResponse.json(
@@ -80,6 +71,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const reservation = await reserveEnrichmentCredits(user.id);
+    if (!reservation.allowed) {
+      return NextResponse.json(
+        {
+          error: reservation.reason || 'Start a trial or add wallet credits to enrich profiles.',
+          usage: reservation.usage,
+          limitReached: true
+        },
+        { status: 403 }
+      );
+    }
+
+    reservationId = reservation.reservationId || null;
+    if (!reservationId) {
+      return NextResponse.json(
+        { error: 'Unable to reserve wallet credits for enrichment.', limitReached: true },
+        { status: 402 }
+      );
+    }
+
     console.log(`[Enrich] Starting enrichment for: ${linkedinUsername}`);
 
     const client = new ApifyClient({ token: APIFY_TOKEN });
@@ -94,6 +105,8 @@ export async function POST(request: NextRequest) {
     const { items } = await client.dataset(run.defaultDatasetId).listItems();
 
     if (!items || items.length === 0) {
+      await releaseEnrichmentReservation(user.id, reservationId, { username: linkedinUsername, releaseReason: 'no_profile_data' });
+      reservationId = null;
       return NextResponse.json(
         { error: 'No profile data returned', profile: null },
         { status: 404 }
@@ -104,6 +117,8 @@ export async function POST(request: NextRequest) {
 
     // Check if profile was found
     if (rawProfile.message === "No profile found or wrong input") {
+      await releaseEnrichmentReservation(user.id, reservationId, { username: linkedinUsername, releaseReason: 'profile_not_found' });
+      reservationId = null;
       return NextResponse.json(
         { error: 'Profile not found', profile: null },
         { status: 404 }
@@ -168,11 +183,11 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Enrich] Successfully enriched: ${linkedinUsername}`);
 
-    // SECURITY FIX (2nd Jan 2026): ALWAYS track and deduct credits for enrichments.
-    // Previously this had a skipUsageTracking bypass that was a security vulnerability.
-    // Credits are now always deducted - no user-controlled bypasses allowed.
-    const usageResult = await incrementEnrichmentUsage(user.id);
+    // Wallet reservation - 2026-05-18 15:28 IST, paras: settle the pre-Apify reservation before returning enriched profile data.
+    const usageResult = await settleEnrichmentUsage(user.id, reservationId);
     if (!usageResult.success) {
+      await releaseEnrichmentReservation(user.id, reservationId, { username: linkedinUsername, releaseReason: 'settlement_failed' });
+      reservationId = null;
       return NextResponse.json(
         {
           error: usageResult.error || 'Unable to deduct wallet credits for enrichment.',
@@ -181,6 +196,7 @@ export async function POST(request: NextRequest) {
         { status: 402 }
       );
     }
+    reservationId = null;
 
     // Get updated usage
     const updatedUsage = await canEnrich(user.id);
@@ -192,6 +208,10 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
+    if (reservationUserId && reservationId) {
+      await releaseEnrichmentReservation(reservationUserId, reservationId, { releaseReason: 'enrichment_error' });
+    }
+
     console.error('[Enrich] Error:', error);
     return NextResponse.json(
       { error: error.message || 'Enrichment failed' },

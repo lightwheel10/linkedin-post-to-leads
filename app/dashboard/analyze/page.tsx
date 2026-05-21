@@ -30,7 +30,7 @@ import {
   Wallet
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchPostDetails, fetchReactions, fetchComments, trackAnalysisUsage, filterByICP, PostData, Reactor, Commenter } from "@/app/actions/analyze-post";
+import { fetchPostDetails, fetchReactions, fetchComments, trackAnalysisUsage, releaseAnalysisReservation, filterByICP, PostData, Reactor, Commenter } from "@/app/actions/analyze-post";
 
 const STEPS = [
   { id: 1, label: "Post Analysis", icon: Search },
@@ -344,6 +344,8 @@ export default function AnalyzePage() {
   const handleAnalyze = async () => {
     if (!url) return;
 
+    let reservationId: string | null = null;
+
     try {
       // ========================================
       // STEP 1: Fetch Post Details
@@ -366,6 +368,11 @@ export default function AnalyzePage() {
 
       if (!postResult.success || !postResult.post) {
         throw new Error(postResult.error || "Failed to fetch post");
+      }
+
+      reservationId = postResult.reservationId || null;
+      if (!reservationId) {
+        throw new Error("Unable to reserve wallet credits. Please try again.");
       }
 
       const post = postResult.post;
@@ -500,15 +507,18 @@ export default function AnalyzePage() {
         };
       });
 
-      // Billing hardening - 2026-05-17 14:06 IST, paras: do not reveal/save paid results unless wallet deduction succeeds.
-      const usageResult = await trackAnalysisUsage(url, reactors.length, commenters.length);
+      // Wallet reservation - 2026-05-18 15:28 IST, paras: settle reserved credits before showing or saving paid analysis results.
+      const usageResult = await trackAnalysisUsage(url, reactors.length, commenters.length, reservationId);
       if (!usageResult.success) {
+        await releaseAnalysisReservation(reservationId, url);
+        reservationId = null;
         setError(usageResult.error || "We could not charge your wallet for this analysis. Please add credits and try again.");
         setStatus('error');
         await refreshBilling();
         window.dispatchEvent(new CustomEvent('usage-updated'));
         return;
       }
+      reservationId = null;
 
       setAllReactors(leads);
       setQualifiedLeads(qualifiedLeadsList);
@@ -576,6 +586,12 @@ export default function AnalyzePage() {
       ]);
 
     } catch (err) {
+      if (reservationId) {
+        await releaseAnalysisReservation(reservationId, url);
+        await refreshBilling();
+        window.dispatchEvent(new CustomEvent('usage-updated'));
+      }
+
       setStatus('error');
       const errorMsg = err instanceof Error ? err.message : "An error occurred";
       setError(errorMsg);

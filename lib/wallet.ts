@@ -38,8 +38,8 @@
 // ================
 // - All credit amounts are stored in CENTS (integer) to avoid float precision issues
 // - Wallet balance should not go negative; atomic RPC rejects insufficient balance
-// - Always check hasEnoughCredits() BEFORE starting an action
-// - Credits are deducted AFTER successful action completion (not before)
+// - Reserve estimated credits BEFORE paid external work starts
+// - Settle reservations after completion so unused credits are refunded
 //
 // Created: 2nd January 2026
 // Last Updated: 2nd January 2026
@@ -98,6 +98,14 @@ export interface WalletOperationResult {
   newBalance: number;
   /** Error message if operation failed */
   error?: string;
+}
+
+export interface WalletReservationResult extends WalletOperationResult {
+  reservationId?: string;
+}
+
+export interface WalletSettlementResult extends WalletOperationResult {
+  refundAmount: number;
 }
 
 /**
@@ -526,6 +534,129 @@ export async function deductCredits(
   });
 
   return { success: true, newBalance: result.new_balance };
+}
+
+export async function releaseExpiredWalletReservations(
+  userId: string,
+  olderThanMinutes: number = 120
+): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('release_expired_wallet_reservations', {
+    p_user_id: userId,
+    p_older_than_minutes: olderThanMinutes,
+  });
+
+  if (error) {
+    console.error('[Wallet] Failed to release expired reservations:', error);
+  }
+}
+
+export async function reserveCredits(
+  userId: string,
+  amount: number,
+  actionType: WalletActionType,
+  reason: string,
+  metadata?: Record<string, unknown>
+): Promise<WalletReservationResult> {
+  if (amount <= 0) {
+    return { success: false, newBalance: 0, error: 'Amount must be positive' };
+  }
+
+  await releaseExpiredWalletReservations(userId);
+
+  const supabase = await createClient();
+
+  // Wallet reservation - 2026-05-18 15:28 IST, paras: reserve before Apify so parallel tabs cannot spend the same balance twice.
+  const { data, error } = await supabase.rpc('reserve_wallet_credits', {
+    p_user_id: userId,
+    p_amount: amount,
+    p_action_type: actionType,
+    p_reason: reason,
+    p_metadata: metadata || null,
+  });
+
+  if (error) {
+    console.error('[Wallet] RPC error during reservation:', error);
+    return { success: false, newBalance: 0, error: 'Database error during credit reservation' };
+  }
+
+  const result = data?.[0];
+  if (!result) {
+    return { success: false, newBalance: 0, error: 'No response from database' };
+  }
+
+  if (!result.success) {
+    return {
+      success: false,
+      newBalance: result.new_balance || 0,
+      error: result.error_message || 'Credit reservation failed',
+    };
+  }
+
+  return {
+    success: true,
+    newBalance: result.new_balance,
+    reservationId: result.reservation_id,
+  };
+}
+
+export async function settleCreditReservation(
+  userId: string,
+  reservationId: string,
+  actualAmount: number,
+  metadata?: Record<string, unknown>
+): Promise<WalletSettlementResult> {
+  if (!reservationId) {
+    return { success: false, newBalance: 0, refundAmount: 0, error: 'Missing reservation ID' };
+  }
+
+  if (actualAmount < 0) {
+    return { success: false, newBalance: 0, refundAmount: 0, error: 'Actual amount must be zero or positive' };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc('settle_wallet_reservation', {
+    p_user_id: userId,
+    p_reservation_id: reservationId,
+    p_actual_amount: actualAmount,
+    p_metadata: metadata || null,
+  });
+
+  if (error) {
+    console.error('[Wallet] RPC error during reservation settlement:', error);
+    return { success: false, newBalance: 0, refundAmount: 0, error: 'Database error during reservation settlement' };
+  }
+
+  const result = data?.[0];
+  if (!result) {
+    return { success: false, newBalance: 0, refundAmount: 0, error: 'No response from database' };
+  }
+
+  if (!result.success) {
+    return {
+      success: false,
+      newBalance: result.new_balance || 0,
+      refundAmount: result.refund_amount || 0,
+      error: result.error_message || 'Reservation settlement failed',
+    };
+  }
+
+  return {
+    success: true,
+    newBalance: result.new_balance,
+    refundAmount: result.refund_amount || 0,
+  };
+}
+
+export async function releaseCreditReservation(
+  userId: string,
+  reservationId: string,
+  metadata?: Record<string, unknown>
+): Promise<WalletSettlementResult> {
+  return settleCreditReservation(userId, reservationId, 0, {
+    released: true,
+    ...metadata,
+  });
 }
 
 /**

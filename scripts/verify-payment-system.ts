@@ -15,7 +15,7 @@
 // WHAT IT TESTS:
 // ==============
 // 1. Database functions exist and work correctly
-// 2. Atomic credit deduction prevents race conditions
+// 2. Atomic credit deduction and reservation prevent race conditions
 // 3. Wallet-only access is enforced for free and trial users
 // 4. Wallet balance tracking is accurate
 // 5. Security fixes are in place
@@ -114,6 +114,36 @@ async function testDatabaseFunctionsExist() {
     // Function exists but returned unexpected result, that's still OK for this test
   }
   log('add_purchased_credits function exists and is callable', 'success');
+
+  const { data: reserveFn, error: reserveError } = await supabase.rpc('reserve_wallet_credits', {
+    p_user_id: nonexistentUserId,
+    p_amount: 1,
+    p_action_type: 'post_analysis',
+    p_reason: 'Test reservation',
+    p_metadata: null,
+  });
+
+  if (reserveError && !reserveError.message.includes('User not found')) {
+    log(`reserve_wallet_credits function error: ${reserveError.message}`, 'error');
+    return false;
+  }
+  if (reserveFn?.[0]?.success !== false) {
+    // Function exists but returned unexpected result, that's still OK for this test
+  }
+  log('reserve_wallet_credits function exists and is callable', 'success');
+
+  const { error: settleError } = await supabase.rpc('settle_wallet_reservation', {
+    p_user_id: nonexistentUserId,
+    p_reservation_id: '00000000-0000-0000-0000-000000000000',
+    p_actual_amount: 0,
+    p_metadata: null,
+  });
+
+  if (settleError && !settleError.message.includes('Reservation not found')) {
+    log(`settle_wallet_reservation function error: ${settleError.message}`, 'error');
+    return false;
+  }
+  log('settle_wallet_reservation function exists and is callable', 'success');
 
   return true;
 }
@@ -253,10 +283,66 @@ async function testAtomicCreditDeduction() {
 }
 
 // =============================================================================
-// TEST 4: Wallet-Only Free User Access
+// TEST 4: Wallet Reservations
+// =============================================================================
+async function testWalletReservations() {
+  header('TEST 4: Wallet Reservations');
+
+  if (!await createTestUser('pro', 1000)) return false;
+
+  log('Testing pre-Apify credit reservation...', 'info');
+  const { data: reserveResult } = await supabase.rpc('reserve_wallet_credits', {
+    p_user_id: TEST_USER_ID,
+    p_amount: 600,
+    p_action_type: 'post_analysis',
+    p_reason: 'Test reservation before Apify',
+    p_metadata: { test: true },
+  });
+
+  const reservation = reserveResult?.[0];
+  if (!reservation?.success || !reservation?.reservation_id || reservation?.new_balance !== 400) {
+    log(`Expected reservation with balance 400, got: ${JSON.stringify(reservation)}`, 'error');
+    return false;
+  }
+  log(`Reserved $6.00 before external work: ${reservation.reservation_id}`, 'success');
+
+  log('Testing reservation settlement and refund...', 'info');
+  const { data: settleResult } = await supabase.rpc('settle_wallet_reservation', {
+    p_user_id: TEST_USER_ID,
+    p_reservation_id: reservation.reservation_id,
+    p_actual_amount: 250,
+    p_metadata: { actualTestCost: 250 },
+  });
+
+  const settlement = settleResult?.[0];
+  if (!settlement?.success || settlement?.new_balance !== 750 || settlement?.refund_amount !== 350) {
+    log(`Expected settlement balance 750/refund 350, got: ${JSON.stringify(settlement)}`, 'error');
+    return false;
+  }
+  log('Settled reservation and refunded unused credits', 'success');
+
+  const { data: transactions } = await supabase
+    .from('wallet_transactions')
+    .select('*')
+    .eq('user_id', TEST_USER_ID)
+    .order('created_at', { ascending: false })
+    .limit(2);
+
+  const refund = transactions?.find((tx) => tx.metadata?.reservationRefund === true);
+  if (!refund || refund.amount !== 350) {
+    log(`Expected refund transaction for 350 credits, got: ${JSON.stringify(transactions)}`, 'error');
+    return false;
+  }
+
+  log('Refund transaction was logged', 'success');
+  return true;
+}
+
+// =============================================================================
+// TEST 5: Wallet-Only Free User Access
 // =============================================================================
 async function testWalletOnlyFreeUserAccess() {
-  header('TEST 3: Wallet-Only Free User Access');
+  header('TEST 5: Wallet-Only Free User Access');
 
   // Wallet-only usage - 2026-05-17 14:06 IST, paras: no fixed free counters.
   if (!await createTestUser('free', 0)) return false;
@@ -297,10 +383,10 @@ async function testWalletOnlyFreeUserAccess() {
 }
 
 // =============================================================================
-// TEST 5: Wallet Transaction Logging
+// TEST 6: Wallet Transaction Logging
 // =============================================================================
 async function testWalletTransactionLogging() {
-  header('TEST 4: Wallet Transaction Logging');
+  header('TEST 6: Wallet Transaction Logging');
 
   // createTestUser now handles cleanup internally
   if (!await createTestUser('growth', 30000)) return false; // $300 balance
@@ -343,10 +429,10 @@ async function testWalletTransactionLogging() {
 }
 
 // =============================================================================
-// TEST 6: Verify Security Fixes in Code
+// TEST 7: Verify Security Fixes in Code
 // =============================================================================
 async function testSecurityFixesInCode() {
-  header('TEST 5: Security Fixes in Code (Manual Verification)');
+  header('TEST 7: Security Fixes in Code (Manual Verification)');
 
   log('The following security fixes should be verified in the codebase:', 'warning');
   console.log('\n📋 CHECKLIST:');
@@ -367,17 +453,22 @@ async function testSecurityFixesInCode() {
   console.log('      File: lib/usage.ts');
   console.log('      Check: incrementAnalysisUsage and incrementEnrichmentUsage should deduct wallet credits');
   console.log('');
+  console.log('5. [ ] Paid external work reserves credits first');
+  console.log('      Files: app/actions/analyze-post.ts, app/api/crm/enrich/route.ts');
+  console.log('      Check: reserveAnalysisCredits/reserveEnrichmentCredits should run before Apify calls');
+  console.log('');
 
   return true;
 }
 
 // =============================================================================
-// TEST 7: Simulate Race Condition (Conceptual)
+// TEST 8: Simulate Race Condition (Conceptual)
 // =============================================================================
 async function testRaceConditionPrevention() {
-  header('TEST 6: Race Condition Prevention (Conceptual)');
+  header('TEST 8: Race Condition Prevention (Conceptual)');
 
   log('Race condition prevention is implemented at the database level.', 'info');
+  log('Before Apify starts, reserve_wallet_credits locks and deducts the max cost.', 'info');
   log('The SELECT ... FOR UPDATE clause ensures only one transaction can modify', 'info');
   log('a user row at a time. Here\'s how to manually test:', 'info');
 
@@ -406,10 +497,10 @@ async function testRaceConditionPrevention() {
 }
 
 // =============================================================================
-// TEST 8: Webhook Verification Guide
+// TEST 9: Webhook Verification Guide
 // =============================================================================
 async function testWebhookVerificationGuide() {
-  header('TEST 7: Webhook Verification Guide');
+  header('TEST 9: Webhook Verification Guide');
 
   log('Webhook testing requires a running server. Here\'s how to test:', 'info');
 
@@ -459,6 +550,7 @@ async function runAllTests() {
     // Run tests
     results.push({ name: 'Database Functions Exist', passed: await testDatabaseFunctionsExist() });
     results.push({ name: 'Atomic Credit Deduction', passed: await testAtomicCreditDeduction() });
+    results.push({ name: 'Wallet Reservations', passed: await testWalletReservations() });
     results.push({ name: 'Wallet-Only Free User Access', passed: await testWalletOnlyFreeUserAccess() });
     results.push({ name: 'Wallet Transaction Logging', passed: await testWalletTransactionLogging() });
     results.push({ name: 'Security Fixes in Code', passed: await testSecurityFixesInCode() });

@@ -3,7 +3,14 @@
 import { ApifyClient } from 'apify-client';
 import { getAuthenticatedUser } from '@/lib/auth';
 import { getOrCreateUser } from '@/lib/data-store';
-import { canAnalyze, incrementAnalysisUsage, getScrapingCaps, UsageInfo } from '@/lib/usage';
+import {
+    canAnalyze,
+    getScrapingCaps,
+    releaseAnalysisReservation as releaseReservedAnalysisCredits,
+    reserveAnalysisCredits,
+    settleAnalysisUsage,
+    UsageInfo,
+} from '@/lib/usage';
 
 // ============================================================================
 // TYPES
@@ -33,6 +40,7 @@ export interface Reactor {
 interface PostFetchResult {
     success: boolean;
     post?: PostData;
+    reservationId?: string;
     error?: string;
     usage?: UsageInfo;
     limitReached?: boolean;
@@ -87,6 +95,9 @@ const apifyClient = new ApifyClient({
 // ============================================================================
 
 export async function fetchPostDetails(url: string): Promise<PostFetchResult> {
+    let reservedUserId: string | null = null;
+    let reservationId: string | null = null;
+
     try {
         console.log("=== STEP 1: FETCHING POST DETAILS ===");
         console.log("Input URL:", url);
@@ -103,14 +114,24 @@ export async function fetchPostDetails(url: string): Promise<PostFetchResult> {
         }
 
         const user = await getOrCreateUser(userEmail);
-        
-        // Check if user can analyze
-        const usageCheck = await canAnalyze(user.id);
-        if (!usageCheck.allowed) {
+        reservedUserId = user.id;
+
+        const reservation = await reserveAnalysisCredits(user.id, url);
+        if (!reservation.allowed) {
             return {
                 success: false,
-                error: usageCheck.reason || "Start a trial or add wallet credits to analyze posts.",
-                usage: usageCheck.usage,
+                error: reservation.reason || "Start a trial or add wallet credits to analyze posts.",
+                usage: reservation.usage,
+                limitReached: true
+            };
+        }
+
+        reservationId = reservation.reservationId || null;
+        if (!reservationId) {
+            return {
+                success: false,
+                error: "Unable to reserve wallet credits. Please try again.",
+                usage: reservation.usage,
                 limitReached: true
             };
         }
@@ -177,9 +198,16 @@ export async function fetchPostDetails(url: string): Promise<PostFetchResult> {
         };
 
         console.log("✅ Post details complete");
-        return { success: true, post };
+        return { success: true, post, reservationId };
 
     } catch (error) {
+        if (reservedUserId && reservationId) {
+            await releaseReservedAnalysisCredits(reservedUserId, reservationId, {
+                postUrl: url,
+                releaseReason: 'post_fetch_failed',
+            });
+        }
+
         const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
         console.error("❌ Post fetch error:", errorMessage);
         return { success: false, error: errorMessage };
@@ -287,15 +315,17 @@ export async function fetchComments(postUrl: string): Promise<CommentsFetchResul
 export async function trackAnalysisUsage(
     postUrl: string, 
     reactorsCount: number, 
-    commentersCount: number = 0
+    commentersCount: number = 0,
+    reservationId?: string
 ): Promise<UsageTrackingResult> {
     try {
         const userEmail = await getAuthenticatedUser();
         if (!userEmail) return { success: false, error: "Please log in to track usage" };
+        if (!reservationId) return { success: false, error: "Missing wallet reservation for this analysis" };
 
         const user = await getOrCreateUser(userEmail);
         
-        const usageResult = await incrementAnalysisUsage(user.id, {
+        const usageResult = await settleAnalysisUsage(user.id, reservationId, {
             postUrl,
             reactionsScraped: reactorsCount,
             commentsScraped: commentersCount,
@@ -315,11 +345,32 @@ export async function trackAnalysisUsage(
     }
 }
 
+export async function releaseAnalysisReservation(
+    reservationId: string,
+    postUrl?: string
+): Promise<{ success: boolean; error?: string }> {
+    try {
+        const userEmail = await getAuthenticatedUser();
+        if (!userEmail) return { success: false, error: "Please log in to release reservation" };
+
+        const user = await getOrCreateUser(userEmail);
+        return await releaseReservedAnalysisCredits(user.id, reservationId, {
+            postUrl,
+            releaseReason: 'analysis_aborted',
+        });
+    } catch (error) {
+        console.error("Failed to release analysis reservation:", error);
+        return { success: false, error: "Failed to release reservation" };
+    }
+}
+
 // ============================================================================
 // LEGACY: Combined function (kept for backwards compatibility)
 // ============================================================================
 
 export async function analyzePost(url: string): Promise<AnalysisResult> {
+    let reservationId: string | undefined;
+
     // Step 1: Fetch post
     const postResult = await fetchPostDetails(url);
     if (!postResult.success || !postResult.post) {
@@ -331,9 +382,12 @@ export async function analyzePost(url: string): Promise<AnalysisResult> {
         };
     }
 
+    reservationId = postResult.reservationId;
+
     // Step 2: Fetch reactions (now uses full post URL instead of activity ID)
     const reactionsResult = await fetchReactions(postResult.post.postUrl);
     if (!reactionsResult.success || !reactionsResult.reactors) {
+        if (reservationId) await releaseAnalysisReservation(reservationId, url);
         return {
             success: false,
             error: reactionsResult.error
@@ -341,7 +395,7 @@ export async function analyzePost(url: string): Promise<AnalysisResult> {
     }
 
     // Step 3: Track usage
-    const usage = await trackAnalysisUsage(url, reactionsResult.reactors.length);
+    const usage = await trackAnalysisUsage(url, reactionsResult.reactors.length, 0, reservationId);
     if (!usage.success) {
         return {
             success: false,

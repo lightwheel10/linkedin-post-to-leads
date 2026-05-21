@@ -23,7 +23,19 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { getPlanLimits } from './plans';
-import { hasEnoughCredits, deductCredits, getWalletStatus, CREDIT_COSTS, WALLET_PLANS, isWalletPlan, type WalletStatus } from './wallet';
+import {
+  hasEnoughCredits,
+  deductCredits,
+  getWalletStatus,
+  CREDIT_COSTS,
+  WALLET_PLANS,
+  isWalletPlan,
+  releaseExpiredWalletReservations,
+  reserveCredits,
+  settleCreditReservation,
+  releaseCreditReservation,
+  type WalletStatus,
+} from './wallet';
 
 // =============================================================================
 // TYPES
@@ -51,6 +63,11 @@ export interface UsageCheckResult {
   /** When true, the UI should offer a billing action alongside the error */
   topUpAvailable?: boolean;
   usage: UsageInfo;
+}
+
+export interface UsageReservationResult extends UsageCheckResult {
+  reservationId?: string;
+  reservedAmount?: number;
 }
 
 export interface AnalysisMetadata {
@@ -122,6 +139,22 @@ async function hasWalletBillingAccess(userId: string, walletStatus: WalletStatus
 
   // Billing hardening - 2026-05-17 19:05 IST, paras: trial users get capped wallet credits; non-trial users need balance.
   return { allowed: false, reason: 'Your wallet is empty. Start a trial or add credits to continue.' };
+}
+
+function getEstimatedAnalysisCost(plan: string): number {
+  const planConfig = isWalletPlan(plan)
+    ? WALLET_PLANS[plan as keyof typeof WALLET_PLANS]
+    : null;
+
+  return CREDIT_COSTS.postAnalysisBase +
+    ((planConfig?.reactionsPerPost ?? 100) * CREDIT_COSTS.perReaction) +
+    ((planConfig?.commentsPerPost ?? 75) * CREDIT_COSTS.perComment);
+}
+
+function getActualAnalysisCost(metadata: AnalysisMetadata): number {
+  return CREDIT_COSTS.postAnalysisBase +
+    (metadata.reactionsScraped * CREDIT_COSTS.perReaction) +
+    (metadata.commentsScraped * CREDIT_COSTS.perComment);
 }
 
 // =============================================================================
@@ -204,12 +237,7 @@ export async function canAnalyze(userId: string): Promise<UsageCheckResult> {
     };
   }
 
-  const planConfig = isWalletPlan(usage.plan)
-    ? WALLET_PLANS[usage.plan as keyof typeof WALLET_PLANS]
-    : null;
-  const estimatedMaxCost = CREDIT_COSTS.postAnalysisBase +
-    ((planConfig?.reactionsPerPost ?? 100) * CREDIT_COSTS.perReaction) +
-    ((planConfig?.commentsPerPost ?? 75) * CREDIT_COSTS.perComment);
+  const estimatedMaxCost = getEstimatedAnalysisCost(usage.plan);
 
   const hasCredits = await hasEnoughCredits(userId, estimatedMaxCost);
 
@@ -223,6 +251,45 @@ export async function canAnalyze(userId: string): Promise<UsageCheckResult> {
   }
 
   return { allowed: true, usage };
+}
+
+export async function reserveAnalysisCredits(
+  userId: string,
+  postUrl: string
+): Promise<UsageReservationResult> {
+  await releaseExpiredWalletReservations(userId);
+
+  const usageCheck = await canAnalyze(userId);
+  if (!usageCheck.allowed) return usageCheck;
+
+  const estimatedMaxCost = getEstimatedAnalysisCost(usageCheck.usage.plan);
+  const reservation = await reserveCredits(
+    userId,
+    estimatedMaxCost,
+    'post_analysis',
+    `Post analysis reservation: ${postUrl}`,
+    {
+      postUrl,
+      reservedAmount: estimatedMaxCost,
+      reservationType: 'post_analysis',
+    }
+  );
+
+  if (!reservation.success || !reservation.reservationId) {
+    return {
+      allowed: false,
+      reason: reservation.error || 'Unable to reserve wallet credits. Please try again.',
+      topUpAvailable: true,
+      usage: usageCheck.usage,
+    };
+  }
+
+  return {
+    allowed: true,
+    usage: usageCheck.usage,
+    reservationId: reservation.reservationId,
+    reservedAmount: estimatedMaxCost,
+  };
 }
 
 /**
@@ -263,6 +330,40 @@ export async function canEnrich(userId: string): Promise<UsageCheckResult> {
   }
 
   return { allowed: true, usage };
+}
+
+export async function reserveEnrichmentCredits(userId: string): Promise<UsageReservationResult> {
+  await releaseExpiredWalletReservations(userId);
+
+  const usageCheck = await canEnrich(userId);
+  if (!usageCheck.allowed) return usageCheck;
+
+  const reservation = await reserveCredits(
+    userId,
+    CREDIT_COSTS.profileEnrichment,
+    'profile_enrichment',
+    'Profile enrichment reservation',
+    {
+      reservedAmount: CREDIT_COSTS.profileEnrichment,
+      reservationType: 'profile_enrichment',
+    }
+  );
+
+  if (!reservation.success || !reservation.reservationId) {
+    return {
+      allowed: false,
+      reason: reservation.error || 'Unable to reserve wallet credits. Please try again.',
+      topUpAvailable: true,
+      usage: usageCheck.usage,
+    };
+  }
+
+  return {
+    allowed: true,
+    usage: usageCheck.usage,
+    reservationId: reservation.reservationId,
+    reservedAmount: CREDIT_COSTS.profileEnrichment,
+  };
 }
 
 /**
@@ -320,6 +421,59 @@ export async function incrementAnalysisUsage(
   return { success: true };
 }
 
+export async function settleAnalysisUsage(
+  userId: string,
+  reservationId: string,
+  metadata: AnalysisMetadata
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  const cost = getActualAnalysisCost(metadata);
+
+  const settlement = await settleCreditReservation(userId, reservationId, cost, {
+    postUrl: metadata.postUrl,
+    reactionsScraped: metadata.reactionsScraped,
+    commentsScraped: metadata.commentsScraped,
+    leadsFound: metadata.leadsFound,
+  });
+
+  if (!settlement.success) {
+    console.error('[Usage] Failed to settle analysis reservation:', settlement.error);
+    return { success: false, error: settlement.error || 'Failed to settle wallet reservation' };
+  }
+
+  const { error: logError } = await supabase.from('usage_logs').insert({
+    user_id: userId,
+    action: 'analysis',
+    post_url: metadata.postUrl,
+    reactions_scraped: metadata.reactionsScraped,
+    comments_scraped: metadata.commentsScraped,
+    leads_found: metadata.leadsFound,
+  });
+
+  if (logError) {
+    console.error('[Usage] Failed to log analysis usage (non-critical):', logError);
+  }
+
+  return { success: true };
+}
+
+export async function releaseAnalysisReservation(
+  userId: string,
+  reservationId: string,
+  metadata?: Record<string, unknown>
+): Promise<{ success: boolean; error?: string }> {
+  const release = await releaseCreditReservation(userId, reservationId, {
+    reservationType: 'post_analysis',
+    ...metadata,
+  });
+
+  if (!release.success) {
+    return { success: false, error: release.error || 'Failed to release wallet reservation' };
+  }
+
+  return { success: true };
+}
+
 /**
  * Increment enrichment usage and log the event
  *
@@ -356,6 +510,53 @@ export async function incrementEnrichmentUsage(
   if (logError) {
     // Log error but don't fail the operation - usage was already tracked
     console.error('[Usage] Failed to log enrichment usage (non-critical):', logError);
+  }
+
+  return { success: true };
+}
+
+export async function settleEnrichmentUsage(
+  userId: string,
+  reservationId: string
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+
+  const settlement = await settleCreditReservation(
+    userId,
+    reservationId,
+    CREDIT_COSTS.profileEnrichment,
+    { reservationType: 'profile_enrichment' }
+  );
+
+  if (!settlement.success) {
+    console.error('[Usage] Failed to settle enrichment reservation:', settlement.error);
+    return { success: false, error: settlement.error || 'Failed to settle wallet reservation' };
+  }
+
+  const { error: logError } = await supabase.from('usage_logs').insert({
+    user_id: userId,
+    action: 'enrichment',
+  });
+
+  if (logError) {
+    console.error('[Usage] Failed to log enrichment usage (non-critical):', logError);
+  }
+
+  return { success: true };
+}
+
+export async function releaseEnrichmentReservation(
+  userId: string,
+  reservationId: string,
+  metadata?: Record<string, unknown>
+): Promise<{ success: boolean; error?: string }> {
+  const release = await releaseCreditReservation(userId, reservationId, {
+    reservationType: 'profile_enrichment',
+    ...metadata,
+  });
+
+  if (!release.success) {
+    return { success: false, error: release.error || 'Failed to release wallet reservation' };
   }
 
   return { success: true };
